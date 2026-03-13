@@ -190,8 +190,7 @@ public static class Transmutation {
 */
 
 public static class Incantation {
-	public static void register_icon(Form mainForm, string icon_name, string namespace_str){
-		
+	public static void register_icon(Form mainForm, string icon_name, string namespace_str) {
 		var assembly = Assembly.GetExecutingAssembly();
         using Stream? stream = assembly.GetManifestResourceStream(namespace_str+"."+icon_name+".ico");
         if (stream != null)
@@ -199,7 +198,6 @@ public static class Incantation {
             mainForm.Icon = new Icon(stream);
         }
 	}
-	
 	
     // utils
 	public static T? get_first<T>(Control parent) where T : Control {
@@ -557,36 +555,31 @@ public static class Incantation_EVENTS {
     // Events 
 	public static void key_shortcut(Control control, string modifiers, string key, Action action) {
 		if (control == null || action == null) return;
-
-		if (!Enum.TryParse<Keys>(key, true, out Keys parsedKey))
-			return;
-
-		if (control is Form form)
-			form.KeyPreview = true;
-
+		if (!Enum.TryParse<Keys>(key, true, out Keys parsedKey)) return;
+        key_shortcut(control, modifiers, parsedKey, action);
+	}
+    public static void key_shortcut(Control control, string modifiers, Keys key, Action action) {
+		if (control == null || action == null) return;
+		if (control is Form form) form.KeyPreview = true;
 		var required = modifiers?.ToLower().Split('+', StringSplitOptions.RemoveEmptyEntries)
 					   ?? Array.Empty<string>();
-
 		bool ctrl  = required.Contains("ctrl");
 		bool alt   = required.Contains("alt");
 		bool shift = required.Contains("shift");
 
-		control.KeyDown += (sender, e) =>
-		{
+		control.KeyDown += (sender, e) =>{
 			bool modifiersMatch =
 				e.Control == ctrl &&
 				e.Alt == alt &&
 				e.Shift == shift;
-
-			if (modifiersMatch && e.KeyCode == parsedKey)
-			{
+			if (modifiersMatch && e.KeyCode == key) {
 				action();
 				e.Handled = true;
 				e.SuppressKeyPress = true;
 			}
 		};
 	}
-	
+
 	private static Dictionary<Control, DateTime> _lastClickTimes = new();
 	public static void on_double_click(Control control, Action action) {
 		if (control == null || action == null) return;
@@ -760,6 +753,7 @@ public static class Incantation_TEXTBOX {
 	}
 	// <<<
 }
+
 public static class Incantation_CONTEXTMENU {
     // Context Menu 
 	public static ContextMenuStrip add_context_menu(Control? control, List<object> items) {
@@ -842,7 +836,6 @@ public static class Incantation_CONTEXTMENU {
 		item.Click += handler; 
 	}
 }
-
 
 public static class Incantation_PANEL {
     // Panel
@@ -944,6 +937,7 @@ public static class Incantation_PANEL {
         return split;
     }
 }
+
 public static class Incantation_TREEVIEW {
 	private static string dummy_node = "Loading...";
 	public static TreeView new_dummy_tree(string display_text){
@@ -1663,6 +1657,8 @@ foreach ($file in $files) {{
 public static class Incantation_SCINTILLA {
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
+        ".csproj",
+        ".user",
 		".cpp",
 		".c",
 		".h",
@@ -1679,7 +1675,10 @@ public static class Incantation_SCINTILLA {
 		".json",
 		".java",
         ".txt",
-        ".ahk"
+        ".ahk",
+        ".bat",
+        ".sh",
+        ".ps1"
 	};
 	private static Dictionary<string, string> ext_to_lexer = new Dictionary<string, string>() {
 		{".cs", "cpp"},
@@ -1718,6 +1717,7 @@ public static class Incantation_SCINTILLA {
 		return CODE_EXTS.Contains(ext);
 	}
 	public static string filename_to_lexer(string filename_with_ext) {
+        if ( string.IsNullOrWhiteSpace(filename_with_ext) ) return "null";
 		string ext = Path.GetExtension(filename_with_ext).ToLowerInvariant();
 		if (ext_to_lexer.TryGetValue(ext, out string lexer)) return lexer;
 		return "null"; // fallback if unknown
@@ -1811,7 +1811,7 @@ public static class Incantation_SCINTILLA {
 		scintilla.LexerName = lexer;
 		// Instruct the lexer to calculate folding
 		scintilla.SetProperty("fold", "1");
-		scintilla.SetProperty("fold.compact", "1");
+		// scintilla.SetProperty("fold.compact", "1");
         scintilla.SetProperty("fold.comment", "1");
 		// Configure a margin to display folding symbols
 		scintilla.Margins[2].Type = MarginType.Symbol;
@@ -1886,6 +1886,10 @@ public static class Incantation_SCINTILLA {
                 break;
             case ".js":
                 set_javascript_style(scintilla);
+                break;
+            case ".bat":
+            case ".sh":
+                set_bash_style(scintilla);
                 break;
 		}
 	}
@@ -1971,11 +1975,49 @@ public static class Incantation_SCINTILLA {
         "assert collectgarbage dofile error getmetatable ipairs load loadfile next pairs pcall print rawequal rawget rawlen rawset require select setmetatable tonumber tostring type xpcall");
     }
 
-    
+    public static void set_bash_style(Scintilla scintilla) {
+        // Default
+        scintilla.Styles[0].ForeColor = Color.Silver;
+
+        // Comments
+        scintilla.Styles[2].ForeColor = comment_fore_color;
+        scintilla.Styles[2].BackColor = comment_back_color;
+
+        // Numbers
+        scintilla.Styles[3].ForeColor = number_fore_color;
+        scintilla.Styles[3].BackColor = number_back_color;
+
+        // Keywords
+        scintilla.Styles[4].ForeColor = keyword1_color;
+
+        // Strings
+        scintilla.Styles[5].ForeColor = string_fore_color;
+        scintilla.Styles[5].BackColor = string_back_color;
+        scintilla.Styles[6].ForeColor = string_fore_color;
+        scintilla.Styles[6].BackColor = string_back_color;
+
+        // Operators
+        scintilla.Styles[7].ForeColor = Color.Yellow;
+
+        // Identifiers
+        scintilla.Styles[8].ForeColor = Color.LightBlue;
+
+        // Variables ($var)
+        scintilla.Styles[9].ForeColor = Color.Orange;
+
+        // Bash keywords
+        scintilla.SetKeywords(0,
+            "if then else elif fi for while do done case esac function select in time until");
+
+        // Bash builtins
+        scintilla.SetKeywords(1,
+            "echo printf read cd pwd export unset alias unalias exit return test true false shift source");
+    }
+
     public static void set_rust_style(Scintilla scintilla) {}
     public static void set_html_style(Scintilla scintilla){}
     public static void set_ahk_style(Scintilla scintilla){}
-
+    
     public static void set_c_family_style(Scintilla scintilla) {
 		// Configure the CPP (C#) lexer styles
 		scintilla.Styles[Style.Cpp.Default].ForeColor = Color.Silver;
@@ -2027,9 +2069,20 @@ public static class Incantation_SCINTILLA {
 	
 	// -- 
 	public static void set_keyshortcuts(Scintilla editor) {
+        key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
 		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
 		key_shortcut(editor, "alt", "o", ()=>{toggle_closest_fold_marker(editor);});
+        key_shortcut(editor, "ctrl", "d", ()=>{
+            string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) return ;
+            find_prev_token(editor, token);
+        });
         key_shortcut(editor, "ctrl", "f", ()=>{
+            string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) return ;
+            find_next_token(editor, token);
+        });
+        key_shortcut(editor, "ctrl", "q", ()=>{
             // -- 
         });
 	}
@@ -2051,6 +2104,22 @@ public static class Incantation_SCINTILLA {
 			}
 		}
 	}
+    public static void unfold_all(Scintilla editor) {
+        const int SCI_FOLDALL = 2662;
+        const int SC_FOLDACTION_EXPAND = 1;
+        editor.DirectMessage(SCI_FOLDALL, (IntPtr)SC_FOLDACTION_EXPAND);
+        // --
+        int lineCount = (int)editor.DirectMessage(2154); // SCI_GETLINECOUNT
+        for (int i = 0; i < lineCount; i++) {
+            int level = (int)editor.DirectMessage(2223, (IntPtr)i); // SCI_GETFOLDLEVEL
+            if ((level & 0x2000) != 0) // SC_FOLDLEVELHEADERFLAG
+            {
+                editor.DirectMessage(2237, (IntPtr)i, (IntPtr)1); // SCI_SETFOLDEXPANDED true
+                int lastChild = (int)editor.DirectMessage(2224, (IntPtr)i, (IntPtr)(-1)); // SCI_GETLASTCHILD
+                editor.DirectMessage(2226, (IntPtr)(i + 1), (IntPtr)lastChild); // SCI_SHOWLINES
+            }
+        }
+    }
     public static void smart_fold_all(Scintilla editor) {
         if (editor == null) return;
         const int SCI_GETLINECOUNT = 2154;
@@ -2096,70 +2165,110 @@ public static class Incantation_SCINTILLA {
 		int pos = editor.CurrentPosition;
 		int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
 
-		for (int i = line; i >= 0; i--)
-		{
+		for (int i = line; i >= 0; i--) {
 			int level = (int)editor.DirectMessage(2223, (IntPtr)i);
-
-			if ((level & 0x2000) != 0)
-			{
+			if ((level & 0x2000) != 0) {
 				editor.DirectMessage(2231, (IntPtr)i); // SCI_TOGGLEFOLD
 				break;
 			}
 		}
 	}
-	
-
-    // -- find 
-    public static void find_next_token(Scintilla editor, string token) {
-        if (editor == null || string.IsNullOrEmpty(token))
-            return;
-
-        int start = editor.CurrentPosition;
-        int end = editor.TextLength;
-
-        editor.TargetStart = start;
-        editor.TargetEnd = end;
-
-        int pos = editor.SearchInTarget(token);
-
-        if (pos != -1)
-        {
-            editor.SetSelection(pos + token.Length, pos);
-            editor.ScrollCaret();
+	public static int get_current_caret_line(Scintilla editor) {
+        if (editor == null) return -1;
+        int pos = (int)editor.DirectMessage(2008); // SCI_GETCURRENTPOS
+        int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
+        return line;
+    }
+    public static void unfold_line(Scintilla editor, int line) {
+        if (editor == null) return;
+        // SCI_SETFOLDEXPANDED
+        editor.DirectMessage(2229, (IntPtr)line, (IntPtr)1);
+        // show the lines hidden under this fold
+        int lastChild = (int)editor.DirectMessage(2225, (IntPtr)line); // SCI_GETLASTCHILD
+        if (lastChild > line) {
+            editor.DirectMessage(2226, (IntPtr)(line + 1), (IntPtr)lastChild); // SCI_SHOWLINES
         }
     }
-    public static void find_prev_token(Scintilla editor, string token) {
-        if (editor == null || string.IsNullOrEmpty(token))
-            return;
+    public static void unfold_line(Scintilla editor) {
+        int line = get_current_caret_line(editor);
+        if (line<0) return ;
+        unfold_line(editor, line);
+    }
 
-        int start = 0;
-        int end = editor.CurrentPosition;
-
+    // -- find 
+    public static string get_selected_token(Scintilla editor) {
+        if (editor == null) return "";
+        string text = editor.SelectedText;
+        if (string.IsNullOrWhiteSpace(text)) return "";
+        text = text.TrimStart();
+        int i = 0;
+        while (i < text.Length && !char.IsWhiteSpace(text[i])) {
+            i++;
+        }
+        return text.Substring(0, i);
+    }
+    public static void find_next_token(Scintilla editor, string token) {
+        if (editor == null || string.IsNullOrEmpty(token)) return;
+        int start = editor.CurrentPosition;
+        int end = editor.TextLength;
         editor.TargetStart = start;
         editor.TargetEnd = end;
-
+        int pos = editor.SearchInTarget(token);
+        if (pos != -1) {
+            editor.SetSelection(pos + token.Length, pos);
+            editor.ScrollCaret();
+            unfold_all(editor);
+            smart_fold_all(editor);
+        }
+    }
+    public static void find_prev_token_DEPRECATED(Scintilla editor, string token) {
+        if (editor == null || string.IsNullOrEmpty(token)) return;
+        int start = 0;
+        int end = editor.CurrentPosition;
+        editor.TargetStart = start;
+        editor.TargetEnd = end;
         int lastPos = -1;
-
-        while (true)
-        {
+        while (true) {
             int pos = editor.SearchInTarget(token);
-            if (pos == -1)
-                break;
-
+            if (pos == -1) break;
             lastPos = pos;
-
             editor.TargetStart = pos + 1;
             editor.TargetEnd = end;
         }
-
-        if (lastPos != -1)
-        {
+        if (lastPos != -1) {
             editor.SetSelection(lastPos + token.Length, lastPos);
             editor.ScrollCaret();
+            unfold_all(editor);
+            smart_fold_all(editor);
+        }
+    }
+    public static void find_prev_token(Scintilla editor, string token) {
+        if (editor == null || string.IsNullOrEmpty(token)) return;
+        const int SCFIND_WHOLEWORD = 2;
+        int caret = editor.CurrentPosition;
+        // Find bounds of the word under the caret
+        int wordStart = (int)editor.DirectMessage(2266, (IntPtr)caret, (IntPtr)1); // SCI_WORDSTARTPOSITION
+        int wordEnd   = (int)editor.DirectMessage(2267, (IntPtr)caret, (IntPtr)1); // SCI_WORDENDPOSITION
+        int searchEnd = wordStart; // exclude current word completely
+        editor.SearchFlags = (ScintillaNET.SearchFlags) SCFIND_WHOLEWORD;
+        editor.TargetStart = 0;
+        editor.TargetEnd = searchEnd;
+        int lastPos = -1;
+        while (true) {
+            int pos = editor.SearchInTarget(token);
+            if (pos == -1) break;
+            lastPos = pos;
+            editor.TargetStart = pos + token.Length;
+            editor.TargetEnd = searchEnd;
+        }
+        if (lastPos != -1) {
+            editor.SetSelection(lastPos + token.Length, lastPos);
+            editor.ScrollCaret();
+            unfold_all(editor);
+            smart_fold_all(editor);
         }
     }
 }
-
 
 // custom widget classes 
 public class DarkTabControl : TabControl {

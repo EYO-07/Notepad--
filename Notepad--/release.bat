@@ -1,6 +1,7 @@
 @echo off
 setlocal
 
+cls 
 echo.
 echo =====================================
 echo Restoring NuGet Packages

@@ -1,6 +1,7 @@
 @echo off
 setlocal
 
+cls 
 echo.
 echo =====================================
 echo Restoring NuGet Packages
@@ -13,7 +14,7 @@ if errorlevel 1 (
 
 echo.
 echo =====================================
-echo Building the Project (Release)
+echo Building the Project (Debug)
 echo =====================================
 dotnet run -c Debug
 if errorlevel 1 (
