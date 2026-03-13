@@ -18,11 +18,16 @@ using System.Reflection;
 using System.Linq;
 using Microsoft.VisualBasic.FileIO;
 using ScintillaNET;
-using Microsoft.Web.WebView2.Core;
-using Microsoft.Web.WebView2.WinForms;
-using System.Net.Http;
-using Nager.PublicSuffix;
-using Nager.PublicSuffix.RuleProviders;
+
+// web view page will not be used on this version !!! 
+//using Microsoft.Web.WebView2.Core;
+//using Microsoft.Web.WebView2.WinForms;
+//using System.Net.Http;
+//using Nager.PublicSuffix;
+//using Nager.PublicSuffix.RuleProviders;
+//<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3800.47" />
+//<PackageReference Include="Nager.PublicSuffix" Version="3.5.0" />
+
 // -- 
 using static Codex.Transmutation;
 using static Codex.Incantation;
@@ -224,7 +229,6 @@ public static class Incantation {
 		return result;
 	}
 	
-	
     // Size and position
 	public static void size(Form form, int width, int height) {
         form.Size = new Size(width, height);
@@ -390,70 +394,7 @@ public static class Incantation {
         int y = screen.WorkingArea.Y + (screen.WorkingArea.Height - height) / 2;
         return new Rectangle(x, y, width, height);
     }
-	
-	
-    
-    // Themed
-	public static void hide_titlebar(Form form) {
-		form.SuspendLayout();
-		form.Visible = false;
-		form.FormBorderStyle = FormBorderStyle.None;
-		form.Visible = true;
-		form.ResumeLayout();
-	}
-	public static void show_titlebar(Form form) {
-		form.SuspendLayout();
-		form.Visible = false;
-		form.FormBorderStyle = FormBorderStyle.Sizable;
-		form.Visible = true;
-		form.ResumeLayout();
-	}
-	public static void apply_theme_recursive(Form form, Color background, Color foreground)	{
-		if (form == null) return;
-
-		form.BackColor = background;
-		form.ForeColor = foreground;
-
-		apply_theme_recursive((Control)form, background, foreground);
-	}
-	public static void apply_theme_recursive(Control control, Color background, Color foreground) {
-		if (control == null) return;
-
-		control.BackColor = background;
-		control.ForeColor = foreground;
-
-		foreach (Control child in control.Controls)
-		{
-			apply_theme_recursive(child, background, foreground);
-		}
-	}
-	public static Color rgb(int r, int g, int b) {
-		return Color.FromArgb(r,g,b);
-	}
-	
-	// >>>
-	public static void border_color_on_focus_change(Control control, Color focused, Color unfocused) {
-		
-	}
-	// <<<
-	
-	// tootip
-	public static ToolTip add_tooltip(Control control, string text) {
-        ToolTip tooltip = new ToolTip();
-
-        tooltip.AutoPopDelay = 5000;
-        tooltip.InitialDelay = 1000;
-        tooltip.ReshowDelay = 500;
-        tooltip.ShowAlways = true;
-
-        tooltip.SetToolTip(control, text);
-
-        return tooltip;
-    }
-
-	
-    // 
-	private static readonly Dictionary<Form, System.Windows.Forms.Timer> animationTimers = new();
+    private static readonly Dictionary<Form, System.Windows.Forms.Timer> animationTimers = new();
 	private static readonly Dictionary<Form, bool> dock_active = new();
 	private static readonly float collapsedPerc = 0.1f;
 	public static void set_as_dock_window(Form form, string dock, float focus_screen_perc) {
@@ -558,6 +499,61 @@ public static class Incantation {
 			}
 		};
 	}
+    
+    // Themed
+	public static void hide_titlebar(Form form) {
+		form.SuspendLayout();
+		form.Visible = false;
+		form.FormBorderStyle = FormBorderStyle.None;
+		form.Visible = true;
+		form.ResumeLayout();
+	}
+	public static void show_titlebar(Form form) {
+		form.SuspendLayout();
+		form.Visible = false;
+		form.FormBorderStyle = FormBorderStyle.Sizable;
+		form.Visible = true;
+		form.ResumeLayout();
+	}
+	public static void apply_theme_recursive(Form form, Color background, Color foreground)	{
+		if (form == null) return;
+
+		form.BackColor = background;
+		form.ForeColor = foreground;
+
+		apply_theme_recursive((Control)form, background, foreground);
+	}
+	public static void apply_theme_recursive(Control control, Color background, Color foreground) {
+		if (control == null) return;
+
+		control.BackColor = background;
+		control.ForeColor = foreground;
+
+		foreach (Control child in control.Controls)
+		{
+			apply_theme_recursive(child, background, foreground);
+		}
+	}
+	public static Color rgb(int r, int g, int b) {
+		return Color.FromArgb(r,g,b);
+	}
+	
+	public static void border_color_on_focus_change(Control control, Color focused, Color unfocused) {}
+	
+	// tootip
+	public static ToolTip add_tooltip(Control control, string text) {
+        ToolTip tooltip = new ToolTip();
+
+        tooltip.AutoPopDelay = 5000;
+        tooltip.InitialDelay = 1000;
+        tooltip.ReshowDelay = 500;
+        tooltip.ShowAlways = true;
+
+        tooltip.SetToolTip(control, text);
+
+        return tooltip;
+    }
+	
 }
 
 public static class Incantation_EVENTS {
@@ -1790,7 +1786,9 @@ public static class Incantation_SCINTILLA {
         ".ahk",
         ".bat",
         ".sh",
-        ".ps1"
+        ".ps1",
+        ".ltx",
+        ".script"
 	};
 	private static Dictionary<string, string> ext_to_lexer = new Dictionary<string, string>() {
 		{".cs", "cpp"},
@@ -1894,7 +1892,7 @@ public static class Incantation_SCINTILLA {
 		// Default text style
 		editor.Styles[Style.Default].Font = "Consolas";
 		editor.Styles[Style.Default].Size = 8;
-		editor.Styles[Style.Default].Bold = false;
+		editor.Styles[Style.Default].Bold = true;
 		editor.Styles[Style.Default].ForeColor = foreground_color;
 		editor.Styles[Style.Default].BackColor = background_color;
 		// Apply default style everywhere
@@ -2475,6 +2473,7 @@ public static class Incantation_SCINTILLA {
     }
 }
 
+/* for web view 2 which will not be used on this version !!! 
 public static class Incantation_WEBVIEW {
 	public static WebView2 new_web_view(string url){
 		WebView2 webView = new WebView2 { Dock = DockStyle.Fill };
@@ -2799,6 +2798,8 @@ public static class Incantation_WEBVIEW {
 		return dataUrl;
 	}
 }
+
+*/
 
 // custom widget classes 
 public class DarkTabControl : TabControl {

@@ -210,54 +210,7 @@ public partial class Notepad__Form : Form {
 		this.help_scintilla.ReadOnly = true;
 	} 
 	// -- subroutines 
-    // explorer tasks 
-	private void SBR_add_selected_dir_to_exp() {
-		var str_list = get_fullpath( this.explorer.GetSelectedNodes() );
-		if (str_list.Count == 0) return ;
-		foreach( string path in str_list ){
-			if (! is_dir(path)) continue ;
-			join( this.explorer, new_multiselection_tree(path) );
-			this.data.Directories.Add(path);
-		}
-	}
-	private void SBR_rem_selected_dir_to_exp() {
-		TreeNode node = this.explorer.SelectedNode; 
-		if (node == null) return ;
-		if (node.Tag is string path && Directory.Exists(path)) {
-			if (this.data.Directories.Contains(path)){					
-				this.data.Directories.Remove(path);
-				this.explorer.Nodes.Remove(node);
-			}
-		}
-	}
-	// --
-    private DarkTabControl? get_focused_tab() {
-		if ( this.left_tabs.ContainsFocus ) return this.left_tabs;
-		if ( this.right_tabs.ContainsFocus ) return this.right_tabs;
-		return null;
-	}
-	private void SBR_update_font(){
-		// not working 
-		foreach (TabPage page in this.right_tabs.TabPages){
-			var editor = get_first<Scintilla>(page);
-			if (editor==null) continue; 
-			editor.Styles[Style.Default].Size = (int) Math.Floor( this.data.FontSize );
-		}
-		foreach (TabPage page in this.left_tabs.TabPages){
-			var editor = get_first<Scintilla>(page);
-			if (editor==null) continue; 
-			editor.Styles[Style.Default].Size = (int) Math.Floor( this.data.FontSize );
-		}
-	}
-	private void SBR_compact_toggle(){
-		if (hidden_titlebar) {
-			show_titlebar(this);
-		} else {
-			hide_titlebar(this);
-		}
-		hidden_titlebar = !hidden_titlebar;
-	}
-	// --
+    // -- subroutines || logic 
     private void tabs_click_handler(Object s, MouseEventArgs e) {
 		if (e.Button == MouseButtons.Right)	{
 			DarkTabControl tabs = (DarkTabControl) s;
@@ -322,7 +275,54 @@ public partial class Notepad__Form : Form {
         };
         toggle_read_only(ns);
 	}
-    // --
+    // -- subroutines || explorer tasks 
+	private void SBR_add_selected_dir_to_exp() {
+		var str_list = get_fullpath( this.explorer.GetSelectedNodes() );
+		if (str_list.Count == 0) return ;
+		foreach( string path in str_list ){
+			if (! is_dir(path)) continue ;
+			join( this.explorer, new_multiselection_tree(path) );
+			this.data.Directories.Add(path);
+		}
+	}
+	private void SBR_rem_selected_dir_to_exp() {
+		TreeNode node = this.explorer.SelectedNode; 
+		if (node == null) return ;
+		if (node.Tag is string path && Directory.Exists(path)) {
+			if (this.data.Directories.Contains(path)){					
+				this.data.Directories.Remove(path);
+				this.explorer.Nodes.Remove(node);
+			}
+		}
+	}
+	// --
+    private DarkTabControl? get_focused_tab() {
+		if ( this.left_tabs.ContainsFocus ) return this.left_tabs;
+		if ( this.right_tabs.ContainsFocus ) return this.right_tabs;
+		return null;
+	}
+	private void SBR_update_font(){
+		// not working 
+		foreach (TabPage page in this.right_tabs.TabPages){
+			var editor = get_first<Scintilla>(page);
+			if (editor==null) continue; 
+			editor.Styles[Style.Default].Size = (int) Math.Floor( this.data.FontSize );
+		}
+		foreach (TabPage page in this.left_tabs.TabPages){
+			var editor = get_first<Scintilla>(page);
+			if (editor==null) continue; 
+			editor.Styles[Style.Default].Size = (int) Math.Floor( this.data.FontSize );
+		}
+	}
+	private void SBR_compact_toggle(){
+		if (hidden_titlebar) {
+			show_titlebar(this);
+		} else {
+			hide_titlebar(this);
+		}
+		hidden_titlebar = !hidden_titlebar;
+	}
+	// --
 	private void SBR_set_location_and_position_from_data() {
 		if (this.data == null) return ; 
 		this.Size = new Size(this.data.Width, this.data.Height);
