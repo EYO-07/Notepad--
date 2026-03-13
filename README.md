@@ -1,5 +1,5 @@
 # Notepad--
-A lesser slop version of Notepad++, don't like it? Use Notepad++ instead.
+A slop and much lesser version of Notepad++, don't like it? Use Notepad++ instead.
 
 Build on top of Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ) by desjarlais.
 
