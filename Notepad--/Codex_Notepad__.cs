@@ -10,6 +10,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -17,6 +18,11 @@ using System.Reflection;
 using System.Linq;
 using Microsoft.VisualBasic.FileIO;
 using ScintillaNET;
+using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.WinForms;
+using System.Net.Http;
+using Nager.PublicSuffix;
+using Nager.PublicSuffix.RuleProviders;
 // -- 
 using static Codex.Transmutation;
 using static Codex.Incantation;
@@ -28,10 +34,13 @@ using static Codex.Incantation_CONTEXTMENU;
 using static Codex.Incantation_TEXTBOX;
 using static Codex.Incantation_TABS;
 using static Codex.Incantation_EVENTS;
+using static Codex.Conjuration;
+using static Codex.Incantation_MOUSE;
 // -- ambiguities
 using MethodInvoker = System.Windows.Forms.MethodInvoker;
 using BorderStyle = System.Windows.Forms.BorderStyle;
 using TabDrawMode = System.Windows.Forms.TabDrawMode;
+using Timer = System.Windows.Forms.Timer; 
 
 // ===================================== transmutation 
 // ... data manipulation 
@@ -620,6 +629,79 @@ public static class Incantation_EVENTS {
 			}
 		};
 	}
+
+    // -- 
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(Keys vKey);
+    public static void OnTick(Control ctrl, Action<object, EventArgs> action, int milliseconds) {
+        if (ctrl == null) throw new ArgumentNullException(nameof(ctrl));
+        if (action == null) throw new ArgumentNullException(nameof(action));
+        var timer = new Timer { Interval = milliseconds };
+        timer.Tick += (s, e) => action(s, e);
+        ctrl.HandleCreated += (s, e) => timer.Start();
+        ctrl.Disposed += (s, e) => timer.Stop();
+    }
+    public static bool IsKeyDown(Keys key) {
+        return (GetAsyncKeyState(key) & 0x8000) != 0;
+    }
+
+    [DllImport("user32.dll")] 
+    private static extern IntPtr GetForegroundWindow();
+    public static bool is_form_active(Form form) {
+        return form.Handle == GetForegroundWindow();
+    }
+}
+
+public static class Incantation_MOUSE {
+    // mouse 
+    [DllImport("user32.dll")] private static extern bool SetCursorPos(int X, int Y);
+    [DllImport("user32.dll")] private static extern bool GetCursorPos(out Point lpPoint);
+    public static void screen_absolute_mouse_move(int x, int y) {
+        SetCursorPos(x, y);
+    }
+    public static void window_absolute_mouse_move(Form form, int x, int y) {
+        Point screenPoint = form.PointToScreen( new Point(x,y) );
+        SetCursorPos(screenPoint.X, screenPoint.Y);
+    }
+    public static void relative_mouse_move(int dx, int dy) {
+        if (GetCursorPos(out Point currentPos)) SetCursorPos(currentPos.X + dx, currentPos.Y + dy);
+    } 
+    
+    [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    private static extern void mouse_event(uint dwFlags, uint dx, uint dy, int dwData, UIntPtr dwExtraInfo);
+    private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+    private const uint MOUSEEVENTF_LEFTUP   = 0x0004;
+    private const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
+    private const uint MOUSEEVENTF_RIGHTUP   = 0x0010;
+    private const uint MOUSEEVENTF_WHEEL = 0x0800;
+    public static void mouse_LButtonDown() {
+        mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, UIntPtr.Zero);
+    }
+    public static void mouse_LButtonUp() {
+        mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
+    }
+    public static void mouse_LeftClick() {
+        mouse_LButtonDown();
+        mouse_LButtonUp();
+    }
+    public static void mouse_RButtonDown() {
+        mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, UIntPtr.Zero);
+    }
+    public static void mouse_RButtonUp() {
+        mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, UIntPtr.Zero);
+    }
+    public static void mouse_RightClick() {
+        mouse_RButtonDown();
+        mouse_RButtonUp();
+    }
+    public static void mouse_ScrollUp() {
+        // Positive value scrolls up
+        mouse_event(MOUSEEVENTF_WHEEL, 0, 0, 120, UIntPtr.Zero);
+    }
+    public static void mouse_ScrollDown() {
+        // Negative value scrolls down
+        mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -120, UIntPtr.Zero);
+    }
 }
 
 public static class Incantation_TABS {
@@ -1246,7 +1328,17 @@ public static class Incantation_TREEVIEW {
 		return node.IsExpanded;
 	}
 	
-	public static DarkTreeView new_file_explorer_dark_tree() {
+	private static string? get_path_from_selected_node(DarkTreeView explorer){
+		TreeNode node = explorer.SelectedNode; 
+		if (node == null) return null;
+		if (node.Tag == null) return null;
+		if (node.Tag is string path){
+			return path;
+		} else {
+			return null;
+		}
+	}
+    public static DarkTreeView new_file_explorer_dark_tree() {
 		return new_file_explorer_dark_tree(new List<string>());
 	}
 	public static DarkTreeView new_file_explorer_dark_tree(List<string> directories) {
@@ -1260,7 +1352,27 @@ public static class Incantation_TREEVIEW {
 			join( explorer, new_multiselection_tree(path) );
 		}
 		set_as_filesystem_tree(explorer);
-		return explorer;
+        var context_menu = add_context_menu(explorer, new List<object>{ 
+            "Open CMD"
+		});
+        set_action(context_menu, "Open CMD", (s,e) => {
+            ToolStripMenuItem clickedItem = s as ToolStripMenuItem;
+            if (clickedItem == null) return ;
+            ContextMenuStrip ownerMenu = clickedItem.Owner as ContextMenuStrip;
+            if (ownerMenu == null) return ;
+            DarkTreeView exp = ownerMenu.SourceControl as DarkTreeView;
+            if (exp == null) return ;
+			string path = get_path_from_selected_node(exp);
+			if (string.IsNullOrEmpty(path)) return ;
+			if ( !is_dir(path) && !is_file(path) ) return ;
+			open_in_cmd(path);
+		});
+		explorer.MouseClick += (s,e) => {
+			// SBR_refresh_pointed_dir();
+			// SBR_copy_file_to_clipboard();
+			// SBR_log_selected_pointed_file_dir();
+		};
+        return explorer;
 	}
 }
 
@@ -1684,6 +1796,7 @@ public static class Incantation_SCINTILLA {
 		{".cs", "cpp"},
 		{".java", "cpp"},
 		{".c", "cpp"},
+        {".ahk", "cpp"},
 		{".cpp", "cpp"},
 		{".h", "cpp"},
 		{".hpp", "cpp"},
@@ -1739,6 +1852,38 @@ public static class Incantation_SCINTILLA {
 	private static Color number_back_color = Color.DarkBlue;
 	private static Color string_fore_color = Color.FromArgb(255, 0, 0); // red 
 	private static Color string_back_color = Color.FromArgb(20, 0, 0); // 
+
+    public static void highlight_set(HashSet<string> set, Scintilla editor, Color forecolor, Color backcolor) {
+        // Define a custom style ID that won't clash with the lexer
+        const int CUSTOM_STYLE = 32; // pick a number > 31 to avoid conflicts
+
+        // Configure the style appearance
+        editor.Styles[CUSTOM_STYLE].ForeColor = forecolor;
+        editor.Styles[CUSTOM_STYLE].BackColor = backcolor;
+        editor.Styles[CUSTOM_STYLE].Bold = true;
+
+        // Reset all previous custom styling
+        editor.StartStyling(0);
+        editor.SetStyling(editor.TextLength, 0);
+
+        // Scan through the text and apply custom style to matches
+        foreach (string keyword in set)
+        {
+            int startPos = 0;
+            while (true)
+            {
+                int foundPos = editor.Text.IndexOf(keyword, startPos, StringComparison.OrdinalIgnoreCase);
+                if (foundPos == -1) break;
+
+                // Apply style to the keyword range
+                editor.StartStyling(foundPos);
+                editor.SetStyling(keyword.Length, CUSTOM_STYLE);
+
+                startPos = foundPos + keyword.Length;
+            }
+        }
+    }
+
 	// -- 
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
@@ -1863,6 +2008,7 @@ public static class Incantation_SCINTILLA {
 		if (filename.Contains(".")) ext = Path.GetExtension(filename);
 		ext = ext.ToLower();
 		switch (ext) {
+            case ".ahk":
             case ".c":
                 set_c_style(scintilla);
                 break;
@@ -2074,18 +2220,98 @@ public static class Incantation_SCINTILLA {
 		key_shortcut(editor, "alt", "o", ()=>{toggle_closest_fold_marker(editor);});
         key_shortcut(editor, "ctrl", "d", ()=>{
             string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) { 
+                token =  input_dialog(null, "Find Previous", "Input Token", "");
+            }
             if ( string.IsNullOrWhiteSpace(token) ) return ;
             find_prev_token(editor, token);
         });
         key_shortcut(editor, "ctrl", "f", ()=>{
             string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) { 
+                token =  input_dialog(null, "Find Next", "Input Token", "");
+            }
             if ( string.IsNullOrWhiteSpace(token) ) return ;
             find_next_token(editor, token);
         });
         key_shortcut(editor, "ctrl", "q", ()=>{
-            // -- 
+            toggle_comment_lines(editor); 
         });
 	}
+    
+    // 
+    public static void toggle_comment_lines(Scintilla editor) {
+        if (editor == null) return;
+
+        string commentString = GetLineCommentString(editor.LexerName);
+        if (string.IsNullOrEmpty(commentString))
+            return;
+
+        int startLine = editor.LineFromPosition(editor.SelectionStart);
+        int endLine = editor.LineFromPosition(editor.SelectionEnd);
+
+        editor.BeginUndoAction();
+        try
+        {
+            for (int line = startLine; line <= endLine; line++)
+            {
+                var sciLine = editor.Lines[line];
+                string text = sciLine.Text;
+
+                if (text.TrimStart().StartsWith(commentString))
+                {
+                    // Remove the comment prefix
+                    int pos = sciLine.Position + text.IndexOf(commentString);
+                    editor.DeleteRange(pos, commentString.Length);
+                }
+                else
+                {
+                    // Add the comment prefix
+                    editor.InsertText(sciLine.Position, commentString);
+                }
+            }
+        }
+        finally
+        {
+            editor.EndUndoAction();
+        }
+    }
+    public static void comment_out(Scintilla editor) {
+        if (editor == null) return;
+        string commentString = GetLineCommentString(editor.LexerName);
+        if (string.IsNullOrEmpty(commentString)) return; // No line comment style available
+        int startLine = editor.LineFromPosition(editor.SelectionStart);
+        int endLine = editor.LineFromPosition(editor.SelectionEnd);
+        editor.BeginUndoAction();
+        try {
+            for (int line = startLine; line <= endLine; line++) {
+                int pos = editor.Lines[line].Position;
+                editor.InsertText(pos, commentString);
+            }
+        }
+        finally {
+            editor.EndUndoAction();
+        }
+    }
+    private static string GetLineCommentString(string lexerName) {
+        switch (lexerName.ToLowerInvariant())
+        {
+            case "cpp":
+            case "cs":
+            case "java":
+                return "//";
+            case "python":
+            case "perl":
+            case "ruby":
+                return "#";
+            case "sql":
+                return "--";
+            case "lua":
+                return "--";
+            default:
+                return null;
+        }
+    }
 	
 	// -- fold 
 	public static void fold_all(Scintilla editor) {
@@ -2221,27 +2447,6 @@ public static class Incantation_SCINTILLA {
             smart_fold_all(editor);
         }
     }
-    public static void find_prev_token_DEPRECATED(Scintilla editor, string token) {
-        if (editor == null || string.IsNullOrEmpty(token)) return;
-        int start = 0;
-        int end = editor.CurrentPosition;
-        editor.TargetStart = start;
-        editor.TargetEnd = end;
-        int lastPos = -1;
-        while (true) {
-            int pos = editor.SearchInTarget(token);
-            if (pos == -1) break;
-            lastPos = pos;
-            editor.TargetStart = pos + 1;
-            editor.TargetEnd = end;
-        }
-        if (lastPos != -1) {
-            editor.SetSelection(lastPos + token.Length, lastPos);
-            editor.ScrollCaret();
-            unfold_all(editor);
-            smart_fold_all(editor);
-        }
-    }
     public static void find_prev_token(Scintilla editor, string token) {
         if (editor == null || string.IsNullOrEmpty(token)) return;
         const int SCFIND_WHOLEWORD = 2;
@@ -2268,6 +2473,331 @@ public static class Incantation_SCINTILLA {
             smart_fold_all(editor);
         }
     }
+}
+
+public static class Incantation_WEBVIEW {
+	public static WebView2 new_web_view(string url){
+		WebView2 webView = new WebView2 { Dock = DockStyle.Fill };
+		InitializeWebViewAsync(webView, url);
+		return webView;
+	}
+	public static Panel new_simple_web_view(
+		string url, 
+		Func<string, string> parser, 
+		string data_dir_path
+	) {
+		Panel panel = new Panel { Dock = DockStyle.Fill };
+        TextBox urlTextBox = new TextBox {
+            Dock = DockStyle.Top,
+            Text = url,
+            Height = 30
+        };
+        WebView2 webView = new WebView2 { Dock = DockStyle.Fill };
+        panel.Controls.Add(webView); 
+        panel.Controls.Add(urlTextBox); 
+        InitializeWebViewAsync(webView, url, data_dir_path);
+        urlTextBox.KeyDown += (sender, e) => {
+            if (e.KeyCode == Keys.Enter) {
+                e.SuppressKeyPress = true; // Prevent beep sound
+				urlTextBox.Text = parser(urlTextBox.Text);
+                if (!string.IsNullOrWhiteSpace(urlTextBox.Text)) {
+                    if (webView.CoreWebView2 != null) {
+                        webView.CoreWebView2.Navigate(urlTextBox.Text);
+                    }
+                }
+            }
+        };
+        return panel;
+	}
+	public static Panel add_simple_web_view(Form form, string url) {
+		return add_simple_web_view(form, url, (e)=>{return e;});
+	}
+	public static Panel add_simple_web_view(Form form, string url, string data_dir_path) {
+		return add_simple_web_view(form, url, (e)=>{return e;}, data_dir_path);
+	}
+	public static Panel add_simple_web_view(
+		Form form, 
+		string url, 
+		Func<string, string> parser
+	) {
+        return add_simple_web_view(form, url, parser, null);
+    }
+    public static Panel add_simple_web_view(Form form, string url, Func<string, string> parser, string data_dir_path) {
+		Panel panel = new Panel { Dock = DockStyle.Fill };
+        TextBox urlTextBox = new TextBox {
+            Dock = DockStyle.Top,
+            Text = url,
+            Height = 30
+        };
+        WebView2 webView = new WebView2 { Dock = DockStyle.Fill };
+        panel.Controls.Add(webView); 
+        panel.Controls.Add(urlTextBox); 
+        form.Controls.Add(panel);
+        InitializeWebViewAsync(webView, url, data_dir_path);
+        urlTextBox.KeyDown += (sender, e) => {
+            if (e.KeyCode == Keys.Enter) {
+                e.SuppressKeyPress = true; // Prevent beep sound
+				urlTextBox.Text = parser(urlTextBox.Text);
+                if (!string.IsNullOrWhiteSpace(urlTextBox.Text)) {
+                    if (webView.CoreWebView2 != null) {
+                        webView.CoreWebView2.Navigate(urlTextBox.Text);
+                    }
+                }
+            }
+        };
+        return panel;
+	}
+	private static async void InitializeWebViewAsync(WebView2 webView, string url) {
+        InitializeWebViewAsync(webView, url, null);
+    }
+	private static async void InitializeWebViewAsync(WebView2 webView, string url, string data_dir_path) {
+		InitializeWebViewAsync(
+			webView, 
+			url, 
+			data_dir_path,
+			true 
+		);
+	}
+	private static async void InitializeWebViewAsync(
+		WebView2 webView, 
+		string url, 
+		string data_dir_path,
+		bool no_script_new_window
+	) {
+		try {
+			// Cria um ambiente do WebView2 com o diretório especificado
+			if (string.IsNullOrWhiteSpace(data_dir_path)) { 
+				await webView.EnsureCoreWebView2Async(null);
+			} else {
+				var env = await CoreWebView2Environment.CreateAsync(null, data_dir_path);
+				// Inicializa o WebView2 com o ambiente personalizado
+				await webView.EnsureCoreWebView2Async(env);
+			}
+			if (!string.IsNullOrWhiteSpace(url))
+			{
+				webView.CoreWebView2.Navigate(url);
+			}
+			if (no_script_new_window) disable_new_window_creation(webView);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show($"Failed to initialize WebView2 with custom data dir: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+		}
+	}
+	public static string GenericUrlParser(string inputUrl) {
+		if (string.IsNullOrWhiteSpace(inputUrl)) return string.Empty;
+		inputUrl = inputUrl.Trim();
+		// Try to parse with a scheme first 
+		if (Uri.TryCreate(inputUrl, UriKind.Absolute, out Uri parsedUri) &&
+			(parsedUri.Scheme == Uri.UriSchemeHttp || parsedUri.Scheme == Uri.UriSchemeHttps))
+		{
+			return parsedUri.AbsoluteUri;
+		}
+		// If missing scheme, try to fix it by adding "https://"
+		string tentativeUrl = "https://" + inputUrl;
+		if (Uri.TryCreate(tentativeUrl, UriKind.Absolute, out parsedUri)) {
+			return parsedUri.AbsoluteUri;
+		}
+		// As a fallback, try to prepend "www." and parse again
+		if (!inputUrl.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) {
+			tentativeUrl = "https://www." + inputUrl;
+			if (Uri.TryCreate(tentativeUrl, UriKind.Absolute, out parsedUri)) {
+				return parsedUri.AbsoluteUri;
+			}
+		}
+		// Final fallback
+		return string.Empty;
+	}
+	// utils 
+	public static void disable_new_window_creation(WebView2 view) {
+		view.CoreWebView2.NewWindowRequested += (sender, e) =>	{
+			e.Handled = true;
+		}; 
+	}
+	public static async Task firewall_whitelist_filter(
+		WebView2 view,
+		ConcurrentDictionary<string, byte> whitelist
+	) {
+		if (domainParser == null) await InitializeParserAsync();
+		view.CoreWebView2.NavigationStarting += (s, e) => {
+			Uri destination;
+			try {
+				destination = new Uri(e.Uri);
+			} catch {
+				e.Cancel = true; // Block malformed URLs
+				return;
+			}
+			string host = destination.Host.ToLowerInvariant();
+			string baseDomain = GetBaseDomain(host); // Normalize here
+			if (!whitelist.ContainsKey(baseDomain)) {
+				e.Cancel = true;
+				if (confirmation_dialog("Add to whitelist", "Do you trust this domain? " + baseDomain + " | " + host)) {
+					whitelist.TryAdd(baseDomain, 0);
+				}
+			}
+		};
+	}
+	public static async Task firewall_filter(
+		WebView2 view,
+		ConcurrentDictionary<string, byte> whitelist,
+		ConcurrentDictionary<string, byte> blacklist
+	) {
+		if (domainParser == null) await InitializeParserAsync();
+		view.CoreWebView2.NavigationStarting += (s, e) => {
+			Uri destination;
+			try {
+				destination = new Uri(e.Uri);
+			} catch {
+				e.Cancel = true; // Block malformed URLs
+				return;
+			}
+			// 
+			string scheme = destination.Scheme.ToLowerInvariant();
+			if (scheme == "data" && destination.Fragment == "#trusted_internal") return; 
+			// 
+			string host = destination.Host.ToLowerInvariant();
+			string baseDomain = GetBaseDomain(host); // Normalize here
+			if (blacklist.ContainsKey(baseDomain)) {
+				e.Cancel = true ;
+				return ; 
+			} 
+			
+			if (!whitelist.ContainsKey(baseDomain)) {
+				e.Cancel = true;
+				if (confirmation_dialog("Add to whitelist", "Do you trust this domain? " + baseDomain + " | " + host)) {
+					whitelist.TryAdd(baseDomain, 0);
+				} else {
+					blacklist.TryAdd(baseDomain, 0);
+				}
+			}
+		};
+	}
+	private static DomainParser domainParser = null;
+	public static async Task InitializeParserAsync() {
+		string filePath = Path.Combine(get_exec_dir(), "public_suffix_list.dat");
+
+		if (!File.Exists(filePath))
+		{
+			using var client = new HttpClient();
+
+			using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)); // 20 seconds timeout
+
+			try
+			{
+				var list = await client.GetStringAsync("https://publicsuffix.org/list/public_suffix_list.dat", cts.Token);
+				await File.WriteAllTextAsync(filePath, list, cts.Token);
+			}
+			catch (OperationCanceledException)
+			{
+				// Handle timeout here, e.g., log or rethrow
+				throw new TimeoutException("Downloading the public suffix list timed out.");
+			}
+		}
+
+		var ruleProvider = new LocalFileRuleProvider(filePath);
+		await ruleProvider.BuildAsync();
+
+		domainParser = new DomainParser(ruleProvider);
+	}
+	private static string GetBaseDomain(string host) {
+		if (string.IsNullOrEmpty(host)) return host;
+		if (domainParser == null)
+			throw new InvalidOperationException("DomainParser not initialized. Call InitializeParserAsync() before using GetBaseDomain().");
+		try
+		{
+			var domainInfo = domainParser.Parse(host);
+			return domainInfo.RegistrableDomain ?? host;
+		}
+		catch
+		{
+			// If parsing fails, fallback to the host itself
+			return host;
+		}
+	}
+	// html generators 
+	public static string GenerateSpeedDial(List<string> urls) {
+		var sb = new System.Text.StringBuilder();
+
+		sb.AppendLine("<!DOCTYPE html>");
+		sb.AppendLine("<html lang='en'>");
+		sb.AppendLine("<head>");
+		sb.AppendLine("<meta charset='UTF-8'>");
+		sb.AppendLine("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+		sb.AppendLine("<title>Speed Dial</title>");
+		sb.AppendLine(@"
+	<style>
+		body {
+			background: gray;
+			font-family: sans-serif;
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			align-items: flex-start;
+			padding: 40px;
+			gap: 20px;
+		}
+		.tile {
+			width: 120px;
+			height: 120px;
+			background: lightgray;
+			border-radius: 12px;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			cursor: pointer;
+			transition: transform 0.2s;
+			text-decoration: none;
+			color: black;
+		}
+		.tile:hover {
+			transform: scale(1.05);
+		}
+		.tile img {
+			width: 32px;
+			height: 32px;
+			margin-bottom: 10px;
+		}
+		.tile span {
+			font-size: 12px;
+			word-break: break-word;
+		}
+	</style>
+	");
+		sb.AppendLine("</head>");
+		sb.AppendLine("<body>");
+
+		foreach (var url in urls)
+		{
+			// Ensure URL starts with http:// or https://
+			string normalizedUrl = url.StartsWith("http://") || url.StartsWith("https://")
+				? url
+				: "https://" + url;
+
+			if (!Uri.TryCreate(normalizedUrl, UriKind.Absolute, out Uri uri))
+				continue; // skip invalid URLs
+
+			string host = uri.Host;
+			string faviconUrl = $"https://www.google.com/s2/favicons?sz=64&domain={host}";
+			string displayText = host.Replace("www.", "");
+
+			sb.AppendLine($@"
+	<a class='tile' href='{normalizedUrl}' target='_self'>
+		<img src='{faviconUrl}' alt='icon' />
+		<span>{System.Net.WebUtility.HtmlEncode(displayText)}</span>
+	</a>");
+		}
+
+		sb.AppendLine("</body>");
+		sb.AppendLine("</html>");
+
+		string html = sb.ToString();
+		string base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(html));
+		string dataUrl = $"data:text/html;base64,{base64}#trusted_internal";
+		return dataUrl;
+	}
 }
 
 // custom widget classes 
@@ -2676,6 +3206,130 @@ public class ToggleablePanel : Panel {
 	public void Next() => Toggle();
 	protected virtual void OnControlChanged(Control control) {
 		ControlChanged?.Invoke(this, control);
+	}
+}
+
+// ===================================== conjuration 
+// ... system integration  
+public static class Conjuration {
+	public static bool default_program_start(string filename) {
+		if (string.IsNullOrWhiteSpace(filename) || !File.Exists(filename))
+			return false;
+
+		try {
+			ProcessStartInfo psi = new ProcessStartInfo {
+				FileName = filename,
+				UseShellExecute = true // Required to launch with default program
+			};
+			Process.Start(psi);
+			return true;
+		}
+		catch {
+			return false; // Handle errors like no association, permissions, etc.
+		}
+	}
+	public static bool open_in_windows_explorer(string filename) {
+		if (string.IsNullOrWhiteSpace(filename))
+			return false;
+
+		try {
+			if (Directory.Exists(filename)) {
+				// It's a folder: open it directly
+				Process.Start("explorer.exe", $"\"{filename}\"");
+			}
+			else if (File.Exists(filename)) {
+				// It's a file: select it in Explorer
+				Process.Start("explorer.exe", $"/select,\"{filename}\"");
+			}
+			else {
+				return false; // File or folder does not exist
+			}
+			return true;
+		}
+		catch {
+			return false;
+		}
+	}
+	public static bool open_in_cmd(string filename) {
+		if (string.IsNullOrWhiteSpace(filename))
+			return false;
+
+		try {
+			string? directory = null;
+
+			if (Directory.Exists(filename)) {
+				directory = filename;
+			}
+			else if (File.Exists(filename)) {
+				directory = Path.GetDirectoryName(filename);
+			}
+
+			if (directory != null) {
+				Process.Start(new ProcessStartInfo {
+					FileName = "cmd.exe",
+					Arguments = $"/K cd /d \"{directory}\"",
+					UseShellExecute = true
+				});
+				return true;
+			}
+
+			return false; // File or folder doesn't exist
+		}
+		catch {
+			return false;
+		}
+	}
+	public static bool default_program_edit(string filename) {
+		if (string.IsNullOrWhiteSpace(filename) || !File.Exists(filename)) return false;
+		try {
+			ProcessStartInfo psi = new ProcessStartInfo {
+				FileName = filename,
+				Verb = "edit",
+				UseShellExecute = true // Required to launch with default program
+			};
+			Process.Start(psi);
+			// return true;
+			// var psi = new ProcessStartInfo(filename) {
+				// UseShellExecute = true
+			// };
+			// if (!psi.Verbs.Contains("edit", StringComparer.OrdinalIgnoreCase)) return false;
+			// psi.Verb = "edit";
+			// Process.Start(psi);
+			return true;
+		}
+		catch (Exception ex) {
+			MessageBox.Show(
+				$"Failed to open file for editing.\n\nFile:\n{filename}\n\nError:\n{ex.Message}",
+				"Edit Error",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Error
+			);
+			return false;
+		}
+
+			
+	}
+	public static bool rename_file(string filename, string new_name) {
+		if (string.IsNullOrWhiteSpace(filename)) return false;
+		if (string.IsNullOrWhiteSpace(new_name)) return false;
+		try {
+			string fullPath = Path.GetFullPath(filename);
+			if (!File.Exists(fullPath)) return false; 
+			string extension = Path.GetExtension(fullPath);
+			if ( !Path.HasExtension(new_name) ) new_name += extension;
+			if (new_name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return false;
+			string directory = Path.GetDirectoryName(fullPath)!;
+			string newFullPath = Path.Combine(directory, new_name);
+			if (File.Exists(newFullPath)) return false;
+			File.Move(fullPath, newFullPath);
+			return true;
+		} catch (UnauthorizedAccessException) {
+			return false;
+		} catch (IOException) {
+			return false;
+		} catch {
+			return false;
+		}
 	}
 }
 

@@ -18,7 +18,7 @@ using static Codex.Incantation_CONTEXTMENU;
 using static Codex.Incantation_TEXTBOX;
 using static Codex.Incantation_TABS;
 using static Codex.Incantation_EVENTS;
-// -- 
+// -- ambiguities 
 using BorderStyle = System.Windows.Forms.BorderStyle;
 
 public class Form_DATA {
@@ -61,6 +61,8 @@ public partial class Notepad__Form : Form {
 	private Scintilla help_scintilla;
     private HashSet<string> autocomplete_hashset = new();
     private string search_token = "";
+    private double work_opacity = 0.85;
+    private double background_opacity = 0.35;
 	// == methods 
 	// -- user interface workflow 
 	private void _components() {
@@ -86,12 +88,16 @@ public partial class Notepad__Form : Form {
 4. Ctrl+R       // Toggle readonly mode changing background color : green safe, blue not safe. 
                 // It's updates the autocomplete words 
 5. Alt+O        // Toggle Folding/Outlining 
-6. Alt+P        // Fold All Markers 
-7. Ctrl+Arrows  // Scroll the Editor 
-8. Ctrl+Tab     // Change and Focus on Tabs, 
+6. Alt+P        // Fold All Markers Below Current Level
+7. Alt+0        // Fold All ...
+8. Ctrl+Arrows  // Scroll the Editor 
+9. Ctrl+Tab     // Change and Focus on Tabs, 
                 // ... with tabs focused you can change tabs using arrow keys 
                 // ... and shift tab to change between panels.
                 // ... tab to return to Editors 
+9. Alt+S        // Switch Select Tabs Between Views 
+10. Ctrl+F      // Go To Next Selection Match
+11. Ctrl+D      // Go To Previous Selection Match
 
 // Tab Commands
 1. Right Click on Tab       // Switch the tab between panels
@@ -102,6 +108,11 @@ public partial class Notepad__Form : Form {
 1. Insert on File Explorer Tab // Add the selected directory as shortcut 
 2. Delete on File Explorer Tab // Remove the selected directory from explorer tree 
 3. Enter on File Explorer Tab  // Open the File if the language is supported 
+4. Right Click                 // Context Menu 
+5. Right Arrow                 // Open+Refresh Folder Contents 
+
+// General Commands 
+1. RCtrl // See through window 
 """;
 	}
 	private void _layout() {
@@ -109,7 +120,7 @@ public partial class Notepad__Form : Form {
 		SBR_set_location_and_position_from_data();
 		// tabs
 		add_new_tab(this.left_tabs, this.help_scintilla , "?" );
-		add_new_tab(this.right_tabs, this.explorer, "File Explorer");
+		add_new_tab(this.right_tabs, this.explorer, "[ File Explorer ]");
 		foreach(var file in this.data.LeftFiles) {
 			add_new_scintilla_tab(this.left_tabs, file);
 		}
@@ -122,14 +133,9 @@ public partial class Notepad__Form : Form {
 		this.Controls.Add(this.main_panel);
 	}
 	private void _logic() {
+        // main form 
 		this.FormClosing += (s, e) => {
 			SBR_save_session_data();
-		};
-		this.Activated += (s,e) => {
-			this.Opacity = 0.85;
-		};
-		this.Deactivate += (s,e) => {
-			this.Opacity = 0.35;
 		};
 		key_shortcut(this, "ctrl","h", () => {
 			SBR_compact_toggle();
@@ -137,15 +143,31 @@ public partial class Notepad__Form : Form {
 		key_shortcut(this, "ctrl","n", () => {
 			add_new_scintilla_tab(this.left_tabs);
 		}); 
-		// 
+		key_shortcut(this, "alt","s", () => {
+            var RST = this.right_tabs.SelectedTab;
+            var LST = this.left_tabs.SelectedTab;
+            switch_view(RST);
+            switch_view(LST);
+            this.right_tabs.SelectedTab = LST;
+            this.left_tabs.SelectedTab = RST; 
+        });
+        OnTick( this, (s,e) => {
+            if ( !is_form_active(this) ) {
+                this.Opacity = background_opacity;
+            } else if ( IsKeyDown(Keys.RControlKey) ) {
+                this.Opacity = background_opacity/2;
+            } else {
+                this.Opacity = work_opacity;
+            }
+        }, 100 );
+        // tabs 
 		drag_window(this.left_tabs);
 		drag_window(this.right_tabs);
 		this.left_tabs.MouseClick += tabs_click_handler;
 		this.right_tabs.MouseClick += tabs_click_handler;
-		//
 		this.right_tabs.ShowToolTips = true;
 		this.left_tabs.ShowToolTips = true;
-		//
+		// explorer 
 		this.explorer.KeyDown += (s,e) => {
 			if (e.KeyCode == Keys.Enter) {
 				string filename = get_selected_filename_from_explorer(this.explorer);
@@ -253,6 +275,53 @@ public partial class Notepad__Form : Form {
 			}
 		}			
 	}
+    private void scintilla_tab_logic(Scintilla ns, TabPage page) {
+		ns.TextChanged += (s,e) => {
+			page.Text = unsave_marker+ get_filename(page.ToolTipText);
+		};
+        key_shortcut(ns, "ctrl","f", () => {
+            // -- todo 
+        });
+		key_shortcut(ns, "ctrl","s", () => {
+			TabPage current_page = page;
+			if (current_page == null) return ;
+			string path = current_page.ToolTipText;
+			Scintilla editor = ns;
+			if (editor==null) return ;
+			string content = editor.Text;
+			if (is_file(path)){
+				save(path, content); 
+				this.fullpath_scintilla_map[path] = editor;
+				set_fold_and_style(editor, path);
+				current_page.Text = get_filename(path);
+			} else {
+				string _path = save_dialog("txt", this.data.DialogDir);
+				if (_path == null) return ;
+				current_page.ToolTipText = _path;
+				save(_path, content); 
+				this.fullpath_scintilla_map[_path] = editor;
+				set_fold_and_style(editor, _path);
+				current_page.Text = get_filename(_path);
+			}
+		});	
+		key_shortcut(ns, "ctrl","r", async () => {
+			toggle_read_only(ns);
+            if (ns.ReadOnly) {
+                kill_document_words_async();
+            } else {
+                _ = get_document_words_async(ns); // fire and forget
+            }
+		});
+		ns.CharAdded += (s, e) => {
+            var editor = (Scintilla)s;
+            if (editor.AutoCActive) return;
+            string prefix = get_current_word(editor);
+            if (prefix.Length < 2) return;
+            string list = build_autocomplete_list(autocomplete_hashset, prefix);
+            if (list.Length > 0) editor.AutoCShow(prefix.Length, list);
+        };
+        toggle_read_only(ns);
+	}
     // --
 	private void SBR_set_location_and_position_from_data() {
 		if (this.data == null) return ; 
@@ -350,7 +419,6 @@ public partial class Notepad__Form : Form {
             is_updating_words = false;
         }
     }
-
     private string get_current_word(Scintilla s) {
         int pos = s.CurrentPosition;
         int start = s.WordStartPosition(pos, true);
@@ -366,54 +434,7 @@ public partial class Notepad__Form : Form {
         list.Sort();
         return string.Join(" ", list);
     }
-    private void scintilla_tab_logic(Scintilla ns, TabPage page) {
-		ns.TextChanged += (s,e) => {
-			page.Text = unsave_marker+ get_filename(page.ToolTipText);
-		};
-        key_shortcut(ns, "ctrl","f", () => {
-            // -- todo 
-        });
-		key_shortcut(ns, "ctrl","s", () => {
-			TabPage current_page = page;
-			if (current_page == null) return ;
-			string path = current_page.ToolTipText;
-			Scintilla editor = ns;
-			if (editor==null) return ;
-			string content = editor.Text;
-			if (is_file(path)){
-				save(path, content); 
-				this.fullpath_scintilla_map[path] = editor;
-				set_fold_and_style(editor, path);
-				current_page.Text = get_filename(path);
-			} else {
-				string _path = save_dialog("txt", this.data.DialogDir);
-				if (_path == null) return ;
-				current_page.ToolTipText = _path;
-				save(_path, content); 
-				this.fullpath_scintilla_map[_path] = editor;
-				set_fold_and_style(editor, _path);
-				current_page.Text = get_filename(_path);
-			}
-		});	
-		key_shortcut(ns, "ctrl","r", async () => {
-			toggle_read_only(ns);
-            if (ns.ReadOnly) {
-                kill_document_words_async();
-            } else {
-                _ = get_document_words_async(ns); // fire and forget
-            }
-		});
-		ns.CharAdded += (s, e) => {
-            var editor = (Scintilla)s;
-            if (editor.AutoCActive) return;
-            string prefix = get_current_word(editor);
-            if (prefix.Length < 3) return;
-            string list = build_autocomplete_list(autocomplete_hashset, prefix);
-            if (list.Length > 0) editor.AutoCShow(prefix.Length, list);
-        };
-        toggle_read_only(ns);
-	}
-	private void toggle_read_only(Scintilla editor){
+    private void toggle_read_only(Scintilla editor){
 		editor.ReadOnly = !editor.ReadOnly;
 		if (editor.ReadOnly) {
 			for (int i = 0; i < 256; i++) {
