@@ -7,7 +7,8 @@ Build on top of Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ) b
 1. Fixed Dark Theme ; I don't care about your bad taste, it's hardcoded.
 2. Has less language support ; Just use a normal programming language, like a normal person.
 3. Lot of commands using keyboard shortcuts instead of a proper user interface ; Never played a game? Are u a boomer?  
-4. Beeps and Boops Sounds on some keybinds ; Don't know why, it's vibecoded ... 
+4. Beeps and Boops Sounds on some keybinds ; Don't know why, it's vibecoded ...
+5. It's under self-development ; I use this editor to build better versions of this editor, if something happens to this repo the development ends.
 
 ## Installation 
 1. Download .NET 10 at https://dotnet.microsoft.com/download
