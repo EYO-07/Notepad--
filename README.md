@@ -27,6 +27,7 @@ Build on top of Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ) b
 2. It will start on compact mode by default, use Ctrl+H to switch.
 3. You can navigate through you windows filesystem using the [ File Explorer ]
 4. Try to navigate to this directory and press enter to open some of .cs files from this project.
+5. Use Ctrl+R to switch between readonly and edition modes. It starts readonly by default. 
 
 ## Source Description:
 1. Codex_Notepad__.cs : Codex is the framework library, mainly generated with AI assistance (Vibecoding). I use the term "codex" way before ChatGPT, "codex" stands for "magical spell codex", a framework for magic helper functions generated or not by A.I. 
