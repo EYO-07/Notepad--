@@ -1,12 +1,23 @@
 # Notepad--
 A lesser version of Notepad++, don't like it? Use Notepad++ instead.
-Build on top of Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ) by desjarlais
+
+Build on top of Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ) by desjarlais.
 
 ### Features--
-1. "Fixed Dark Theme" // I don't care about your bad taste, it's hardcoded.
-2. "Has less language support" // Just use a normal programming language, like a normal person.
-3. "Lot of commands using keyboard shortcuts instead of a proper user interface" // Never played a game? Are u a boomer?  
-4. "Beeps and Boops Sounds on some keybinds" // Don't know why, it's vibecoded ... 
+1. Fixed Dark Theme ; I don't care about your bad taste, it's hardcoded.
+2. Has less language support ; Just use a normal programming language, like a normal person.
+3. Lot of commands using keyboard shortcuts instead of a proper user interface ; Never played a game? Are u a boomer?  
+4. Beeps and Boops Sounds on some keybinds ; Don't know why, it's vibecoded ... 
+
+## Installation 
+1. Download .NET 10 at https://dotnet.microsoft.com/download
+2. Install .NET SDK
+3. Download this repository
+4. Extract the contents of this repository
+5. Run the batch script release.bat to compile
+6. go to binary folder and open the program
+
+## Usage
 
 ### Editor Commands
 1. Ctrl+N       // New Empty Tab 
