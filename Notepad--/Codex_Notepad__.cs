@@ -4,6 +4,8 @@
 namespace Codex;
 // -- 
 using System.Runtime.InteropServices;
+//<PackageReference Include="Microsoft.PowerShell.SDK" Version="7.5.5" />
+//using System.Management.Automation; // Add reference to System.Management.Automation.dll
 using System.Drawing;
 using System.Windows.Forms;
 using System.IO;
@@ -11,13 +13,16 @@ using System.Text;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+//using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Reflection;
 using System.Linq;
+// --
 using Microsoft.VisualBasic.FileIO;
 using ScintillaNET;
+//using NetFwTypeLib; 
 
 // web view page will not be used on this version !!! 
 //using Microsoft.Web.WebView2.Core;
@@ -646,6 +651,32 @@ public static class Incantation_EVENTS {
     public static bool is_form_active(Form form) {
         return form.Handle == GetForegroundWindow();
     }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(
+        IntPtr hWnd,
+        IntPtr hWndInsertAfter,
+        int X,
+        int Y,
+        int cx,
+        int cy,
+        uint uFlags);
+    private static readonly IntPtr HWND_TOP = new IntPtr(0);
+    private static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOACTIVATE = 0x0010;
+    public static void bring_window_to_top(Form form) {
+        try {
+            SetWindowPos(form.Handle, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        } catch (Exception ex) {}
+    }
+    public static void bring_window_to_least(Form form) {
+        try {
+            SetWindowPos(form.Handle, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        } catch (Exception ex) {}
+    }
+    
 }
 
 public static class Incantation_MOUSE {
@@ -997,16 +1028,12 @@ public static class Incantation_PANEL {
 
         return split;
     }
-    public static SplitContainer new_vertical_split(Control ctrl1, Control ctrl2) {
-		return new_vertical_split(ctrl1, ctrl2, 200);
-	}
-	public static SplitContainer new_vertical_split(Control ctrl1, Control ctrl2, int splitter_dist) {
+	public static SplitContainer new_vertical_split(Control ctrl1, Control ctrl2) {
         var split = new SplitContainer {
             Dock = DockStyle.Fill,
             Orientation = Orientation.Vertical,
-            Panel1MinSize = 50,
-            Panel2MinSize = 50,
-            SplitterDistance = splitter_dist // adjust as needed
+            Panel1MinSize = 30,
+            Panel2MinSize = 30,
         };
         split.Panel1.Controls.Add(ctrl1);
         split.Panel2.Controls.Add(ctrl2);
@@ -1014,6 +1041,32 @@ public static class Incantation_PANEL {
         ctrl2.Dock = DockStyle.Fill;
         return split;
     }
+    public static void set_splitter_distance(SplitContainer split, int percentage) {
+        if (split == null) return;
+        if (percentage < 0 || percentage > 100)
+            throw new ArgumentOutOfRangeException(nameof(percentage), "Percentage must be between 1 and 100.");
+        // For vertical orientation, SplitterDistance is measured in pixels from the left edge
+        if (split.Orientation == Orientation.Vertical) {
+            int distance = (split.Width * percentage) / 100;
+            split.SplitterDistance = distance;
+        }
+        else {
+            // For horizontal orientation, SplitterDistance is measured in pixels from the top
+            int distance = (split.Height * percentage) / 100;
+            split.SplitterDistance = distance;
+        }
+    }
+
+    public static int get_focused_panel(SplitContainer split) {
+        if (split == null) return -1;
+
+        if (split.Panel1.ContainsFocus) return 1;
+        if (split.Panel2.ContainsFocus) return 2;
+
+        return -1; // focus is outside this SplitContainer
+    }
+
+
 }
 
 public static class Incantation_TREEVIEW {
@@ -1337,6 +1390,11 @@ public static class Incantation_TREEVIEW {
     public static DarkTreeView new_file_explorer_dark_tree() {
 		return new_file_explorer_dark_tree(new List<string>());
 	}
+    public static TreeNode? get_selected_one_node(DarkTreeView tree) {
+        var nodes = tree.GetSelectedNodes();
+        if (nodes.Count != 1) return null;        
+        return nodes[0];
+    }
 	public static DarkTreeView new_file_explorer_dark_tree(List<string> directories) {
 		DarkTreeView explorer = new_dark_tree("Explorer");
 		foreach( string path in get_drives() ){
@@ -1364,10 +1422,24 @@ public static class Incantation_TREEVIEW {
 			open_in_cmd(path);
 		});
 		explorer.MouseClick += (s,e) => {
-			// SBR_refresh_pointed_dir();
-			// SBR_copy_file_to_clipboard();
-			// SBR_log_selected_pointed_file_dir();
+            var node = get_selected_one_node(explorer);
+            if (node != null && node.Tag is string path) {
+                if ( is_dir(path) ) {
+                    filter_filesystem_node(node, new List<string>() );
+                } 
+            }
 		};
+        explorer.KeyDown += (s,e) => {
+            if (e.KeyCode == Keys.Right) {
+				var node = get_selected_one_node(explorer);
+                if (node != null && node.Tag is string path) {
+                    if ( is_dir(path) ) {
+                        filter_filesystem_node(node, new List<string>() );
+                    } 
+                }
+                return ;
+			}
+        };
         return explorer;
 	}
 }
@@ -1763,6 +1835,24 @@ foreach ($file in $files) {{
 }
 
 public static class Incantation_SCINTILLA {
+    // -- dark theme colors 
+	private static Color foreground_color = Color.FromArgb(255, 255, 255);
+	private static Color background_color = Color.FromArgb(10, 10, 15);
+	private static Color locked_background_color = Color.FromArgb(20, 20, 35);
+	private static Color fold_fore_color = Color.FromArgb(60, 60, 60);
+	private static Color fold_back_color = Color.FromArgb(255, 255, 255);
+	private static Color margin_fore_color = Color.FromArgb(120,120,120);
+	private static Color margin_back_color = Color.FromArgb(30,30,30); 
+	private static Color keyword1_color = Color.FromArgb(255, 153, 51); // orange 
+	private static Color keyword2_color = Color.FromArgb(0, 255, 0); // green 
+	private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
+	private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
+	private static Color number_fore_color = Color.Cyan;
+	private static Color number_back_color = Color.DarkBlue;
+	private static Color string_fore_color = Color.FromArgb(255, 0, 0); // red 
+	private static Color string_back_color = Color.FromArgb(20, 0, 0); // 
+    
+    // -- 
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
         ".csproj",
@@ -1788,9 +1878,18 @@ public static class Incantation_SCINTILLA {
         ".sh",
         ".ps1",
         ".ltx",
-        ".script"
+        ".script",
+        ".md"
 	};
-	private static Dictionary<string, string> ext_to_lexer = new Dictionary<string, string>() {
+	public static bool is_code_file(string filename_or_ext) {
+		if ( string.IsNullOrWhiteSpace(filename_or_ext) ) return false;
+		string ext = filename_or_ext;
+		if (filename_or_ext.Contains(".")) ext = Path.GetExtension(filename_or_ext);
+		ext = ext.ToLower();
+		return CODE_EXTS.Contains(ext);
+	}
+	// --
+    private static Dictionary<string, string> EXT_TO_LEXER = new Dictionary<string, string>() {
 		{".cs", "cpp"},
 		{".java", "cpp"},
 		{".c", "cpp"},
@@ -1802,8 +1901,9 @@ public static class Incantation_SCINTILLA {
 		{".ts", "cpp"},
 		{".json", "json"},
 		{".xml", "xml"},
-		{".html", "html"},
-		{".htm", "html"},
+		{".html", "xml"},
+		{".htm", "xml"},
+        {".csproj", "xml"},
 		{".css", "css"},
 		{".py", "python"},
         {".pyw", "python"},
@@ -1820,68 +1920,13 @@ public static class Incantation_SCINTILLA {
 		{".md", "markdown"},
 		{".txt", "null"}
 	};
-	public static bool is_code_file(string filename_or_ext) {
-		if ( string.IsNullOrWhiteSpace(filename_or_ext) ) return false;
-		string ext = filename_or_ext;
-		if (filename_or_ext.Contains(".")) ext = Path.GetExtension(filename_or_ext);
-		ext = ext.ToLower();
-		return CODE_EXTS.Contains(ext);
-	}
-	public static string filename_to_lexer(string filename_with_ext) {
+    public static string get_lexer_name(string filename_with_ext) {
         if ( string.IsNullOrWhiteSpace(filename_with_ext) ) return "null";
 		string ext = Path.GetExtension(filename_with_ext).ToLowerInvariant();
-		if (ext_to_lexer.TryGetValue(ext, out string lexer)) return lexer;
+		if (EXT_TO_LEXER.TryGetValue(ext, out string lexer)) return lexer;
 		return "null"; // fallback if unknown
 	}
 	
-	// -- colors 
-	private static Color foreground_color = Color.FromArgb(255, 255, 255);
-	private static Color background_color = Color.FromArgb(10, 10, 15);
-	private static Color locked_background_color = Color.FromArgb(10, 10, 35);
-	private static Color fold_fore_color = Color.FromArgb(60, 60, 60);
-	private static Color fold_back_color = Color.FromArgb(255, 255, 255);
-	private static Color margin_fore_color = Color.FromArgb(120,120,120);
-	private static Color margin_back_color = Color.FromArgb(30,30,30); 
-	private static Color keyword1_color = Color.FromArgb(255, 153, 51); // orange 
-	private static Color keyword2_color = Color.FromArgb(0, 255, 0); // green 
-	private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
-	private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
-	private static Color number_fore_color = Color.Cyan;
-	private static Color number_back_color = Color.DarkBlue;
-	private static Color string_fore_color = Color.FromArgb(255, 0, 0); // red 
-	private static Color string_back_color = Color.FromArgb(20, 0, 0); // 
-
-    public static void highlight_set(HashSet<string> set, Scintilla editor, Color forecolor, Color backcolor) {
-        // Define a custom style ID that won't clash with the lexer
-        const int CUSTOM_STYLE = 32; // pick a number > 31 to avoid conflicts
-
-        // Configure the style appearance
-        editor.Styles[CUSTOM_STYLE].ForeColor = forecolor;
-        editor.Styles[CUSTOM_STYLE].BackColor = backcolor;
-        editor.Styles[CUSTOM_STYLE].Bold = true;
-
-        // Reset all previous custom styling
-        editor.StartStyling(0);
-        editor.SetStyling(editor.TextLength, 0);
-
-        // Scan through the text and apply custom style to matches
-        foreach (string keyword in set)
-        {
-            int startPos = 0;
-            while (true)
-            {
-                int foundPos = editor.Text.IndexOf(keyword, startPos, StringComparison.OrdinalIgnoreCase);
-                if (foundPos == -1) break;
-
-                // Apply style to the keyword range
-                editor.StartStyling(foundPos);
-                editor.SetStyling(keyword.Length, CUSTOM_STYLE);
-
-                startPos = foundPos + keyword.Length;
-            }
-        }
-    }
-
 	// -- 
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
@@ -1938,16 +1983,13 @@ public static class Incantation_SCINTILLA {
 	}
 	public static void set_fold_and_style(Scintilla editor, string filename) {
 		editor.Tag = filename;
-		string lexer = filename_to_lexer(filename);
 		try {
-			set_language_folding(editor, lexer);
+			set_language_folding(editor, get_lexer_name(filename) );
 			set_language_style(editor, filename);
 		} catch (Exception e) {
 			
 		}
 	}
-	
-	// --
 	public static void set_language_folding(Scintilla scintilla, string lexer) {
 		// --
 		// Set the lexer
@@ -2000,6 +2042,32 @@ public static class Incantation_SCINTILLA {
 		// Enable automatic folding
 		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
 	}
+    public static void set_keyshortcuts(Scintilla editor) {
+        key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
+		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
+		key_shortcut(editor, "alt", "o", ()=>{toggle_closest_fold_marker(editor);});
+        key_shortcut(editor, "ctrl", "d", ()=>{
+            string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) { 
+                token =  input_dialog(null, "Find Previous", "Input Token", "");
+            }
+            if ( string.IsNullOrWhiteSpace(token) ) return ;
+            find_prev_token(editor, token);
+        });
+        key_shortcut(editor, "ctrl", "f", ()=>{
+            string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) { 
+                token =  input_dialog(null, "Find Next", "Input Token", "");
+            }
+            if ( string.IsNullOrWhiteSpace(token) ) return ;
+            find_next_token(editor, token);
+        });
+        key_shortcut(editor, "ctrl", "q", ()=>{
+            toggle_comment_lines(editor); 
+        });
+	}
+
+    // language style - dark theme 
 	public static void set_language_style(Scintilla scintilla, string filename) {
 		if ( string.IsNullOrWhiteSpace(filename) ) return ;
 		string ext = filename;
@@ -2034,6 +2102,12 @@ public static class Incantation_SCINTILLA {
             case ".bat":
             case ".sh":
                 set_bash_style(scintilla);
+                break;
+            case ".htm":
+            case ".html":
+            case ".xml":
+            case ".csproj":
+                set_html_style(scintilla);
                 break;
 		}
 	}
@@ -2118,7 +2192,6 @@ public static class Incantation_SCINTILLA {
         scintilla.SetKeywords(1,
         "assert collectgarbage dofile error getmetatable ipairs load loadfile next pairs pcall print rawequal rawget rawlen rawset require select setmetatable tonumber tostring type xpcall");
     }
-
     public static void set_bash_style(Scintilla scintilla) {
         // Default
         scintilla.Styles[0].ForeColor = Color.Silver;
@@ -2157,10 +2230,42 @@ public static class Incantation_SCINTILLA {
         scintilla.SetKeywords(1,
             "echo printf read cd pwd export unset alias unalias exit return test true false shift source");
     }
+    public static void set_html_style(Scintilla scintilla) {
+        // Default
+        scintilla.Styles[Style.Html.Default].ForeColor = Color.Silver;
+        // Tags
+        scintilla.Styles[Style.Html.Tag].ForeColor = keyword1_color;
+        // Unknown tags
+//        scintilla.Styles[Style.Html.UnknownTag].ForeColor = Color.Red;
+        // Attributes
+        scintilla.Styles[Style.Html.Attribute].ForeColor = keyword1_color;
+        // Unknown attributes
+//        scintilla.Styles[Style.Html.UnknownAttribute].ForeColor = Color.Red;
+        // Numbers
+        scintilla.Styles[Style.Html.Number].ForeColor = number_fore_color;
+        scintilla.Styles[Style.Html.Number].BackColor = number_back_color;
+        // Strings
+//        scintilla.Styles[Style.Html.String].ForeColor = string_fore_color;
+//        scintilla.Styles[Style.Html.String].BackColor = string_back_color;
+        scintilla.Styles[Style.Html.Other].ForeColor = string_fore_color;
+        scintilla.Styles[Style.Html.Other].BackColor = string_back_color;
+        // Comments
+        scintilla.Styles[Style.Html.Comment].ForeColor = comment_fore_color;
+        scintilla.Styles[Style.Html.Comment].BackColor = comment_back_color;
+        // Entities
+        scintilla.Styles[Style.Html.Entity].ForeColor = Color.LightGreen;
+        // Operators
+//        scintilla.Styles[Style.Html.Operator].ForeColor = Color.Yellow;
+        // Keywords (HTML elements)
+        scintilla.SetKeywords(0,
+            "html head body div span p a img h1 h2 h3 h4 h5 h6 table tr td th ul ol li form input button select option textarea script style link meta");
 
-    public static void set_rust_style(Scintilla scintilla) {}
-    public static void set_html_style(Scintilla scintilla){}
-    public static void set_ahk_style(Scintilla scintilla){}
+        // Common attributes
+        scintilla.SetKeywords(1,
+            "id class src href alt title type value name rel action method style");
+    }
+    
+    public static void set_ahk_style(Scintilla scintilla) {}
     
     public static void set_c_family_style(Scintilla scintilla) {
 		// Configure the CPP (C#) lexer styles
@@ -2191,7 +2296,6 @@ public static class Incantation_SCINTILLA {
 		scintilla.SetKeywords(0, "abstract as base break case catch checked continue default delegate do else event explicit extern false finally fixed for foreach goto if implicit in interface internal is lock namespace new null object operator out override params private protected public readonly ref return sealed sizeof stackalloc switch this throw true try typeof unchecked unsafe using virtual while");
 		scintilla.SetKeywords(1, "bool byte char class const decimal double enum float int long sbyte short static string struct uint ulong ushort void");
 	}
-	
 	public static void set_cpp_style(Scintilla scintilla) {
         set_c_family_style(scintilla);
         // C++ keywords
@@ -2210,34 +2314,39 @@ public static class Incantation_SCINTILLA {
         scintilla.SetKeywords(1,
         "bool size_t ptrdiff_t");
     }
-	
-	// -- 
-	public static void set_keyshortcuts(Scintilla editor) {
-        key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
-		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
-		key_shortcut(editor, "alt", "o", ()=>{toggle_closest_fold_marker(editor);});
-        key_shortcut(editor, "ctrl", "d", ()=>{
-            string token = get_selected_token(editor);
-            if ( string.IsNullOrWhiteSpace(token) ) { 
-                token =  input_dialog(null, "Find Previous", "Input Token", "");
+
+    public static void highlight_set(HashSet<string> set, Scintilla editor, Color forecolor, Color backcolor) {
+        // Define a custom style ID that won't clash with the lexer
+        const int CUSTOM_STYLE = 32; // pick a number > 31 to avoid conflicts
+
+        // Configure the style appearance
+        editor.Styles[CUSTOM_STYLE].ForeColor = forecolor;
+        editor.Styles[CUSTOM_STYLE].BackColor = backcolor;
+        editor.Styles[CUSTOM_STYLE].Bold = true;
+
+        // Reset all previous custom styling
+        editor.StartStyling(0);
+        editor.SetStyling(editor.TextLength, 0);
+
+        // Scan through the text and apply custom style to matches
+        foreach (string keyword in set)
+        {
+            int startPos = 0;
+            while (true)
+            {
+                int foundPos = editor.Text.IndexOf(keyword, startPos, StringComparison.OrdinalIgnoreCase);
+                if (foundPos == -1) break;
+
+                // Apply style to the keyword range
+                editor.StartStyling(foundPos);
+                editor.SetStyling(keyword.Length, CUSTOM_STYLE);
+
+                startPos = foundPos + keyword.Length;
             }
-            if ( string.IsNullOrWhiteSpace(token) ) return ;
-            find_prev_token(editor, token);
-        });
-        key_shortcut(editor, "ctrl", "f", ()=>{
-            string token = get_selected_token(editor);
-            if ( string.IsNullOrWhiteSpace(token) ) { 
-                token =  input_dialog(null, "Find Next", "Input Token", "");
-            }
-            if ( string.IsNullOrWhiteSpace(token) ) return ;
-            find_next_token(editor, token);
-        });
-        key_shortcut(editor, "ctrl", "q", ()=>{
-            toggle_comment_lines(editor); 
-        });
-	}
-    
-    // 
+        }
+    }
+
+    // -- comment helpers 
     public static void toggle_comment_lines(Scintilla editor) {
         if (editor == null) return;
 
@@ -2311,7 +2420,7 @@ public static class Incantation_SCINTILLA {
         }
     }
 	
-	// -- fold 
+	// -- fold helpers
 	public static void fold_all(Scintilla editor) {
 		const int SCI_FOLDALL = 2662;
 		const int SC_FOLDACTION_CONTRACT = 0;
@@ -2419,7 +2528,7 @@ public static class Incantation_SCINTILLA {
         unfold_line(editor, line);
     }
 
-    // -- find 
+    // -- find helpers 
     public static string get_selected_token(Scintilla editor) {
         if (editor == null) return "";
         string text = editor.SelectedText;
@@ -2433,20 +2542,24 @@ public static class Incantation_SCINTILLA {
     }
     public static void find_next_token(Scintilla editor, string token) {
         if (editor == null || string.IsNullOrEmpty(token)) return;
+        unfold_all(editor);
         int start = editor.CurrentPosition;
         int end = editor.TextLength;
         editor.TargetStart = start;
         editor.TargetEnd = end;
         int pos = editor.SearchInTarget(token);
         if (pos != -1) {
-            editor.SetSelection(pos + token.Length, pos);
+            editor.SetSelection(pos + token.Length, pos);               
             editor.ScrollCaret();
-            unfold_all(editor);
             smart_fold_all(editor);
+
+            int line = editor.LineFromPosition(editor.CurrentPosition);
+            editor.DirectMessage(2234, (IntPtr)line, IntPtr.Zero); // Ensure visible
         }
     }
     public static void find_prev_token(Scintilla editor, string token) {
         if (editor == null || string.IsNullOrEmpty(token)) return;
+        unfold_all(editor);
         const int SCFIND_WHOLEWORD = 2;
         int caret = editor.CurrentPosition;
         // Find bounds of the word under the caret
@@ -2467,8 +2580,10 @@ public static class Incantation_SCINTILLA {
         if (lastPos != -1) {
             editor.SetSelection(lastPos + token.Length, lastPos);
             editor.ScrollCaret();
-            unfold_all(editor);
             smart_fold_all(editor);
+
+            int line = editor.LineFromPosition(editor.CurrentPosition);
+            editor.DirectMessage(2234, (IntPtr)line, IntPtr.Zero); // Ensure visible
         }
     }
 }
@@ -2811,9 +2926,7 @@ public class DarkTabControl : TabControl {
 		this.DrawMode = TabDrawMode.OwnerDrawFixed;
 		this.ItemSize = new Size(100, 24); // Fixed tab size
 	}
-
-	protected override void OnDrawItem(DrawItemEventArgs e)
-	{
+	protected override void OnDrawItem(DrawItemEventArgs e) {
 		TabPage tab = this.TabPages[e.Index];
 		bool selected = (e.Index == this.SelectedIndex);
 
@@ -2892,6 +3005,7 @@ public class DarkTabControl : TabControl {
 	}
 }
 
+// modified for notepad-- 
 public class DarkTreeView : MultiSelectTreeView {
 	public DarkTreeView() {
 		// Use owner-drawn mode for full custom rendering
@@ -2961,21 +3075,23 @@ public class DarkTreeView : MultiSelectTreeView {
 			if (Directory.Exists(path))
 				return Color.FromArgb(0,255,0); // Folder
 			if (File.Exists(path)) {
-				string ext = get_extension(path);
-				switch (ext) { 
-					case ".exe": return exe_color;
-					case ".ini": return special_file_color; 
-					case ".json": return special_file_color;
-					case ".bat": return special_file_color;
-					case ".dll": return special_file_color; 
-					case ".txt": return editable_color; 
-					case ".pdf": return media_color; 
-					case ".mp3": return media_color;
-					case ".mp4": return media_color;
-					case ".mkv": return media_color;
-					case ".zip": return special_file_color;
-					case ".7z": return special_file_color;
-				}
+                if ( is_code_file(path) ) return exe_color; 
+//				string ext = get_extension(path);
+//                
+//				switch (ext) { 
+//					case ".exe": return special_file_color;
+//					case ".ini": return special_file_color; 
+//					case ".json": return special_file_color;
+//					case ".bat": return special_file_color;
+//					case ".dll": return special_file_color; 
+//					case ".txt": return editable_color; 
+//					case ".pdf": return media_color; 
+//					case ".mp3": return media_color;
+//					case ".mp4": return media_color;
+//					case ".mkv": return media_color;
+//					case ".zip": return special_file_color;
+//					case ".7z": return special_file_color;
+//				}
 				return Color.FromArgb(255,255,255);     // File
 			} 
 		}
@@ -3332,6 +3448,124 @@ public static class Conjuration {
 			return false;
 		}
 	}
+    
+    // -- firewall 
+    /*
+    public static void BlockApplication(string ruleName, string appPath) {
+        // Get firewall policy
+        INetFwPolicy2 firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(
+            Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
+        // Create a new rule
+        INetFwRule rule = (INetFwRule)Activator.CreateInstance(
+            Type.GetTypeFromProgID("HNetCfg.FWRule"));
+        rule.Name = ruleName;
+        rule.ApplicationName = appPath;
+        rule.Action = NET_FW_ACTION_.NET_FW_ACTION_BLOCK;
+        rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
+        rule.Enabled = true;
+        // Add rule
+        firewallPolicy.Rules.Add(rule);
+    }
+    public static void UnblockApplication(string ruleName) {
+        INetFwPolicy2 firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(
+            Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
+
+        // Remove rule by name
+        firewallPolicy.Rules.Remove(ruleName);
+    }
+    */
+    /*
+    public static bool block_app_windows_firewall(string ruleName, string dirPath) {
+        if ( !Directory.Exists(dirPath) ) return false;
+        try {
+            using (PowerShell ps = PowerShell.Create()) {
+                ps.AddScript($@"
+                    New-NetFirewallRule -DisplayName '{ruleName}' `
+                                        -Direction Outbound `
+                                        -Program '{dirPath}\*' `
+                                        -Action Block
+                ");
+                Collection<PSObject> results = ps.Invoke();
+                return ps.HadErrors == false;
+            }
+        } catch {
+            return false;
+        }
+    }
+    public static bool unblock_app_windows_firewall(string ruleName) {
+        try {
+            using (PowerShell ps = PowerShell.Create()) {
+                ps.AddScript($@"Remove-NetFirewallRule -DisplayName '{ruleName}'");
+                ps.Invoke();
+                return ps.HadErrors == false;
+            }
+        } catch {
+            return false;
+        }
+    }
+    */
 }
+
+// NOT WORKING 
+public static class Conjuration_GLOBALHOTKEY {
+    // Win32 API imports
+    [DllImport("user32.dll")]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+    [DllImport("user32.dll")]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    // Modifier keys
+    private const uint MOD_ALT = 0x0001;
+    private const uint MOD_CONTROL = 0x0002;
+    private const uint MOD_SHIFT = 0x0004;
+    private const uint MOD_WIN = 0x0008;
+    private const int WM_HOTKEY = 0x0312;
+
+    // Store registered hotkeys
+    private static Dictionary<int, Action> hotkeyActions = new Dictionary<int, Action>();
+    private static int hotkeyIdCounter = 0;
+
+    public static bool register_global_hotkey(Keys modifier, Keys key, Action action) {
+        try {
+            uint mod = 0;
+            if (modifier.HasFlag(Keys.Alt)) mod |= MOD_ALT;
+            if (modifier.HasFlag(Keys.Control)) mod |= MOD_CONTROL;
+            if (modifier.HasFlag(Keys.Shift)) mod |= MOD_SHIFT;
+            if (modifier.HasFlag(Keys.LWin) || modifier.HasFlag(Keys.RWin)) mod |= MOD_WIN;
+            int id = ++hotkeyIdCounter;
+            bool success = RegisterHotKey(IntPtr.Zero, id, mod, (uint)key);
+            if (success) hotkeyActions[id] = action;
+            return success;
+        } catch {
+            return false;
+        }
+    }
+    public static void unregister_all_hotkeys() {
+        try {
+            foreach (var id in hotkeyActions.Keys) UnregisterHotKey(IntPtr.Zero, id);
+            hotkeyActions.Clear();
+        } catch {}
+    }
+
+    // Hook into Application message loop
+    public static void ProcessHotKeyMessage(ref Message m) {
+        if (m.Msg == WM_HOTKEY) {
+            int id = m.WParam.ToInt32();
+            if (hotkeyActions.TryGetValue(id, out var action)) {
+                action?.Invoke();
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
 
 // -- END 
