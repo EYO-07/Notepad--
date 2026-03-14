@@ -865,6 +865,15 @@ public static class Incantation_TEXTBOX {
 
 public static class Incantation_CONTEXTMENU {
     // Context Menu 
+    public static ToolStripMenuItem add_item(ContextMenuStrip menu, string text) {
+        var menuItem = new ToolStripMenuItem(text);
+        menu.Items.Add(menuItem);
+        return menuItem;
+    } 
+    public static ToolStripMenuItem add_context_menu_item(Control ctrl, string text) {
+        var menu = ctrl.ContextMenuStrip; 
+        return add_item(menu, text);
+    }
 	public static ContextMenuStrip add_context_menu(Control? control, List<object> items) {
 		var menu = new ContextMenuStrip();
 		foreach (var item in items) {

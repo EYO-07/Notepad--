@@ -19,6 +19,7 @@ using static Codex.Incantation_CONTEXTMENU;
 using static Codex.Incantation_TEXTBOX;
 using static Codex.Incantation_TABS;
 using static Codex.Incantation_EVENTS;
+using static Codex.Conjuration;
 //using static Codex.Conjuration_GLOBALHOTKEY;
 // -- ambiguities 
 using BorderStyle = System.Windows.Forms.BorderStyle;
@@ -73,6 +74,7 @@ public partial class Notepad__Form : Form {
 		this.left_tabs = new_dark_tabs();
 		this.right_tabs = new_dark_tabs();
 		this.explorer = new_file_explorer_dark_tree(this.data.Directories);
+        add_context_menu_item(this.explorer, "Open File/Directory");
 		this.help_scintilla = new_scintilla();
 		this.help_scintilla.Text = """
 // [ Notepad-- ] : A lesser version of Notepad++, don't like it? Use Notepad++ instead.
@@ -209,9 +211,7 @@ public partial class Notepad__Form : Form {
 		// explorer 
 		this.explorer.KeyDown += (s,e) => {
 			if (e.KeyCode == Keys.Enter) {
-				string filename = get_selected_filename_from_explorer(this.explorer);
-				if (! add_new_scintilla_tab(this.left_tabs, filename) ) return ;
-				this.data.LeftFiles.Add(filename);
+				SBR_open_file_or_dir();
 			}
 			if (e.KeyCode == Keys.Delete) {
 				SBR_rem_selected_dir_to_exp();
@@ -233,7 +233,10 @@ public partial class Notepad__Form : Form {
 //				}
 //			}
 		}; 
-		// some logic features are on add_new_scintilla_tab, scintilla_tab_logic function !
+		set_action(this.explorer.ContextMenuStrip, "Open File/Directory", (s,e)=>{
+            SBR_open_file_or_dir();
+        });
+        // some logic features are on add_new_scintilla_tab, scintilla_tab_logic function !
 	}
 	private void _theme() {
         hide_titlebar(this);
@@ -347,6 +350,16 @@ public partial class Notepad__Form : Form {
 		scintilla_tab_logic(ns, page);
 	}
     // -- subroutines 
+    private void SBR_open_file_or_dir() {
+        string path = get_selected_filename_from_explorer(this.explorer);
+        if ( string.IsNullOrWhiteSpace(path) ) return ;
+        if ( is_file(path) ) {
+            if ( !add_new_scintilla_tab(this.left_tabs, path) ) return ;
+            this.data.LeftFiles.Add(path);
+        } else if ( is_dir(path) ) {
+            open_in_windows_explorer(path);
+        }
+    }
 	private void SBR_add_selected_dir_to_exp() {
 		var str_list = get_fullpath( this.explorer.GetSelectedNodes() );
 		if (str_list.Count == 0) return ;
