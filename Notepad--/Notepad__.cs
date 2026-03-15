@@ -70,10 +70,13 @@ public partial class Notepad__Form : Form {
     private bool hidden_titlebar = true;
     // -- 
 	private Dictionary<string, Scintilla> fullpath_scintilla_map = new();
+    private Dictionary<string, int> fullpath_lines_map = new();
 	private string unsave_marker = "!! ";
 	private float font_step = 0.5f;
     private HashSet<string> autocomplete_hashset = new();
     private string search_token = "";
+    private int char_added_debouncer = 0;
+    private int char_added_debouncer_max = 20;
 //    private int current_split_percentage = 55;
 	// == methods 
 	// -- user interface workflow 
@@ -155,6 +158,8 @@ public partial class Notepad__Form : Form {
 	}
 	private void _logic() {
         // main form 
+        this.DoubleBuffered = true;
+		this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
 		this.FormClosing += (s, e) => {
 			SBR_save_session_data();
 		};
@@ -326,6 +331,15 @@ public partial class Notepad__Form : Form {
 		});
 		ns.CharAdded += (s, e) => {
             var editor = (Scintilla)s;
+            int line_count = editor.Lines.Count;
+            if (line_count > 3000) {
+                if (char_added_debouncer < (line_count/1000)*2) {
+                    char_added_debouncer++;
+                    return;
+                } else {
+                    char_added_debouncer = 0;
+                }
+            }
             if (editor.AutoCActive) return;
             string prefix = get_current_word(editor);
             if (prefix.Length < 2) return;

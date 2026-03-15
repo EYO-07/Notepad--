@@ -1846,22 +1846,21 @@ foreach ($file in $files) {{
 
 public static class Incantation_SCINTILLA {
     // -- dark theme colors 
-	private static Color foreground_color = Color.FromArgb(255, 255, 255);
-	private static Color background_color = Color.FromArgb(10, 10, 15);
-	private static Color locked_background_color = Color.FromArgb(20, 20, 35);
-	private static Color fold_fore_color = Color.FromArgb(60, 60, 60);
-	private static Color fold_back_color = Color.FromArgb(255, 255, 255);
-	private static Color margin_fore_color = Color.FromArgb(120,120,120);
-	private static Color margin_back_color = Color.FromArgb(30,30,30); 
-	private static Color keyword1_color = Color.FromArgb(255, 153, 51); // orange 
-	private static Color keyword2_color = Color.FromArgb(0, 255, 0); // green 
-	private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
-	private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
-	private static Color number_fore_color = Color.Cyan;
-	private static Color number_back_color = Color.DarkBlue;
-	private static Color string_fore_color = Color.FromArgb(255, 0, 0); // red 
-	private static Color string_back_color = Color.FromArgb(20, 0, 0); // 
-    
+    private static Color foreground_color = Color.FromArgb(255, 255, 255);
+    private static Color background_color = Color.FromArgb(10, 10, 15);
+    private static Color locked_background_color = Color.FromArgb(20, 20, 35);
+    private static Color fold_fore_color = Color.FromArgb(60, 60, 60);
+    private static Color fold_back_color = Color.FromArgb(255, 255, 255);
+    private static Color margin_fore_color = Color.FromArgb(120,120,120);
+    private static Color margin_back_color = Color.FromArgb(30,30,30); 
+    private static Color keyword1_color = Color.FromArgb(255, 153, 51); // orange 
+    private static Color keyword2_color = Color.FromArgb(0, 255, 0); // green 
+    private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
+    private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
+    private static Color number_fore_color = Color.Cyan;
+    private static Color number_back_color = Color.DarkBlue;
+    private static Color string_fore_color = Color.FromArgb(255, 0, 0); // red 
+    private static Color string_back_color = Color.FromArgb(20, 0, 0); // 
     // -- 
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
@@ -1936,7 +1935,6 @@ public static class Incantation_SCINTILLA {
 		if (EXT_TO_LEXER.TryGetValue(ext, out string lexer)) return lexer;
 		return "null"; // fallback if unknown
 	}
-	
 	// -- 
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
@@ -2121,7 +2119,6 @@ public static class Incantation_SCINTILLA {
                 break;
 		}
 	}
-
     public static void set_py_style(Scintilla scintilla) {
         // Default
         scintilla.Styles[Style.Python.Default].ForeColor = Color.Silver;
@@ -2504,19 +2501,39 @@ public static class Incantation_SCINTILLA {
             }
         }
     }
-	public static void toggle_closest_fold_marker(Scintilla editor) {
-		int pos = editor.CurrentPosition;
-		int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
 
-		for (int i = line; i >= 0; i--) {
-			int level = (int)editor.DirectMessage(2223, (IntPtr)i);
-			if ((level & 0x2000) != 0) {
-				editor.DirectMessage(2231, (IntPtr)i); // SCI_TOGGLEFOLD
-				break;
-			}
-		}
-	}
-	public static int get_current_caret_line(Scintilla editor) {
+//	public static void toggle_closest_fold_marker_DEPR(Scintilla editor) {
+//		int pos = editor.CurrentPosition;
+//		int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
+//		for (int i = line; i >= 0; i--) {
+//			int level = (int)editor.DirectMessage(2223, (IntPtr)i);
+//			if ((level & 0x2000) != 0) {
+//				editor.DirectMessage(2231, (IntPtr)i); // SCI_TOGGLEFOLD
+//				break;
+//			}
+//		}
+//	}
+    
+    public static void toggle_closest_fold_marker(Scintilla editor) {
+        int pos = editor.CurrentPosition;        
+        // 1. Force the lexer to update the fold levels for the current area
+        // This ensures C++ levels are accurate before we check them.
+        int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
+        // 2. Use the built-in logic to find the fold header for this line
+        // SCI_GETFOLDPARENT (2225) returns the index of the line that is the 
+        // parent of the current line's fold block.
+        int parentLine = (int)editor.DirectMessage(2225, (IntPtr)line);
+        // If the current line itself is a header, SCI_GETFOLDPARENT usually 
+        // returns the parent above it. We check if the current line is a header first.
+        int currentLevel = (int)editor.DirectMessage(2223, (IntPtr)line);
+        bool isHeader = (currentLevel & 0x2000) != 0;
+        int targetLine = isHeader ? line : parentLine;
+        if (targetLine >= 0) {
+            editor.DirectMessage(2231, (IntPtr)targetLine); // SCI_TOGGLEFOLD
+        }
+    }
+
+    public static int get_current_caret_line(Scintilla editor) {
         if (editor == null) return -1;
         int pos = (int)editor.DirectMessage(2008); // SCI_GETCURRENTPOS
         int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
