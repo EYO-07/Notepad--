@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 //using System.Collections.ObjectModel;
@@ -2595,6 +2596,47 @@ public static class Incantation_SCINTILLA {
             editor.DirectMessage(2234, (IntPtr)line, IntPtr.Zero); // Ensure visible
         }
     }
+
+    public static void apply_highlight_for_file_directives(Scintilla editor) {
+        var directivePattern = @"\{Notepad--;([^}]*)\}";
+        var regex = new Regex(directivePattern);
+        for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
+            var lineText = editor.Lines[i].Text;
+            var match = regex.Match(lineText);
+            if (!match.Success) continue;
+            var directives = match.Groups[1].Value.Split(';');
+            int styleId = 32; // start custom styles after predefined ones
+            foreach (var directive in directives) {
+                var parts = directive.Split(':');
+                if (parts.Length != 2) continue;
+                var colorName = parts[0].Trim();
+                var keywords = parts[1].Split(',')
+                                       .Select(k => k.Trim())
+                                       .Where(k => k.Length > 0);
+                // Assign style color
+                Color c = Color.FromName(colorName);
+                if ( !editor.ReadOnly ) {
+                    editor.Styles[styleId].ForeColor = keyword2_color;
+                } else {
+                    editor.Styles[styleId].ForeColor = c;
+                }
+                // Highlight keywords across document
+                foreach (var keyword in keywords) {
+                    int startPos = 0;
+                    while (true) {
+                        editor.TargetStart = startPos;
+                        editor.TargetEnd = editor.TextLength;
+                        int foundPos = editor.SearchInTarget(keyword);
+                        if (foundPos == -1) break;
+                        editor.StartStyling(foundPos);
+                        editor.SetStyling(keyword.Length, styleId);
+                        startPos = foundPos + keyword.Length;
+                    }
+                }
+                styleId++;
+            }
+        }
+    }
 }
 
 /* for web view 2 which will not be used on this version !!! 
@@ -2927,29 +2969,24 @@ public static class Incantation_WEBVIEW {
 
 // custom widget classes 
 public class DarkTabControl : TabControl {
-	public DarkTabControl() {
-		// Enable custom drawing and optimize painting
-		this.SetStyle(ControlStyles.UserPaint, true);
-		this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-		this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
-		this.DrawMode = TabDrawMode.OwnerDrawFixed;
-		this.ItemSize = new Size(100, 24); // Fixed tab size
-	}
+    // == attributes 
+    private Color textColor = Color.FromArgb(220, 220, 220); // Matches Notepad_Form text color
+    private Color tabBackColor_selected = Color.FromArgb(10, 10, 15);
+    private Color tabBackColor_notselected = Color.FromArgb(0, 0, 0);
+    private Color borderColor = Color.FromArgb(0, 0, 255); // Thin border color
+    // == methods 
+    public void change_border_color(Color color) {
+        this.borderColor = color;
+    }
+    // -- overrides
 	protected override void OnDrawItem(DrawItemEventArgs e) {
 		TabPage tab = this.TabPages[e.Index];
 		bool selected = (e.Index == this.SelectedIndex);
-
-		// Define colors to match Notepad_Form theme
-		Color tabBackColor = selected ? Color.FromArgb(10, 10, 15) : Color.FromArgb(0, 0, 0);
-		Color textColor = Color.FromArgb(220, 220, 220); // Matches Notepad_Form text color
-		Color borderColor = Color.FromArgb(0, 0, 255); // Thin border color
-
+        Color tabBackColor = selected ? tabBackColor_selected : tabBackColor_notselected;
 		// Draw tab background
-		using (SolidBrush brush = new SolidBrush(tabBackColor))
-		{
+		using (SolidBrush brush = new SolidBrush(tabBackColor)) {
 			e.Graphics.FillRectangle(brush, e.Bounds);
 		}
-
 		// Draw tab text
 		TextRenderer.DrawText(
 			e.Graphics,
@@ -2959,43 +2996,31 @@ public class DarkTabControl : TabControl {
 			textColor,
 			TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
 		);
-
 		// Draw a thin border around the selected tab
-		if (selected)
-		{
-			using (Pen pen = new Pen(borderColor, 1))
-			{
+		if (selected){
+			using (Pen pen = new Pen(borderColor, 1)) {
 				Rectangle borderRect = new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1, e.Bounds.Height - 1);
 				e.Graphics.DrawRectangle(pen, borderRect);
 			}
 		}
 	}
-
-	protected override void OnPaint(PaintEventArgs e)
-	{
+	protected override void OnPaint(PaintEventArgs e) {
 		// Clear the entire control with the background color
-		using (SolidBrush brush = new SolidBrush(Color.FromArgb(10, 10, 15))) // Matches Notepad_Form background
-		{
+		using ( SolidBrush brush = new SolidBrush(Color.FromArgb(10, 10, 15)) ) {
 			e.Graphics.FillRectangle(brush, this.ClientRectangle);
 		}
-
 		// Draw the content area (below tabs) with the same background
 		Rectangle contentRect = new Rectangle(0, this.ItemSize.Height, this.Width, this.Height - this.ItemSize.Height);
-		using (SolidBrush brush = new SolidBrush(Color.FromArgb(10, 10, 15)))
-		{
+		using (SolidBrush brush = new SolidBrush(Color.FromArgb(10, 10, 15))) {
 			e.Graphics.FillRectangle(brush, contentRect);
 		}
-
 		// Draw a thin border around the content area
-		using (Pen pen = new Pen(Color.FromArgb(100, 100, 100), 1))
-		{
+		using (Pen pen = new Pen(Color.FromArgb(100, 100, 100), 1)) {
 			Rectangle borderRect = new Rectangle(0, this.ItemSize.Height, this.Width - 1, this.Height - this.ItemSize.Height - 1);
 			e.Graphics.DrawRectangle(pen, borderRect);
 		}
-
 		// Draw each tab
-		for (int i = 0; i < this.TabCount; i++)
-		{
+		for (int i = 0; i < this.TabCount; i++) {
 			Rectangle tabRect = this.GetTabRect(i);
 			DrawItemEventArgs args = new DrawItemEventArgs(
 				e.Graphics,
@@ -3007,10 +3032,17 @@ public class DarkTabControl : TabControl {
 			OnDrawItem(args);
 		}
 	}
-
-	protected override void OnPaintBackground(PaintEventArgs pevent)
-	{
+	protected override void OnPaintBackground(PaintEventArgs pevent) {
 		// Do nothing to prevent default background painting (avoids white parts)
+	}
+    // -- constructors
+    public DarkTabControl() {
+		// Enable custom drawing and optimize painting
+		this.SetStyle(ControlStyles.UserPaint, true);
+		this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+		this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+		this.DrawMode = TabDrawMode.OwnerDrawFixed;
+		this.ItemSize = new Size(100, 24); // Fixed tab size
 	}
 }
 

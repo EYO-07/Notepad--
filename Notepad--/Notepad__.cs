@@ -49,24 +49,31 @@ public class Form_DATA {
 
 public partial class Notepad__Form : Form {
 	// == attributes 
+    // -- session data
 	private Form_DATA? data = null;
 	private string data_filename = "Notepad--.sav";
-	private SplitContainer main_panel;
+	// -- gui components
+    private SplitContainer main_panel;
 	private DarkTabControl left_tabs;
 	private DarkTabControl right_tabs;
 	private DarkTreeView explorer;
+    private Scintilla help_scintilla;
+    // -- theme
+    private static Color background_color = Color.FromArgb(10, 10, 12);
+	private static Color locked_background_color = Color.FromArgb(0, 12, 0);
+    private static Color border_color = Color.FromArgb(0, 0, 255);
+    private static Color locked_border_color = Color.FromArgb(0, 255, 0);
+    // -- gui options 
+    private double work_opacity = 0.85;
+    private double background_opacity = 0.35;   
+    private int split_percentage = 55;
+    private bool hidden_titlebar = true;
+    // -- 
 	private Dictionary<string, Scintilla> fullpath_scintilla_map = new();
-	private bool hidden_titlebar = true;
 	private string unsave_marker = "!! ";
 	private float font_step = 0.5f;
-	private static Color background_color = Color.FromArgb(10, 10, 12);
-	private static Color locked_background_color = Color.FromArgb(0, 12, 0);
-	private Scintilla help_scintilla;
     private HashSet<string> autocomplete_hashset = new();
     private string search_token = "";
-    private double work_opacity = 0.85;
-    private double background_opacity = 0.35;
-    private int split_percentage = 55;
 //    private int current_split_percentage = 55;
 	// == methods 
 	// -- user interface workflow 
@@ -208,6 +215,12 @@ public partial class Notepad__Form : Form {
 		this.right_tabs.MouseClick += tabs_click_handler;
 		this.right_tabs.ShowToolTips = true;
 		this.left_tabs.ShowToolTips = true;
+        this.right_tabs.SelectedIndexChanged += (s,e)=>{
+            update_border_color(this.right_tabs.SelectedTab);
+        };
+        this.left_tabs.SelectedIndexChanged += (s,e)=>{
+            update_border_color(this.left_tabs.SelectedTab);
+        };
 		// explorer 
 		this.explorer.KeyDown += (s,e) => {
 			if (e.KeyCode == Keys.Enter) {
@@ -254,9 +267,9 @@ public partial class Notepad__Form : Form {
 	// -- subroutines 
     // -- subroutines || logic 
     private void tabs_click_handler(Object s, MouseEventArgs e) {
-		if (e.Button == MouseButtons.Right)	{
-			DarkTabControl tabs = (DarkTabControl) s;
-			TabPage pointed_page = get_pointed_tab(tabs, e.Location);
+        DarkTabControl tabs = (DarkTabControl) s;
+        TabPage pointed_page = get_pointed_tab(tabs, e.Location);
+		if (e.Button == MouseButtons.Right)	{	
 			if ((Control.ModifierKeys & Keys.Control) != 0) {
 				if ( fullpath_scintilla_map.ContainsKey( pointed_page.ToolTipText ) ) { 
 					close_tab(tabs, pointed_page);
@@ -299,16 +312,17 @@ public partial class Notepad__Form : Form {
 				set_fold_and_style(editor, _path);
 				current_page.Text = get_filename(_path);
 			}
+            apply_highlight_for_file_directives(editor);
 		});	
 		key_shortcut(ns, "ctrl","r", async () => {
 			toggle_read_only(ns);
             if (ns.ReadOnly) {
-//                page.BackColor = Color.FromArgb(0,0,30);
                 kill_document_words_async();
             } else {
-//                page.BackColor = Color.FromArgb(0,0,0);
                 _ = get_document_words_async(ns); // fire and forget
             }
+            apply_highlight_for_file_directives(ns);
+            update_border_color(ns, page);
 		});
 		ns.CharAdded += (s, e) => {
             var editor = (Scintilla)s;
@@ -319,6 +333,7 @@ public partial class Notepad__Form : Form {
             if (list.Length > 0) editor.AutoCShow(prefix.Length, list);
         };
         toggle_read_only(ns);
+        update_border_color(ns, page);
 	}
     // -- subroutines || new tabs 
     private TabPage add_new_tab(DarkTabControl tabs, Control ctrl, string name) {
@@ -417,6 +432,31 @@ public partial class Notepad__Form : Form {
 		hidden_titlebar = !hidden_titlebar;
 	}
     // -- subroutines 
+    private Scintilla? get_scintilla(TabPage page) {
+        string filename = page.ToolTipText as string; 
+        if ( string.IsNullOrWhiteSpace(filename) ) return null;
+        if ( !is_file(filename) ) return null;
+        if ( !this.fullpath_scintilla_map.ContainsKey(filename) ) return null;
+        return this.fullpath_scintilla_map[filename];
+    }
+    private void repaint_tab(TabPage page) {
+        DarkTabControl tabs = page.Parent as DarkTabControl;
+        tabs.Invalidate();
+    }
+    private void update_border_color(TabPage page) {
+        Scintilla? ns = get_scintilla(page);
+        if (ns==null) return ;
+        update_border_color(ns, page);
+    }
+    private void update_border_color(Scintilla ns, TabPage page) {
+        DarkTabControl tabs = page.Parent as DarkTabControl;
+        if (ns.ReadOnly) {
+            tabs.change_border_color(locked_border_color);
+        } else {
+            tabs.change_border_color(border_color);
+        }
+        repaint_tab(page);
+    }
     private void refresh_style(Scintilla editor) {
         string path = (string) editor.Tag;
         if (string.IsNullOrWhiteSpace(path)) return;
