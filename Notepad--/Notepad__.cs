@@ -190,6 +190,12 @@ public partial class Notepad__Form : Form {
                 this.Opacity = work_opacity;
             }
         }, 100 );
+//        key_shortcut(this, "ctrl", Keys.Insert, ()=>{
+//            MouseScrollBackWindow(this, true);
+//        });
+//        key_shortcut(this, "ctrl", Keys.Delete, ()=>{
+//            MouseScrollBackWindow(this, false);
+//        });
 //        OnTick( this, (s,e)=>{
 //            if ( get_focused_panel(this.main_panel) == 2 ){
 //                if ( current_split_percentage > 40 ) { 
@@ -306,7 +312,9 @@ public partial class Notepad__Form : Form {
 			if (is_file(path)){
 				save(path, content); 
 				this.fullpath_scintilla_map[path] = editor;
-				set_fold_and_style(editor, path);
+				set_lexer(editor, path);
+                set_folding(editor);
+                set_language_style(editor, path);
 				current_page.Text = get_filename(path);
 			} else {
 				string _path = save_dialog("txt", this.data.DialogDir);
@@ -314,7 +322,9 @@ public partial class Notepad__Form : Form {
 				current_page.ToolTipText = _path;
 				save(_path, content); 
 				this.fullpath_scintilla_map[_path] = editor;
-				set_fold_and_style(editor, _path);
+				set_lexer(editor, _path);
+                set_folding(editor);
+                set_language_style(editor, _path);
 				current_page.Text = get_filename(_path);
 			}
             apply_highlight_for_file_directives(editor);
@@ -478,7 +488,9 @@ public partial class Notepad__Form : Form {
         string path = (string) editor.Tag;
         if (string.IsNullOrWhiteSpace(path)) return;
         if ( !is_code_file(path) ) return; 
-        set_fold_and_style(editor, path);
+//        set_lexer(editor, filename);
+        set_folding(editor);
+        set_language_style(editor, path);
     }
     private DarkTabControl? get_focused_tab() {
 		if ( this.left_tabs.ContainsFocus ) return this.left_tabs;

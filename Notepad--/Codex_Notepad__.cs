@@ -1859,7 +1859,7 @@ public static class Incantation_SCINTILLA {
     private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
     private static Color number_fore_color = Color.Cyan;
     private static Color number_back_color = Color.DarkBlue;
-    private static Color string_fore_color = Color.FromArgb(255, 0, 0); // red 
+    private static Color string_fore_color = Color.FromArgb(255, 20, 0); // red 
     private static Color string_back_color = Color.FromArgb(20, 0, 0); // 
     // -- 
 	private static List<string> CODE_EXTS = new List<string>{
@@ -1888,7 +1888,8 @@ public static class Incantation_SCINTILLA {
         ".ps1",
         ".ltx",
         ".script",
-        ".md"
+        ".md",
+        ".tex"
 	};
 	public static bool is_code_file(string filename_or_ext) {
 		if ( string.IsNullOrWhiteSpace(filename_or_ext) ) return false;
@@ -2031,6 +2032,7 @@ public static class Incantation_SCINTILLA {
     }
     
     // DEPRECATED
+    /*
     public static void set_fold_and_style(Scintilla editor, string filename) {
 		editor.Tag = filename;
 		try {
@@ -2040,7 +2042,10 @@ public static class Incantation_SCINTILLA {
 			
 		}
 	}
-	public static void set_language_folding(Scintilla scintilla, string lexer) {
+	
+    */
+
+    public static void set_language_folding(Scintilla scintilla, string lexer) {
 		// --
 		// Set the lexer
 		scintilla.LexerName = lexer;
@@ -2092,7 +2097,6 @@ public static class Incantation_SCINTILLA {
 		// Enable automatic folding
 		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
 	}
-    
 
     // -- lexer, folding and style
     public static bool set_lexer(Scintilla editor, string filename) {
@@ -2230,6 +2234,9 @@ public static class Incantation_SCINTILLA {
             case ".xml":
             case ".csproj":
                 set_html_style(scintilla);
+                break;
+            case ".ps1":
+                set_powershell_style(scintilla);
                 break;
 		}
 	}
@@ -2387,7 +2394,36 @@ public static class Incantation_SCINTILLA {
     }
     
     public static void set_ahk_style(Scintilla scintilla) {}
-    
+
+    public static void set_powershell_style(Scintilla scintilla) {
+        // Default
+        scintilla.Styles[Style.PowerShell.Default].ForeColor = Color.Silver;
+        // Comments
+        scintilla.Styles[Style.PowerShell.Comment].ForeColor = comment_fore_color;
+        scintilla.Styles[Style.PowerShell.Comment].BackColor = comment_back_color;
+        // Numbers
+        scintilla.Styles[Style.PowerShell.Number].ForeColor = number_fore_color;
+        scintilla.Styles[Style.PowerShell.Number].BackColor = number_back_color;
+        // Keywords (cmdlets, reserved words)
+        scintilla.Styles[Style.PowerShell.Keyword].ForeColor = keyword1_color;
+        // Strings
+        scintilla.Styles[Style.PowerShell.String].ForeColor = string_fore_color;
+        scintilla.Styles[Style.PowerShell.String].BackColor = string_back_color;
+        // Operators
+        scintilla.Styles[Style.PowerShell.Operator].ForeColor = Color.Yellow;
+        // Variables
+        scintilla.Styles[Style.PowerShell.Variable].ForeColor = Color.LightBlue;
+        // Commands (cmdlets/functions)
+        scintilla.Styles[Style.PowerShell.Cmdlet].ForeColor = Color.LightGreen;
+        // Set PowerShell keywords (reserved words)
+        scintilla.SetKeywords(0,
+            "begin break catch class continue data do dynamicparam else elseif end enum exit filter finally for foreach function if in param process return switch throw trap try until using var while");
+
+        // Common cmdlets (you can expand this list)
+        scintilla.SetKeywords(1,
+            "Get-Item Get-ChildItem Get-Content Set-Content Remove-Item Copy-Item Move-Item New-Item Write-Output Write-Host Import-Module Export-Module Invoke-Command Start-Process Stop-Process");
+    }
+
     public static void set_c_family_style(Scintilla scintilla) {
 		// Configure the CPP (C#) lexer styles
 		scintilla.Styles[Style.Cpp.Default].ForeColor = Color.Silver;
@@ -2468,42 +2504,73 @@ public static class Incantation_SCINTILLA {
     }
 
     // -- comment helpers 
+//    public static void toggle_comment_lines_DEPRE(Scintilla editor) {
+//        if (editor == null) return;
+//        string commentString = GetLineCommentString(editor.LexerName);
+//        if (string.IsNullOrEmpty(commentString)) return;
+//        int startLine = editor.LineFromPosition(editor.SelectionStart);
+//        int endLine = editor.LineFromPosition(editor.SelectionEnd);
+//        editor.BeginUndoAction();
+//        try {
+//            for (int line = startLine; line <= endLine; line++) {
+//                var sciLine = editor.Lines[line];
+//                string text = sciLine.Text;
+//                if (text.TrimStart().StartsWith(commentString)) {
+//                    int pos = sciLine.Position + text.IndexOf(commentString);
+//                    editor.DeleteRange(pos, commentString.Length);
+//                }
+//                else {
+//                    editor.InsertText(sciLine.Position, commentString);
+//                }
+//            }
+//        }
+//        finally {
+//            editor.EndUndoAction();
+//        }
+//    }
+
     public static void toggle_comment_lines(Scintilla editor) {
         if (editor == null) return;
-
         string commentString = GetLineCommentString(editor.LexerName);
-        if (string.IsNullOrEmpty(commentString))
-            return;
+        if (string.IsNullOrEmpty(commentString)) return;
 
         int startLine = editor.LineFromPosition(editor.SelectionStart);
         int endLine = editor.LineFromPosition(editor.SelectionEnd);
 
         editor.BeginUndoAction();
+//        editor.SuspendDrawing(); // optional, reduces flicker
+
         try
         {
             for (int line = startLine; line <= endLine; line++)
             {
                 var sciLine = editor.Lines[line];
-                string text = sciLine.Text;
+                string text = editor.GetTextRange(sciLine.Position, sciLine.Length);
 
                 if (text.TrimStart().StartsWith(commentString))
                 {
-                    // Remove the comment prefix
+                    // Remove comment prefix
                     int pos = sciLine.Position + text.IndexOf(commentString);
-                    editor.DeleteRange(pos, commentString.Length);
+                    editor.TargetStart = pos;
+                    editor.TargetEnd = pos + commentString.Length;
+                    editor.ReplaceTarget(string.Empty);
                 }
                 else
                 {
-                    // Add the comment prefix
-                    editor.InsertText(sciLine.Position, commentString);
+                    // Add comment prefix
+                    editor.TargetStart = sciLine.Position;
+                    editor.TargetEnd = sciLine.Position;
+                    editor.ReplaceTarget(commentString);
                 }
             }
         }
         finally
         {
+//            editor.ResumeDrawing();
             editor.EndUndoAction();
         }
     }
+
     public static void comment_out(Scintilla editor) {
         if (editor == null) return;
         string commentString = GetLineCommentString(editor.LexerName);
@@ -2655,17 +2722,17 @@ public static class Incantation_SCINTILLA {
         unfold_line(editor, line);
     }
 
-//	public static void toggle_closest_fold_marker_DEPR(Scintilla editor) {
-//		int pos = editor.CurrentPosition;
-//		int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
-//		for (int i = line; i >= 0; i--) {
-//			int level = (int)editor.DirectMessage(2223, (IntPtr)i);
-//			if ((level & 0x2000) != 0) {
-//				editor.DirectMessage(2231, (IntPtr)i); // SCI_TOGGLEFOLD
-//				break;
-//			}
-//		}
-//	}
+//    public static void toggle_closest_fold_marker_DEPR(Scintilla editor) {
+//        int pos = editor.CurrentPosition;
+//        int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
+//        for (int i = line; i >= 0; i--) {
+//            int level = (int)editor.DirectMessage(2223, (IntPtr)i);
+//            if ((level & 0x2000) != 0) {
+//                editor.DirectMessage(2231, (IntPtr)i); // SCI_TOGGLEFOLD
+//                break;
+//            }
+//        }
+//    }
 
     // -- find helpers 
     public static string get_selected_token(Scintilla editor) {
@@ -3495,6 +3562,60 @@ public class ToggleablePanel : Panel {
 	}
 }
 
+public class OverlayForm : Form {
+    // == methods 
+    public OverlayForm(Form parent, string message) {
+        this.FormBorderStyle = FormBorderStyle.None;
+        this.StartPosition = FormStartPosition.Manual;
+        this.ShowInTaskbar = false;
+        this.TopMost = true;
+        this.BackColor = Color.Black;
+        this.Opacity = 0.7;
+        this.Bounds = parent.Bounds;
+        Label lbl = new Label {
+            Text = message,
+            ForeColor = Color.White,
+            BackColor = Color.Transparent,
+            AutoSize = true,
+            Font = new Font("Segoe UI", 16, FontStyle.Bold),
+            Location = new Point(this.Width / 2 - 100, this.Height / 2)
+        };
+        this.Controls.Add(lbl);
+    }
+    public void FadeIn() {
+        Timer t = new Timer { Interval = 30 };
+        t.Tick += (s, e) => {
+            if (this.Opacity < 0.8)
+                this.Opacity += 0.05;
+            else
+                t.Stop();
+        };
+        t.Start();
+    }
+    public void FadeOut() {
+        Timer t = new Timer { Interval = 30 };
+        t.Tick += (s, e) => {
+            if (this.Opacity > 0)
+                this.Opacity -= 0.05;
+            else
+            {
+                t.Stop();
+                this.Close();
+            }
+        };
+        t.Start();
+    }
+    // -- overrides 
+    protected override CreateParams CreateParams {
+        get {
+            var cp = base.CreateParams;
+            cp.ExStyle |= 0x08000000; // WS_EX_NOACTIVATE
+            return cp;
+        }
+    }
+
+}
+
 // ===================================== conjuration 
 // ... system integration  
 public static class Conjuration {
@@ -3618,6 +3739,23 @@ public static class Conjuration {
 		}
 	}
     
+    [DllImport("user32.dll")] private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+    [DllImport("user32.dll")] private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll")]static extern bool GetCursorPos(out POINT lpPoint);
+    struct POINT { public int X; public int Y; }
+    private const uint GW_HWNDNEXT = 2;
+    private const uint WM_MOUSEWHEEL = 0x020A;
+    // WHEEL_DELTA is 120 units per notch
+    private const int WHEEL_DELTA = 120;
+    public static void MouseScrollBackWindow(Form currentForm, bool up) {
+        IntPtr below = GetWindow(currentForm.Handle, GW_HWNDNEXT);
+        if (below == IntPtr.Zero) return;
+        GetCursorPos(out POINT pt);
+        int lParam = (pt.X & 0xFFFF) | ((pt.Y & 0xFFFF) << 16);
+        int delta = up ? WHEEL_DELTA : -WHEEL_DELTA;
+        int wParam = (delta << 16); // no key state
+        PostMessage(below, WM_MOUSEWHEEL, (IntPtr)wParam, (IntPtr)lParam);
+    }
     // -- firewall 
     /*
     public static void BlockApplication(string ruleName, string appPath) {
