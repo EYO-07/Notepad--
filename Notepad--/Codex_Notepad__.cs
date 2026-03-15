@@ -1898,6 +1898,8 @@ public static class Incantation_SCINTILLA {
 		return CODE_EXTS.Contains(ext);
 	}
 	// --
+
+    // DEPRECATED
     private static Dictionary<string, string> EXT_TO_LEXER = new Dictionary<string, string>() {
 		{".cs", "cpp"},
 		{".java", "cpp"},
@@ -1935,7 +1937,8 @@ public static class Incantation_SCINTILLA {
 		if (EXT_TO_LEXER.TryGetValue(ext, out string lexer)) return lexer;
 		return "null"; // fallback if unknown
 	}
-	// -- 
+	
+    // -- 
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
 		editor.Dock = DockStyle.Fill;
@@ -1986,10 +1989,49 @@ public static class Incantation_SCINTILLA {
 		string? text = load(filename); 
 		if (string.IsNullOrWhiteSpace(text)) return ;
 		editor.Text = text;
-		set_fold_and_style(editor, filename);
+//		set_fold_and_style(editor, filename);
+        set_lexer(editor, filename);
+        set_folding(editor);
+        set_language_style(editor, filename);
 		fold_all(editor);
 	}
-	public static void set_fold_and_style(Scintilla editor, string filename) {
+	public static void set_keyshortcuts(Scintilla editor) {
+        key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
+		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
+		key_shortcut(editor, "alt", "o", ()=>{toggle_closest_fold_marker(editor);});
+        key_shortcut(editor, "ctrl", "d", ()=>{
+            string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) { 
+                token =  input_dialog(null, "Find Previous", "Input Token", "");
+            }
+            if ( string.IsNullOrWhiteSpace(token) ) return ;
+            find_prev_token(editor, token);
+        });
+        key_shortcut(editor, "ctrl", "f", ()=>{
+            string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) { 
+                token =  input_dialog(null, "Find Next", "Input Token", "");
+            }
+            if ( string.IsNullOrWhiteSpace(token) ) return ;
+            find_next_token(editor, token);
+        });
+        key_shortcut(editor, "ctrl", "q", ()=>{
+            toggle_comment_lines(editor); 
+        });
+	}
+
+    // DEBUG
+    public static void dump_lexer_names(Scintilla editor){
+        editor.AppendText("=== Lexer Names ===\n");
+        int count = 1;
+        foreach( string name in Lexilla.GetLexerNames() ) {
+            editor.AppendText(to_string(count)+". "+name+"\n");
+            count++;
+        }
+    }
+    
+    // DEPRECATED
+    public static void set_fold_and_style(Scintilla editor, string filename) {
 		editor.Tag = filename;
 		try {
 			set_language_folding(editor, get_lexer_name(filename) );
@@ -2050,32 +2092,104 @@ public static class Incantation_SCINTILLA {
 		// Enable automatic folding
 		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
 	}
-    public static void set_keyshortcuts(Scintilla editor) {
-        key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
-		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
-		key_shortcut(editor, "alt", "o", ()=>{toggle_closest_fold_marker(editor);});
-        key_shortcut(editor, "ctrl", "d", ()=>{
-            string token = get_selected_token(editor);
-            if ( string.IsNullOrWhiteSpace(token) ) { 
-                token =  input_dialog(null, "Find Previous", "Input Token", "");
-            }
-            if ( string.IsNullOrWhiteSpace(token) ) return ;
-            find_prev_token(editor, token);
-        });
-        key_shortcut(editor, "ctrl", "f", ()=>{
-            string token = get_selected_token(editor);
-            if ( string.IsNullOrWhiteSpace(token) ) { 
-                token =  input_dialog(null, "Find Next", "Input Token", "");
-            }
-            if ( string.IsNullOrWhiteSpace(token) ) return ;
-            find_next_token(editor, token);
-        });
-        key_shortcut(editor, "ctrl", "q", ()=>{
-            toggle_comment_lines(editor); 
-        });
-	}
+    
 
-    // language style - dark theme 
+    // -- lexer, folding and style
+    public static bool set_lexer(Scintilla editor, string filename) {
+        if ( string.IsNullOrWhiteSpace(filename) ) return false;
+		string ext = Path.GetExtension(filename).ToLowerInvariant();
+        if ( string.IsNullOrWhiteSpace(ext) ) return false;
+        // -- first try to find the lexer_name directly on GetLexerNames iterator
+        foreach(string lexer_name in Lexilla.GetLexerNames()) {
+            if (ext == "."+lexer_name) {
+                editor.LexerName = lexer_name;
+                return true;
+            }
+        } 
+        // -- hand picked lexer names which will mismatch extension names 
+        switch (ext) {
+            case ".md":
+                editor.LexerName = "markdown";
+                return true;
+            case ".html":
+            case ".htm":
+            case ".csproj":
+                editor.LexerName = "hypertext";
+                return true;
+            case ".h":
+            case ".hpp":
+            case ".cs":
+            case ".java":
+            case ".ts":
+                editor.LexerName = "cpp";
+                return true;
+            case ".bat":
+                editor.LexerName = "batch";
+                return true;
+            case ".sh":
+                editor.LexerName = "bash";
+                return true;
+            case ".tex":
+                editor.LexerName = "latex";
+                return true;
+            case ".ps1":
+                editor.LexerName = "powershell";
+                return true;
+            case ".py":
+            case ".pyw":
+                editor.LexerName = "python";
+                return true;
+            case ".rb":
+                editor.LexerName = "ruby";
+                return true;
+        }
+        return false;
+    }
+    public static void set_folding(Scintilla scintilla) {
+        // Instruct the lexer to calculate folding
+		scintilla.SetProperty("fold", "1");
+        scintilla.SetProperty("fold.comment", "1");
+		// Configure a margin to display folding symbols
+		scintilla.Margins[2].Type = MarginType.Symbol;
+		scintilla.Margins[2].Mask = Marker.MaskFolders;
+		scintilla.Margins[2].Sensitive = true;
+		scintilla.Margins[2].Width = 20;
+		// Set colors for all folding markers
+		for (int i = 25; i <= 31; i++) {
+			scintilla.Markers[i].SetForeColor(fold_fore_color);
+			scintilla.Markers[i].SetBackColor(fold_back_color);
+		}
+		// Marker colors
+		Color fore = fold_fore_color;
+		Color back = fold_back_color;
+		scintilla.Markers[Marker.Folder].SetForeColor(fore);
+		scintilla.Markers[Marker.Folder].SetBackColor(back);
+		scintilla.Markers[Marker.FolderOpen].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderOpen].SetBackColor(back);
+		scintilla.Markers[Marker.FolderEnd].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderEnd].SetBackColor(back);
+		scintilla.Markers[Marker.FolderMidTail].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderMidTail].SetBackColor(back);
+		scintilla.Markers[Marker.FolderOpenMid].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderOpenMid].SetBackColor(back);
+		scintilla.Markers[Marker.FolderSub].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderSub].SetBackColor(back);
+		scintilla.Markers[Marker.FolderTail].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderTail].SetBackColor(back);
+		// Folding margin background
+		scintilla.SetFoldMarginColor(true, Color.FromArgb(30, 30, 30));
+		scintilla.SetFoldMarginHighlightColor(true, Color.FromArgb(30, 30, 30));
+		// Configure folding markers with respective symbols
+		scintilla.Markers[Marker.Folder].Symbol = MarkerSymbol.BoxPlus;
+		scintilla.Markers[Marker.FolderOpen].Symbol = MarkerSymbol.BoxMinus;
+		scintilla.Markers[Marker.FolderEnd].Symbol = MarkerSymbol.BoxPlusConnected;
+		scintilla.Markers[Marker.FolderMidTail].Symbol = MarkerSymbol.TCorner;
+		scintilla.Markers[Marker.FolderOpenMid].Symbol = MarkerSymbol.BoxMinusConnected;
+		scintilla.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
+		scintilla.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
+		// Enable automatic folding
+		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
+    }
 	public static void set_language_style(Scintilla scintilla, string filename) {
 		if ( string.IsNullOrWhiteSpace(filename) ) return ;
 		string ext = filename;
@@ -2501,19 +2615,6 @@ public static class Incantation_SCINTILLA {
             }
         }
     }
-
-//	public static void toggle_closest_fold_marker_DEPR(Scintilla editor) {
-//		int pos = editor.CurrentPosition;
-//		int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
-//		for (int i = line; i >= 0; i--) {
-//			int level = (int)editor.DirectMessage(2223, (IntPtr)i);
-//			if ((level & 0x2000) != 0) {
-//				editor.DirectMessage(2231, (IntPtr)i); // SCI_TOGGLEFOLD
-//				break;
-//			}
-//		}
-//	}
-    
     public static void toggle_closest_fold_marker(Scintilla editor) {
         int pos = editor.CurrentPosition;        
         // 1. Force the lexer to update the fold levels for the current area
@@ -2532,7 +2633,6 @@ public static class Incantation_SCINTILLA {
             editor.DirectMessage(2231, (IntPtr)targetLine); // SCI_TOGGLEFOLD
         }
     }
-
     public static int get_current_caret_line(Scintilla editor) {
         if (editor == null) return -1;
         int pos = (int)editor.DirectMessage(2008); // SCI_GETCURRENTPOS
@@ -2554,6 +2654,18 @@ public static class Incantation_SCINTILLA {
         if (line<0) return ;
         unfold_line(editor, line);
     }
+
+//	public static void toggle_closest_fold_marker_DEPR(Scintilla editor) {
+//		int pos = editor.CurrentPosition;
+//		int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
+//		for (int i = line; i >= 0; i--) {
+//			int level = (int)editor.DirectMessage(2223, (IntPtr)i);
+//			if ((level & 0x2000) != 0) {
+//				editor.DirectMessage(2231, (IntPtr)i); // SCI_TOGGLEFOLD
+//				break;
+//			}
+//		}
+//	}
 
     // -- find helpers 
     public static string get_selected_token(Scintilla editor) {
@@ -2613,7 +2725,6 @@ public static class Incantation_SCINTILLA {
             editor.DirectMessage(2234, (IntPtr)line, IntPtr.Zero); // Ensure visible
         }
     }
-
     public static void apply_highlight_for_file_directives(Scintilla editor) {
         var directivePattern = @"\{Notepad--;([^}]*)\}";
         var regex = new Regex(directivePattern);

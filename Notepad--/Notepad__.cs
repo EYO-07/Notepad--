@@ -348,6 +348,9 @@ public partial class Notepad__Form : Form {
         };
         toggle_read_only(ns);
         update_border_color(ns, page);
+        key_shortcut(ns, "ctrl", Keys.F1, ()=>{
+            dump_lexer_names(ns);
+        });
 	}
     // -- subroutines || new tabs 
     private TabPage add_new_tab(DarkTabControl tabs, Control ctrl, string name) {
