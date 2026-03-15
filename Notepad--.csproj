@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+<PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>Notepad__</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>        
+    <ApplicationIcon>Notepad__.ico</ApplicationIcon>
+</PropertyGroup>
+
+<ItemGroup> 
+	<EmbeddedResource Include="Notepad__.ico" /> 
+</ItemGroup>
+
+<ItemGroup>
+    <PackageReference Include="Scintilla5.NET" Version="6.1.2" />
+</ItemGroup>
+
+</Project>
