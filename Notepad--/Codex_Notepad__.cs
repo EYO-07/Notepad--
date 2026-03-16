@@ -546,6 +546,10 @@ public static class Incantation {
 	
 	public static void border_color_on_focus_change(Control control, Color focused, Color unfocused) {}
 	
+    public static void Center(Control ctrl, Control target) {
+        
+    }
+
 	// tootip
 	public static ToolTip add_tooltip(Control control, string text) {
         ToolTip tooltip = new ToolTip();
@@ -1053,8 +1057,8 @@ public static class Incantation_PANEL {
     }
     public static void set_splitter_distance(SplitContainer split, int percentage) {
         if (split == null) return;
-        if (percentage < 0 || percentage > 100)
-            throw new ArgumentOutOfRangeException(nameof(percentage), "Percentage must be between 1 and 100.");
+        if (percentage < 5 || percentage > 95) return;
+//            throw new ArgumentOutOfRangeException(nameof(percentage), "Percentage must be between 1 and 100.");
         // For vertical orientation, SplitterDistance is measured in pixels from the left edge
         if (split.Orientation == Orientation.Vertical) {
             int distance = (split.Width * percentage) / 100;
@@ -1847,20 +1851,20 @@ foreach ($file in $files) {{
 public static class Incantation_SCINTILLA {
     // -- dark theme colors 
     private static Color foreground_color = Color.FromArgb(255, 255, 255);
-    private static Color background_color = Color.FromArgb(10, 10, 15);
+    private static Color background_color = Color.FromArgb(10, 10, 12);
     private static Color locked_background_color = Color.FromArgb(20, 20, 35);
     private static Color fold_fore_color = Color.FromArgb(60, 60, 60);
     private static Color fold_back_color = Color.FromArgb(255, 255, 255);
     private static Color margin_fore_color = Color.FromArgb(120,120,120);
     private static Color margin_back_color = Color.FromArgb(30,30,30); 
     private static Color keyword1_color = Color.FromArgb(255, 153, 51); // orange 
-    private static Color keyword2_color = Color.FromArgb(0, 255, 0); // green 
+    private static Color keyword2_color = Color.FromArgb(0, 255, 20); // green 
     private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
     private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
     private static Color number_fore_color = Color.Cyan;
     private static Color number_back_color = Color.DarkBlue;
-    private static Color string_fore_color = Color.FromArgb(255, 20, 0); // red 
-    private static Color string_back_color = Color.FromArgb(20, 0, 0); // 
+    private static Color string_fore_color = Color.FromArgb(230, 230, 230); 
+    private static Color string_back_color = Color.FromArgb(40, 40, 40); 
     // -- 
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
@@ -1990,11 +1994,12 @@ public static class Incantation_SCINTILLA {
 		string? text = load(filename); 
 		if (string.IsNullOrWhiteSpace(text)) return ;
 		editor.Text = text;
+        editor.Tag = filename;
 //		set_fold_and_style(editor, filename);
-        set_lexer(editor, filename);
-        set_folding(editor);
-        set_language_style(editor, filename);
-		fold_all(editor);
+//        set_lexer(editor, filename);
+//        set_folding(editor);
+//        set_language_style(editor, filename);
+//		fold_all(editor);
 	}
 	public static void set_keyshortcuts(Scintilla editor) {
         key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
@@ -2240,6 +2245,7 @@ public static class Incantation_SCINTILLA {
                 break;
 		}
 	}
+    // -- 
     public static void set_py_style(Scintilla scintilla) {
         // Default
         scintilla.Styles[Style.Python.Default].ForeColor = Color.Silver;
@@ -2392,9 +2398,6 @@ public static class Incantation_SCINTILLA {
         scintilla.SetKeywords(1,
             "id class src href alt title type value name rel action method style");
     }
-    
-    public static void set_ahk_style(Scintilla scintilla) {}
-
     public static void set_powershell_style(Scintilla scintilla) {
         // Default
         scintilla.Styles[Style.PowerShell.Default].ForeColor = Color.Silver;
@@ -2422,8 +2425,7 @@ public static class Incantation_SCINTILLA {
         // Common cmdlets (you can expand this list)
         scintilla.SetKeywords(1,
             "Get-Item Get-ChildItem Get-Content Set-Content Remove-Item Copy-Item Move-Item New-Item Write-Output Write-Host Import-Module Export-Module Invoke-Command Start-Process Stop-Process");
-    }
-
+    }    
     public static void set_c_family_style(Scintilla scintilla) {
 		// Configure the CPP (C#) lexer styles
 		scintilla.Styles[Style.Cpp.Default].ForeColor = Color.Silver;
@@ -2451,7 +2453,7 @@ public static class Incantation_SCINTILLA {
 		set_c_family_style(scintilla);
 		// Set the keywords
 		scintilla.SetKeywords(0, "abstract as base break case catch checked continue default delegate do else event explicit extern false finally fixed for foreach goto if implicit in interface internal is lock namespace new null object operator out override params private protected public readonly ref return sealed sizeof stackalloc switch this throw true try typeof unchecked unsafe using virtual while");
-		scintilla.SetKeywords(1, "bool byte char class const decimal double enum float int long sbyte short static string struct uint ulong ushort void");
+		scintilla.SetKeywords(1, "bool byte char class const decimal double enum float int long sbyte short static string struct uint ulong ushort void var");
 	}
 	public static void set_cpp_style(Scintilla scintilla) {
         set_c_family_style(scintilla);
@@ -2471,6 +2473,8 @@ public static class Incantation_SCINTILLA {
         scintilla.SetKeywords(1,
         "bool size_t ptrdiff_t");
     }
+
+    public static void set_ahk_style(Scintilla scintilla) {}
 
     public static void highlight_set(HashSet<string> set, Scintilla editor, Color forecolor, Color backcolor) {
         // Define a custom style ID that won't clash with the lexer
@@ -2503,32 +2507,43 @@ public static class Incantation_SCINTILLA {
         }
     }
 
+    public static void apply_highlight_for_file_directives(Scintilla editor) {
+        var directivePattern = @"\{Notepad--;([^}]*)\}";
+        var regex = new Regex(directivePattern);
+        for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
+            var lineText = editor.Lines[i].Text;
+            var match = regex.Match(lineText);
+            if (!match.Success) continue;
+            var directives = match.Groups[1].Value.Split(';');
+            int styleId = 32; // start custom styles after predefined ones
+            foreach (var directive in directives) {
+                var parts = directive.Split(':');
+                if (parts.Length != 2) continue;
+                var colorName = parts[0].Trim();
+                var keywords = parts[1].Split(',')
+                                       .Select(k => k.Trim())
+                                       .Where(k => k.Length > 0);
+                // Assign style color
+                Color c = Color.FromName(colorName);
+                editor.Styles[styleId].ForeColor = c;
+                foreach (var keyword in keywords) {
+                    int startPos = 0;
+                    while (true) {
+                        editor.TargetStart = startPos;
+                        editor.TargetEnd = editor.TextLength;
+                        int foundPos = editor.SearchInTarget(keyword);
+                        if (foundPos == -1) break;
+                        editor.StartStyling(foundPos);
+                        editor.SetStyling(keyword.Length, styleId);
+                        startPos = foundPos + keyword.Length;
+                    }
+                }
+                styleId++;
+            }
+        }
+    }
+    
     // -- comment helpers 
-//    public static void toggle_comment_lines_DEPRE(Scintilla editor) {
-//        if (editor == null) return;
-//        string commentString = GetLineCommentString(editor.LexerName);
-//        if (string.IsNullOrEmpty(commentString)) return;
-//        int startLine = editor.LineFromPosition(editor.SelectionStart);
-//        int endLine = editor.LineFromPosition(editor.SelectionEnd);
-//        editor.BeginUndoAction();
-//        try {
-//            for (int line = startLine; line <= endLine; line++) {
-//                var sciLine = editor.Lines[line];
-//                string text = sciLine.Text;
-//                if (text.TrimStart().StartsWith(commentString)) {
-//                    int pos = sciLine.Position + text.IndexOf(commentString);
-//                    editor.DeleteRange(pos, commentString.Length);
-//                }
-//                else {
-//                    editor.InsertText(sciLine.Position, commentString);
-//                }
-//            }
-//        }
-//        finally {
-//            editor.EndUndoAction();
-//        }
-//    }
-
     public static void toggle_comment_lines(Scintilla editor) {
         if (editor == null) return;
         string commentString = GetLineCommentString(editor.LexerName);
@@ -2570,7 +2585,6 @@ public static class Incantation_SCINTILLA {
             editor.EndUndoAction();
         }
     }
-
     public static void comment_out(Scintilla editor) {
         if (editor == null) return;
         string commentString = GetLineCommentString(editor.LexerName);
@@ -2722,18 +2736,6 @@ public static class Incantation_SCINTILLA {
         unfold_line(editor, line);
     }
 
-//    public static void toggle_closest_fold_marker_DEPR(Scintilla editor) {
-//        int pos = editor.CurrentPosition;
-//        int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
-//        for (int i = line; i >= 0; i--) {
-//            int level = (int)editor.DirectMessage(2223, (IntPtr)i);
-//            if ((level & 0x2000) != 0) {
-//                editor.DirectMessage(2231, (IntPtr)i); // SCI_TOGGLEFOLD
-//                break;
-//            }
-//        }
-//    }
-
     // -- find helpers 
     public static string get_selected_token(Scintilla editor) {
         if (editor == null) return "";
@@ -2792,46 +2794,7 @@ public static class Incantation_SCINTILLA {
             editor.DirectMessage(2234, (IntPtr)line, IntPtr.Zero); // Ensure visible
         }
     }
-    public static void apply_highlight_for_file_directives(Scintilla editor) {
-        var directivePattern = @"\{Notepad--;([^}]*)\}";
-        var regex = new Regex(directivePattern);
-        for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
-            var lineText = editor.Lines[i].Text;
-            var match = regex.Match(lineText);
-            if (!match.Success) continue;
-            var directives = match.Groups[1].Value.Split(';');
-            int styleId = 32; // start custom styles after predefined ones
-            foreach (var directive in directives) {
-                var parts = directive.Split(':');
-                if (parts.Length != 2) continue;
-                var colorName = parts[0].Trim();
-                var keywords = parts[1].Split(',')
-                                       .Select(k => k.Trim())
-                                       .Where(k => k.Length > 0);
-                // Assign style color
-                Color c = Color.FromName(colorName);
-                if ( !editor.ReadOnly ) {
-                    editor.Styles[styleId].ForeColor = keyword2_color;
-                } else {
-                    editor.Styles[styleId].ForeColor = c;
-                }
-                // Highlight keywords across document
-                foreach (var keyword in keywords) {
-                    int startPos = 0;
-                    while (true) {
-                        editor.TargetStart = startPos;
-                        editor.TargetEnd = editor.TextLength;
-                        int foundPos = editor.SearchInTarget(keyword);
-                        if (foundPos == -1) break;
-                        editor.StartStyling(foundPos);
-                        editor.SetStyling(keyword.Length, styleId);
-                        startPos = foundPos + keyword.Length;
-                    }
-                }
-                styleId++;
-            }
-        }
-    }
+    
 }
 
 /* for web view 2 which will not be used on this version !!! 
@@ -3563,44 +3526,82 @@ public class ToggleablePanel : Panel {
 }
 
 public class OverlayForm : Form {
+    protected Label LabelRef;
+    protected Form? parent_form;
+    private Timer? fadeTimer;
+    private Color background_color = Color.FromArgb(30,30,30);
+    private double max_opacity = 0.3;
+    private double opacity_step = 0.01;
     // == methods 
+    public OverlayForm(Form parent) : this(parent, "") {}
     public OverlayForm(Form parent, string message) {
         this.FormBorderStyle = FormBorderStyle.None;
         this.StartPosition = FormStartPosition.Manual;
         this.ShowInTaskbar = false;
         this.TopMost = true;
-        this.BackColor = Color.Black;
-        this.Opacity = 0.7;
-        this.Bounds = parent.Bounds;
-        Label lbl = new Label {
+        this.BackColor = this.background_color;
+        this.Opacity = 0;
+        this.Bounds = parent.Bounds;    
+        this.LabelRef = new Label {
             Text = message,
             ForeColor = Color.White,
             BackColor = Color.Transparent,
             AutoSize = true,
-            Font = new Font("Segoe UI", 16, FontStyle.Bold),
-            Location = new Point(this.Width / 2 - 100, this.Height / 2)
+            Font = new Font("Consolas", 14),
+            Location = new Point(this.Width / 2 - 100, this.Height / 2),
+//            Dock = DockStyle.Fill
         };
-        this.Controls.Add(lbl);
-    }
-    public void FadeIn() {
-        Timer t = new Timer { Interval = 30 };
-        t.Tick += (s, e) => {
-            if (this.Opacity < 0.8)
-                this.Opacity += 0.05;
-            else
-                t.Stop();
+        this.Controls.Add(this.LabelRef);
+        this.parent_form = parent;
+        this.Activated += (s,e)=>{
+            this.parent_form?.Activate();
         };
-        t.Start();
+        this.Shown += (s,e)=>{
+            this.parent_form?.Activate();
+        };
     }
-    public void FadeOut() {
-        Timer t = new Timer { Interval = 30 };
+    public void update_size() {
+        if (this.parent_form == null) return;
+        this.Width = this.parent_form.Width;
+        this.Height = this.parent_form.Height;
+    }
+    public void update_position() {
+        if (this.parent_form == null) return;
+        this.Location = this.parent_form.Location; 
+        this.LabelRef.TextAlign = ContentAlignment.MiddleCenter;
+        this.LabelRef.Location = new Point(this.Width / 2 - 100, this.Height / 2);
+    }
+    public void Display(string message, int time = 30) {
+        if (string.IsNullOrWhiteSpace(message)) return;
+        update_size();
+        update_position();
+        LabelRef.Text = message;
+        if (!Visible) {
+            Opacity = 0;
+            Show();
+        }
+        StartFadeAnimation(time);
+    }
+    private void StartFadeAnimation(int time) {
+        fadeTimer?.Stop();
+        fadeTimer = new Timer { Interval = time/3 };
+        fadeTimer.Tick += (s, e) => {
+            if (Opacity < this.max_opacity)
+                Opacity += this.opacity_step;
+            else {
+                fadeTimer.Stop();
+                FadeOut(time);
+            }
+        };
+        fadeTimer.Start();
+    }
+    private void FadeOut(int time) {
+        Timer t = new Timer { Interval = time };
         t.Tick += (s, e) => {
-            if (this.Opacity > 0)
-                this.Opacity -= 0.05;
-            else
-            {
+            if (Opacity > 0)
+                Opacity -= this.opacity_step;
+            else {
                 t.Stop();
-                this.Close();
             }
         };
         t.Start();

@@ -1,6 +1,11 @@
 // Notepad-- : Simpler version of Notepad++ 
 // -- BEGIN 
 
+/* === Bugs/Issues === 
+1. Toggle Outlining/Folding : Alt+P don't always put the caret visible 
+2. Message Overlay : Display OverlayForm steals the window focus and don't return - [SOLVED]
+*/
+
 namespace Notepad__;
 // -- 
 using System.IO;
@@ -29,16 +34,18 @@ public class Form_DATA {
     public int Height { get; set; }
     public int X { get; set; }
     public int Y { get; set; }
+    public int split_percentage { get; set; }
 	public List<string> Directories { get; set; }
 	public List<string> LeftFiles { get; set; }
 	public List<string> RightFiles { get; set; }
 	public float FontSize { get; set; } 
 	public string DialogDir { get;set; }
-    public Form_DATA() {
+    public Form_DATA() { // defaults 
         Width = 1200;
         Height = 600;
         X = 20;
         Y = 20;
+        split_percentage = 55;
 		Directories = new List<string>();
 		LeftFiles = new List<string>();
 		RightFiles = new List<string>();
@@ -58,6 +65,7 @@ public partial class Notepad__Form : Form {
 	private DarkTabControl right_tabs;
 	private DarkTreeView explorer;
     private Scintilla help_scintilla;
+    private OverlayForm message_overlay = null;
     // -- theme
     private static Color background_color = Color.FromArgb(10, 10, 12);
 	private static Color locked_background_color = Color.FromArgb(0, 12, 0);
@@ -66,7 +74,7 @@ public partial class Notepad__Form : Form {
     // -- gui options 
     private double work_opacity = 0.85;
     private double background_opacity = 0.35;   
-    private int split_percentage = 55;
+//    private int split_percentage = 55;
     private bool hidden_titlebar = true;
     // -- 
 	private Dictionary<string, Scintilla> fullpath_scintilla_map = new();
@@ -77,12 +85,13 @@ public partial class Notepad__Form : Form {
     private string search_token = "";
     private int char_added_debouncer = 0;
     private int char_added_debouncer_max = 20;
-//    private int current_split_percentage = 55;
+    private int current_split_percentage = 55;
 	// == methods 
 	// -- user interface workflow 
 	private void _components() {
 		this.left_tabs = new_dark_tabs();
 		this.right_tabs = new_dark_tabs();
+        this.current_split_percentage = this.data.split_percentage;
 		this.explorer = new_file_explorer_dark_tree(this.data.Directories);
         add_context_menu_item(this.explorer, "Open File/Directory");
 		this.help_scintilla = new_scintilla();
@@ -137,6 +146,7 @@ public partial class Notepad__Form : Form {
 // General Commands 
 1. RCtrl // See through window 
 """;
+        this.message_overlay = new OverlayForm(this);
 	}
 	private void _layout() {
 		this.StartPosition = FormStartPosition.Manual;
@@ -154,7 +164,7 @@ public partial class Notepad__Form : Form {
 		this.main_panel = new_vertical_split(this.left_tabs, this.right_tabs);
 		this.main_panel.Dock = DockStyle.Fill;
 		this.Controls.Add(this.main_panel);
-        set_splitter_distance(this.main_panel, this.split_percentage);
+        set_splitter_distance(this.main_panel, this.current_split_percentage);
 	}
 	private void _logic() {
         // main form 
@@ -164,7 +174,7 @@ public partial class Notepad__Form : Form {
 			SBR_save_session_data();
 		};
 		this.Resize += (s,e) => {
-            set_splitter_distance(this.main_panel, this.split_percentage);
+            set_splitter_distance(this.main_panel, this.current_split_percentage);
         }; 
         key_shortcut(this, "ctrl","h", () => {
 			SBR_compact_toggle();
@@ -180,6 +190,14 @@ public partial class Notepad__Form : Form {
             this.right_tabs.SelectedTab = LST;
             this.left_tabs.SelectedTab = RST; 
         });
+        key_shortcut(this, "alt","d", ()=>{
+            current_split_percentage += 5;
+            set_splitter_distance(this.main_panel, this.current_split_percentage);
+        } );
+        key_shortcut(this, "alt","a", ()=>{
+            current_split_percentage -= 5;
+            set_splitter_distance(this.main_panel, this.current_split_percentage);
+        } );
         OnTick( this, (s,e) => {
             // opacity logic 
             if ( !is_form_active(this) ) {
@@ -287,6 +305,7 @@ public partial class Notepad__Form : Form {
 					fullpath_scintilla_map.Remove( pointed_page.ToolTipText );
 					this.data.LeftFiles.Remove(pointed_page.ToolTipText);
 					this.data.RightFiles.Remove(pointed_page.ToolTipText);
+                    this.message_overlay.Display("Tab Closed : "+pointed_page.Text, 30);
 				} 
 			} else {
 				if (pointed_page == null) return;
@@ -309,39 +328,50 @@ public partial class Notepad__Form : Form {
 			if (editor==null) return ;
             if (editor.ReadOnly) return ;
 			string content = editor.Text;
-			if (is_file(path)){
-				save(path, content); 
-				this.fullpath_scintilla_map[path] = editor;
-				set_lexer(editor, path);
-                set_folding(editor);
-                set_language_style(editor, path);
-				current_page.Text = get_filename(path);
-			} else {
-				string _path = save_dialog("txt", this.data.DialogDir);
-				if (_path == null) return ;
-				current_page.ToolTipText = _path;
-				save(_path, content); 
-				this.fullpath_scintilla_map[_path] = editor;
-				set_lexer(editor, _path);
-                set_folding(editor);
-                set_language_style(editor, _path);
-				current_page.Text = get_filename(_path);
+			if ( !is_file(path) ){
+				path = save_dialog("txt", this.data.DialogDir);
+				if (path == null) return ;
+				current_page.ToolTipText = path;
 			}
-            apply_highlight_for_file_directives(editor);
+            save(path, content); 
+//            this.message_overlay.Display("Saved : "+path);
+            this.fullpath_scintilla_map[path] = editor;
+            current_page.Text = get_filename(path);
+            update_border_color(ns, page);
+            refresh_style(editor);
+//            set_lexer(editor, path);
+//            set_folding(editor);
+//            set_language_style(editor, path);
+//            apply_highlight_for_file_directives(editor);
 		});	
 		key_shortcut(ns, "ctrl","r", async () => {
-			toggle_read_only(ns);
-            if (ns.ReadOnly) {
+            Scintilla editor = ns;
+            if (editor.ReadOnly) {
                 kill_document_words_async();
             } else {
-                _ = get_document_words_async(ns); // fire and forget
+                _ = get_document_words_async(editor); // fire and forget
             }
-            apply_highlight_for_file_directives(ns);
-            update_border_color(ns, page);
+//            string content = ns.Text; // testing
+            toggle_read_only(editor);
+            update_border_color(editor, page);
+            refresh_style(editor);
+//            string path = page.ToolTipText;
+//            set_lexer(editor, path);
+//            set_folding(editor);
+//            set_language_style(editor, path);
+//            apply_highlight_for_file_directives(editor);
 		});
 		ns.CharAdded += (s, e) => {
             var editor = (Scintilla)s;
-            int line_count = editor.Lines.Count;
+            int line_count = -1;
+            string? filename = editor.Tag as string;
+            if ( !string.IsNullOrWhiteSpace(filename) ) {
+                if ( this.fullpath_lines_map.ContainsKey(filename) ) {
+                    line_count = this.fullpath_lines_map[filename];
+                } else {
+                    line_count = editor.Lines.Count;
+                }
+            }
             if (line_count > 3000) {
                 if (char_added_debouncer < (line_count/1000)*2) {
                     char_added_debouncer++;
@@ -356,12 +386,15 @@ public partial class Notepad__Form : Form {
             string list = build_autocomplete_list(autocomplete_hashset, prefix);
             if (list.Length > 0) editor.AutoCShow(prefix.Length, list);
         };
-        toggle_read_only(ns);
-        update_border_color(ns, page);
+//        toggle_read_only(ns);
+//        update_border_color(ns, page);
+        
+        // DEBUG 
         key_shortcut(ns, "ctrl", Keys.F1, ()=>{
-            dump_lexer_names(ns);
+            if ( this.message_overlay==null ) this.message_overlay = new OverlayForm(this);
+            this.message_overlay.Display("Testing");
         });
-	}
+    }
     // -- subroutines || new tabs 
     private TabPage add_new_tab(DarkTabControl tabs, Control ctrl, string name) {
 		TabPage page = add_tab<Panel>(tabs, name);
@@ -377,13 +410,19 @@ public partial class Notepad__Form : Form {
 			// this.fullpath_scintilla_map[filename].Focus();
 			return false;
 		}
-		Scintilla ns = new_scintilla();
-		this.fullpath_scintilla_map[filename] = ns;
-		load_file(ns, filename);
-		TabPage page = add_new_tab(tabs, ns, get_filename(filename) );
+		Scintilla editor = new_scintilla();
+		this.fullpath_scintilla_map[filename] = editor;
+        load_file(editor, filename);
+        this.fullpath_lines_map[filename] = editor.Lines.Count;
+		TabPage page = add_new_tab(tabs, editor, get_filename(filename) );
 		page.ToolTipText = filename;
 		// extra logic 
-		scintilla_tab_logic(ns, page);
+		scintilla_tab_logic(editor, page);
+        toggle_read_only(editor);
+        update_border_color(editor, page);
+//        apply_highlight_for_file_directives(editor);
+        refresh_style(editor);
+        fold_all(editor);
 		return true;
 	}
 	private void add_new_scintilla_tab(DarkTabControl tabs) {
@@ -432,6 +471,7 @@ public partial class Notepad__Form : Form {
 		this.data.Height = this.Height;
 		this.data.X = this.Location.X;
 		this.data.Y = this.Location.Y;
+        this.data.split_percentage = this.current_split_percentage;
 		save(
 			join(get_exec_dir(), this.data_filename), 
 			JsonSerializer.Serialize(this.data)
@@ -488,9 +528,10 @@ public partial class Notepad__Form : Form {
         string path = (string) editor.Tag;
         if (string.IsNullOrWhiteSpace(path)) return;
         if ( !is_code_file(path) ) return; 
-//        set_lexer(editor, filename);
+        set_lexer(editor, path);
         set_folding(editor);
         set_language_style(editor, path);
+        apply_highlight_for_file_directives(editor);
     }
     private DarkTabControl? get_focused_tab() {
 		if ( this.left_tabs.ContainsFocus ) return this.left_tabs;
@@ -561,7 +602,7 @@ public partial class Notepad__Form : Form {
         list.Sort();
         return string.Join(" ", list);
     }
-    private void toggle_read_only(Scintilla editor){
+    private void toggle_read_only(Scintilla editor) {
 		editor.ReadOnly = !editor.ReadOnly;
 		if (editor.ReadOnly) {
 			for (int i = 0; i < 256; i++) {
@@ -571,7 +612,7 @@ public partial class Notepad__Form : Form {
 			for (int i = 0; i < 256; i++) {
 				editor.Styles[i].BackColor = background_color;
 			}
-            refresh_style(editor);
+//            refresh_style(editor); 
 		}
 	}
 	private bool switch_view(TabPage page) {
@@ -625,18 +666,6 @@ public partial class Notepad__Form : Form {
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
