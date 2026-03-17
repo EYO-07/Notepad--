@@ -126,10 +126,11 @@ public partial class Notepad__Form : Form {
                 // ... tab to return to Editors 
 
 // Editor Commands || Misc
-1. Alt+S    // Switch Select Tabs Between Views 
-2. Ctrl+F   // Go To Next Selection Match
-3. Ctrl+D   // Go To Previous Selection Match
-4. Ctrl+Q   // Comment out selected lines 
+1. Alt+S            // Switch Select Tabs Between Views 
+2. Alt+A / Alt+D    // Change the splitter position 
+3. Ctrl+F           // Go To Next Selection Match
+4. Ctrl+D           // Go To Previous Selection Match
+5. Ctrl+Q           // Comment out selected lines 
 
 // Tab Commands
 1. Right Click on Tab       // Switch the tab between panels
@@ -361,7 +362,16 @@ public partial class Notepad__Form : Form {
 //            set_language_style(editor, path);
 //            apply_highlight_for_file_directives(editor);
 		});
-		ns.CharAdded += (s, e) => {
+		key_shortcut(ns, "alt","z", () => {
+//            add_begin_fold_marker(ns);
+        });
+        key_shortcut(ns, "alt","x", () => {
+//            add_end_fold_marker(ns);
+        });
+        key_shortcut(ns, "alt","c", () => {
+//            remove_fold_marker(ns);
+        });
+        ns.CharAdded += (s, e) => {
             var editor = (Scintilla)s;
             int line_count = -1;
             string? filename = editor.Tag as string;
@@ -373,7 +383,7 @@ public partial class Notepad__Form : Form {
                 }
             }
             if (line_count > 3000) {
-                if (char_added_debouncer < (line_count/1000)*2) {
+                if (char_added_debouncer < (line_count/1000) ) {
                     char_added_debouncer++;
                     return;
                 } else {
@@ -530,8 +540,10 @@ public partial class Notepad__Form : Form {
         if ( !is_code_file(path) ) return; 
         set_lexer(editor, path);
         set_folding(editor);
+        configure_manual_fold_markers(editor);
         set_language_style(editor, path);
         apply_highlight_for_file_directives(editor);
+//        apply_fold_marks_for_file_directives(editor);
     }
     private DarkTabControl? get_focused_tab() {
 		if ( this.left_tabs.ContainsFocus ) return this.left_tabs;

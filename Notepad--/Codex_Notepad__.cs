@@ -1862,7 +1862,7 @@ public static class Incantation_SCINTILLA {
     private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
     private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
     private static Color number_fore_color = Color.Cyan;
-    private static Color number_back_color = Color.DarkBlue;
+    private static Color number_back_color = Color.FromArgb(0, 0, 33);
     private static Color string_fore_color = Color.FromArgb(230, 230, 230); 
     private static Color string_back_color = Color.FromArgb(40, 40, 40); 
     // -- 
@@ -1903,47 +1903,6 @@ public static class Incantation_SCINTILLA {
 		return CODE_EXTS.Contains(ext);
 	}
 	// --
-
-    // DEPRECATED
-    private static Dictionary<string, string> EXT_TO_LEXER = new Dictionary<string, string>() {
-		{".cs", "cpp"},
-		{".java", "cpp"},
-		{".c", "cpp"},
-        {".ahk", "cpp"},
-		{".cpp", "cpp"},
-		{".h", "cpp"},
-		{".hpp", "cpp"},
-		{".js", "cpp"},        // many editors reuse cpp lexer for js
-		{".ts", "cpp"},
-		{".json", "json"},
-		{".xml", "xml"},
-		{".html", "xml"},
-		{".htm", "xml"},
-        {".csproj", "xml"},
-		{".css", "css"},
-		{".py", "python"},
-        {".pyw", "python"},
-		{".lua", "lua"},
-		{".sh", "bash"},
-		{".bat", "batch"},
-		{".ps1", "powershell"},
-		{".sql", "sql"},
-		{".php", "php"},
-		{".rb", "ruby"},
-		{".go", "go"},
-		{".rs", "rust"},
-		{".swift", "swift"},
-		{".md", "markdown"},
-		{".txt", "null"}
-	};
-    public static string get_lexer_name(string filename_with_ext) {
-        if ( string.IsNullOrWhiteSpace(filename_with_ext) ) return "null";
-		string ext = Path.GetExtension(filename_with_ext).ToLowerInvariant();
-		if (EXT_TO_LEXER.TryGetValue(ext, out string lexer)) return lexer;
-		return "null"; // fallback if unknown
-	}
-	
-    // -- 
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
 		editor.Dock = DockStyle.Fill;
@@ -2026,6 +1985,31 @@ public static class Incantation_SCINTILLA {
         });
 	}
 
+    // Define custom marker indices for begin/end folds
+    private const int BeginFoldMarker = 20; // pick an unused marker index
+    private const int EndFoldMarker   = 21;
+    public static void add_begin_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerAdd(BeginFoldMarker);
+    }
+    public static void add_end_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerAdd(EndFoldMarker);
+    }
+    public static void remove_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerDelete(BeginFoldMarker);
+        editor.Lines[line].MarkerDelete(EndFoldMarker);
+    }
+    public static void configure_manual_fold_markers(Scintilla editor) {
+        editor.Markers[BeginFoldMarker].Symbol = MarkerSymbol.Arrow;
+        editor.Markers[BeginFoldMarker].SetForeColor(System.Drawing.Color.White);
+        editor.Markers[BeginFoldMarker].SetBackColor(System.Drawing.Color.Green);
+        editor.Markers[EndFoldMarker].Symbol = MarkerSymbol.ArrowDown;
+        editor.Markers[EndFoldMarker].SetForeColor(System.Drawing.Color.White);
+        editor.Markers[EndFoldMarker].SetBackColor(System.Drawing.Color.Red);
+    }
+
     // DEBUG
     public static void dump_lexer_names(Scintilla editor){
         editor.AppendText("=== Lexer Names ===\n");
@@ -2036,20 +2020,6 @@ public static class Incantation_SCINTILLA {
         }
     }
     
-    // DEPRECATED
-    /*
-    public static void set_fold_and_style(Scintilla editor, string filename) {
-		editor.Tag = filename;
-		try {
-			set_language_folding(editor, get_lexer_name(filename) );
-			set_language_style(editor, filename);
-		} catch (Exception e) {
-			
-		}
-	}
-	
-    */
-
     public static void set_language_folding(Scintilla scintilla, string lexer) {
 		// --
 		// Set the lexer
@@ -2245,17 +2215,13 @@ public static class Incantation_SCINTILLA {
                 break;
 		}
 	}
-    // -- 
+    // --     
     public static void set_py_style(Scintilla scintilla) {
-        // Default
         scintilla.Styles[Style.Python.Default].ForeColor = Color.Silver;
-        // Comments
         scintilla.Styles[Style.Python.CommentLine].ForeColor = comment_fore_color;
         scintilla.Styles[Style.Python.CommentLine].BackColor = comment_back_color;
-        // Numbers
         scintilla.Styles[Style.Python.Number].ForeColor = number_fore_color;
         scintilla.Styles[Style.Python.Number].BackColor = number_back_color;
-        // Strings
         scintilla.Styles[Style.Python.String].ForeColor = string_fore_color;
         scintilla.Styles[Style.Python.String].BackColor = string_back_color;
         scintilla.Styles[Style.Python.Character].ForeColor = string_fore_color;
@@ -2264,14 +2230,10 @@ public static class Incantation_SCINTILLA {
         scintilla.Styles[Style.Python.Triple].BackColor = string_back_color;
         scintilla.Styles[Style.Python.TripleDouble].ForeColor = string_fore_color;
         scintilla.Styles[Style.Python.TripleDouble].BackColor = string_back_color;
-        // Keywords
         scintilla.Styles[Style.Python.Word].ForeColor = keyword1_color;
-        // Operators
         scintilla.Styles[Style.Python.Operator].ForeColor = Color.Yellow;
-        // Python keywords
         scintilla.SetKeywords(0,
         "and as assert async await break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield");
-        // Common builtins / types
         scintilla.SetKeywords(1,
         "int float str bool list tuple dict set bytes object type");
     }
@@ -2507,6 +2469,23 @@ public static class Incantation_SCINTILLA {
         }
     }
 
+//    public static void apply_fold_marks_for_file_directives(Scintilla editor) {
+//        var directivePattern = @"\{Notepad--Fold;([^}]*)\}";
+//        var regex = new Regex(directivePattern);
+//        for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
+//            var lineText = editor.Lines[i].Text;
+//            var match = regex.Match(lineText);
+//            if (!match.Success) continue;
+//            var directives = match.Groups[1].Value.Split(';');            
+//            foreach (var directive in directives) {
+//                var parts = directive.Split(',');
+//                if (parts.Length != 2) continue;
+//                var begin = parts[0].Trim();
+//                var end = parts[1].Trim();
+//                set_custom_fold_markers(editor, begin, end);
+//            }
+//        }
+//    }
     public static void apply_highlight_for_file_directives(Scintilla editor) {
         var directivePattern = @"\{Notepad--;([^}]*)\}";
         var regex = new Regex(directivePattern);
@@ -2623,6 +2602,11 @@ public static class Incantation_SCINTILLA {
     }
 	
 	// -- fold helpers
+
+    // :D just use `using NativeMethods`, dumb 
+//    private static const int SCI_LINEFROMPOSITION = 2166;
+//    private static const int SCI_GETFOLDPARENT = 2225; // SCI_GETFOLDPARENT (2225) returns the index of the line that is the parent of the current line's fold block.
+    
 	public static void fold_all(Scintilla editor) {
 		const int SCI_FOLDALL = 2662;
 		const int SC_FOLDACTION_CONTRACT = 0;
@@ -2702,8 +2686,7 @@ public static class Incantation_SCINTILLA {
         // This ensures C++ levels are accurate before we check them.
         int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
         // 2. Use the built-in logic to find the fold header for this line
-        // SCI_GETFOLDPARENT (2225) returns the index of the line that is the 
-        // parent of the current line's fold block.
+        
         int parentLine = (int)editor.DirectMessage(2225, (IntPtr)line);
         // If the current line itself is a header, SCI_GETFOLDPARENT usually 
         // returns the parent above it. We check if the current line is a header first.
