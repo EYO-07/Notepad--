@@ -1,4 +1,4 @@
-// Codex Library for Magic Oriented Programming 
+// Codex Library in Magic Oriented Programming 
 // -- BEGIN 
 
 namespace Codex;
@@ -197,8 +197,7 @@ public static class Transmutation {
 	// List 
 	public static T? Get<T>(this List<T> list, int index) {
 		return (index >= 0 && index < list.Count) ? list[index] : default;
-	}
-	
+	}   
 }
 
 // ===================================== incantation 
@@ -1849,6 +1848,10 @@ foreach ($file in $files) {{
 }
 
 public static class Incantation_SCINTILLA {
+    public static bool is_file_modified(Scintilla editor, string filename) {
+        // check if the editor.Text match the content in filename 
+        return false;
+    }
     // -- dark theme colors 
     private static Color foreground_color = Color.FromArgb(255, 255, 255);
     private static Color background_color = Color.FromArgb(10, 10, 12);
@@ -1857,12 +1860,12 @@ public static class Incantation_SCINTILLA {
     private static Color fold_back_color = Color.FromArgb(255, 255, 255);
     private static Color margin_fore_color = Color.FromArgb(120,120,120);
     private static Color margin_back_color = Color.FromArgb(30,30,30); 
-    private static Color keyword1_color = Color.FromArgb(255, 153, 51); // orange 
-    private static Color keyword2_color = Color.FromArgb(0, 255, 20); // green 
+    private static Color keyword1_color = Color.FromArgb(255, 133, 50); // orange 
+    private static Color keyword2_color = Color.FromArgb(0, 255, 70); // green 
     private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
     private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
     private static Color number_fore_color = Color.Cyan;
-    private static Color number_back_color = Color.FromArgb(0, 0, 33);
+    private static Color number_back_color = Color.FromArgb(0, 0, 73);
     private static Color string_fore_color = Color.FromArgb(230, 230, 230); 
     private static Color string_back_color = Color.FromArgb(40, 40, 40); 
     // -- 
@@ -1903,49 +1906,41 @@ public static class Incantation_SCINTILLA {
 		return CODE_EXTS.Contains(ext);
 	}
 	// --
-	public static Scintilla new_scintilla() {
-		var editor = new Scintilla();
-		editor.Dock = DockStyle.Fill;
-		editor.BorderStyle = ScintillaNET.BorderStyle.None;
-		// Reset styles
-		editor.StyleResetDefault();
-		// Default text style
+    public static void init_dark_theme_scintilla(Scintilla editor) {
+        editor.StyleResetDefault();
 		editor.Styles[Style.Default].Font = "Consolas";
 		editor.Styles[Style.Default].Size = 8;
 		editor.Styles[Style.Default].Bold = true;
 		editor.Styles[Style.Default].ForeColor = foreground_color;
 		editor.Styles[Style.Default].BackColor = background_color;
-		// Apply default style everywhere
-		editor.StyleClearAll();
-		// Caret
-		editor.CaretForeColor = Color.White;
-		editor.CaretWidth = 2;
-		// Selection
-		editor.SetSelectionBackColor(true, Color.FromArgb(70, 70, 70));
+        editor.StyleClearAll();
+        editor.Styles[Style.LineNumber].ForeColor = Color.FromArgb(120,120,120);
+		editor.Styles[Style.LineNumber].BackColor = margin_back_color;
+        editor.Styles[Style.IndentGuide].ForeColor = Color.FromArgb(60,60,60);
+        editor.EdgeColor = Color.FromArgb(60,60,60);
+        editor.CaretForeColor = Color.White;
+        editor.CaretLineBackColor = Color.FromArgb(40, 40, 40);
+        editor.SetSelectionBackColor(true, Color.FromArgb(70, 70, 70));
 		editor.SetSelectionForeColor(true, Color.White);
-		// Highlight current line
+    }
+    
+	public static Scintilla new_scintilla() {
+		var editor = new Scintilla();
+		editor.Dock = DockStyle.Fill;
+		editor.BorderStyle = ScintillaNET.BorderStyle.None;
+		editor.CaretWidth = 2;
 		editor.CaretLineVisible = true;
-		editor.CaretLineBackColor = Color.FromArgb(40, 40, 40);
-		// Line numbers margin
 		editor.Margins[0].Type = MarginType.Number;
 		editor.Margins[0].Width = 40;
-		editor.Styles[Style.LineNumber].ForeColor = Color.FromArgb(120,120,120);
-		editor.Styles[Style.LineNumber].BackColor = margin_back_color;
-		//
-		editor.Styles[Style.IndentGuide].ForeColor = Color.FromArgb(60,60,60);
 		editor.EdgeMode = EdgeMode.Line;
 		editor.EdgeColumn = 120;
-		editor.EdgeColor = Color.FromArgb(60,60,60);
-		set_keyshortcuts(editor);
-    
-        // 
         editor.WrapMode = WrapMode.Word;
         editor.WrapIndentMode = WrapIndentMode.Indent;
-
         editor.AutoCIgnoreCase = true;
-        // editor.AutoCMaxHeight = 10;
+        editor.AutoCMaxHeight = 30;
         editor.AutoCSeparator = ' ';
-
+        init_dark_theme_scintilla(editor);
+        set_keyshortcuts(editor);
 		return editor;
 	}
 	public static void load_file(Scintilla editor, string filename) {
@@ -2078,14 +2073,8 @@ public static class Incantation_SCINTILLA {
         if ( string.IsNullOrWhiteSpace(filename) ) return false;
 		string ext = Path.GetExtension(filename).ToLowerInvariant();
         if ( string.IsNullOrWhiteSpace(ext) ) return false;
-        // -- first try to find the lexer_name directly on GetLexerNames iterator
-        foreach(string lexer_name in Lexilla.GetLexerNames()) {
-            if (ext == "."+lexer_name) {
-                editor.LexerName = lexer_name;
-                return true;
-            }
-        } 
         // -- hand picked lexer names which will mismatch extension names 
+//        reset_dark_theme_scintilla(editor);
         switch (ext) {
             case ".md":
                 editor.LexerName = "markdown";
@@ -2095,6 +2084,7 @@ public static class Incantation_SCINTILLA {
             case ".csproj":
                 editor.LexerName = "hypertext";
                 return true;
+            case ".c":
             case ".h":
             case ".hpp":
             case ".cs":
@@ -2122,6 +2112,13 @@ public static class Incantation_SCINTILLA {
                 editor.LexerName = "ruby";
                 return true;
         }
+        // -- the lexer_name directly on GetLexerNames iterator
+        foreach(string lexer_name in Lexilla.GetLexerNames()) {
+            if (ext == "."+lexer_name) {
+                editor.LexerName = lexer_name;
+                return true;
+            }
+        } 
         return false;
     }
     public static void set_folding(Scintilla scintilla) {
@@ -2178,6 +2175,7 @@ public static class Incantation_SCINTILLA {
             case ".ahk":
             case ".c":
                 set_c_style(scintilla);
+//                set_cpp_style(scintilla);
                 break;
             case ".h":
             case ".hpp":
@@ -2429,11 +2427,9 @@ public static class Incantation_SCINTILLA {
     public static void set_c_style(Scintilla scintilla) {
         set_c_family_style(scintilla);
         // C keywords
-        scintilla.SetKeywords(0,
-        "auto break case char const continue default do double else enum extern float for goto if inline int long register restrict return short signed sizeof static struct switch typedef union unsigned void volatile while");
+        scintilla.SetKeywords(0,"auto break case char const continue default do double else enum extern float for goto if inline int long register restrict return short signed sizeof static struct switch typedef union unsigned void volatile while");
         // C types
-        scintilla.SetKeywords(1,
-        "bool size_t ptrdiff_t");
+        scintilla.SetKeywords(1,"bool size_t ptrdiff_t");
     }
 
     public static void set_ahk_style(Scintilla scintilla) {}
@@ -2489,6 +2485,7 @@ public static class Incantation_SCINTILLA {
     public static void apply_highlight_for_file_directives(Scintilla editor) {
         var directivePattern = @"\{Notepad--;([^}]*)\}";
         var regex = new Regex(directivePattern);
+        var text_len = editor.TextLength;
         for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
             var lineText = editor.Lines[i].Text;
             var match = regex.Match(lineText);
@@ -2509,7 +2506,7 @@ public static class Incantation_SCINTILLA {
                     int startPos = 0;
                     while (true) {
                         editor.TargetStart = startPos;
-                        editor.TargetEnd = editor.TextLength;
+                        editor.TargetEnd = text_len;
                         int foundPos = editor.SearchInTarget(keyword);
                         if (foundPos == -1) break;
                         editor.StartStyling(foundPos);

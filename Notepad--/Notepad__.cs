@@ -1,9 +1,21 @@
 // Notepad-- : Simpler version of Notepad++ 
 // -- BEGIN 
 
+// -- Custom Highlights 
+// {Notepad--;Red:Bug,Issue,Bugs,Issues;Silver:SOLVED,~;Yellow:...;Cyan:TODO,Ideas}
+
 /* === Bugs/Issues === 
-1. Toggle Outlining/Folding : Alt+P don't always put the caret visible 
+1. Toggle Outlining/Folding : Alt+P don't always put the caret visible - ...
 2. Message Overlay : Display OverlayForm steals the window focus and don't return - [SOLVED]
+3. files.c not recognized - [~] using cpp lexer 
+4. custom hightlight not been applied to all lines - ... 
+5. custom hightlight detecting non-tokens - ... 
+6. the lexer seems to not be active until text change - ... 
+*/
+
+/* === Ideas/TODO ===
+1. Tab specialized for searching and replacing content on target tab 
+2. is_file_modified(Control ctrl, string filename) 
 */
 
 namespace Notepad__;
@@ -328,11 +340,13 @@ public partial class Notepad__Form : Form {
 			Scintilla editor = ns;
 			if (editor==null) return ;
             if (editor.ReadOnly) return ;
+            editor.Tag = path;
 			string content = editor.Text;
 			if ( !is_file(path) ){
 				path = save_dialog("txt", this.data.DialogDir);
 				if (path == null) return ;
 				current_page.ToolTipText = path;
+                editor.Tag = path;
 			}
             save(path, content); 
 //            this.message_overlay.Display("Saved : "+path);
@@ -396,8 +410,6 @@ public partial class Notepad__Form : Form {
             string list = build_autocomplete_list(autocomplete_hashset, prefix);
             if (list.Length > 0) editor.AutoCShow(prefix.Length, list);
         };
-//        toggle_read_only(ns);
-//        update_border_color(ns, page);
         
         // DEBUG 
         key_shortcut(ns, "ctrl", Keys.F1, ()=>{
@@ -430,7 +442,6 @@ public partial class Notepad__Form : Form {
 		scintilla_tab_logic(editor, page);
         toggle_read_only(editor);
         update_border_color(editor, page);
-//        apply_highlight_for_file_directives(editor);
         refresh_style(editor);
         fold_all(editor);
 		return true;
@@ -540,7 +551,7 @@ public partial class Notepad__Form : Form {
         if ( !is_code_file(path) ) return; 
         set_lexer(editor, path);
         set_folding(editor);
-        configure_manual_fold_markers(editor);
+//        configure_manual_fold_markers(editor);
         set_language_style(editor, path);
         apply_highlight_for_file_directives(editor);
 //        apply_fold_marks_for_file_directives(editor);
@@ -679,7 +690,11 @@ public partial class Notepad__Form : Form {
 
 }
 
+/* Bug/Issue : Custom Highlights not been applied consistently - ... 
 
+
+
+*/
 
 // -- END 
 
