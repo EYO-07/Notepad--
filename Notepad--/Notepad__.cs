@@ -1,19 +1,17 @@
 // Notepad-- : Simpler version of Notepad++ 
 // -- BEGIN 
+// {Notepad--;Red:BUG,ISSUE;Yellow:?;Cyan:TODO;Silver:SOLVED}
 
-// -- Custom Highlights 
-// {Notepad--;Red:Bug,Issue,Bugs,Issues;Silver:SOLVED,~;Yellow:...;Cyan:TODO,Ideas}
-
-/* === Bugs/Issues === 
+/* === BUG/ISSUE === 
 1. Toggle Outlining/Folding : Alt+P don't always put the caret visible - ...
-2. Message Overlay : Display OverlayForm steals the window focus and don't return - [SOLVED]
-3. files.c not recognized - [~] using cpp lexer 
-4. custom hightlight not been applied to all lines - ... 
-5. custom hightlight detecting non-tokens - ... 
-6. the lexer seems to not be active until text change - ... 
+2. Message Overlay : Display OverlayForm steals the window focus and don't return - SOLVED
+3. files.c not recognized - SOLVED 
+4. custom hightlight not been applied to all lines - SOLVED
+5. custom hightlight detecting non-tokens - SOLVED
+6. the lexer seems to not be active until text change - SOLVED
 */
 
-/* === Ideas/TODO ===
+/* === TODO ===
 1. Tab specialized for searching and replacing content on target tab 
 2. is_file_modified(Control ctrl, string filename) 
 */
@@ -23,6 +21,7 @@ namespace Notepad__;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using ScintillaNET;
 // --
 using Codex;
@@ -111,6 +110,9 @@ public partial class Notepad__Form : Form {
 // [ Notepad-- ] : A lesser version of Notepad++, don't like it? Use Notepad++ instead.
 // ... build on top of Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ) by desjarlais
 
+"Use comments like this on top of document to set textmarker highlighting, use comment style of the language used."
+{Notepad--;Red:BUG,ISSUE,Close,Titlebar;Yellow:TODO;Silver:SOLVED,Switch}
+
 // Features--
 1. "Fixed Dark Theme" // I don't care about your bad taste, it's hardcoded.
 2. "Has less language support" // Just use a normal programming language, like a normal person.
@@ -122,6 +124,7 @@ public partial class Notepad__Form : Form {
 2. Ctrl+S   // Save File 
 3. Ctrl+H   // Toggle Titlebar ~ Compact Mode 
             // ... use this to access the close button on right corner 
+            // ... use this to change window size
 4. Ctrl+R   // Toggle readonly mode changing background color : green safe, blue not safe. 
             // It's updates the autocomplete words 
 
@@ -158,6 +161,9 @@ public partial class Notepad__Form : Form {
 
 // General Commands 
 1. RCtrl // See through window 
+
+>>> 
+
 """;
         this.message_overlay = new OverlayForm(this);
 	}
@@ -304,6 +310,7 @@ public partial class Notepad__Form : Form {
 		// help 
 		set_language_folding(this.help_scintilla, "cpp");
 		set_cs_style(this.help_scintilla);
+        apply_highlight_for_file_directives(this.help_scintilla);
 		this.help_scintilla.ReadOnly = true;
 	} 
 	// -- subroutines 
@@ -659,7 +666,13 @@ public partial class Notepad__Form : Form {
 		}
 		return false;
 	}
-	// -- constructor 
+	private void print(string text) {
+        // this.help_scintilla.Text
+        this.help_scintilla.ReadOnly = false;
+        this.help_scintilla.AppendText(text+"\n");
+        this.help_scintilla.ReadOnly = true;
+    }
+    // -- constructor 
     public Notepad__Form() {
         InitializeComponent(); 
 		this.data = new_object_from_json<Form_DATA>(join(get_exec_dir(), this.data_filename));
@@ -690,7 +703,7 @@ public partial class Notepad__Form : Form {
 
 }
 
-/* Bug/Issue : Custom Highlights not been applied consistently - ... 
+/* BUG/ISSUE : Custom Highlights not been applied consistently - SOLVED
 
 
 

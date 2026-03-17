@@ -1,6 +1,9 @@
 // Codex Library in Magic Oriented Programming 
 // -- BEGIN 
 
+// -- Custom Highlights 
+// {Notepad--;Red:BUG,ISSUE;Yellow:?;Cyan:TODO;Silver:SOLVED}
+
 namespace Codex;
 // -- 
 using System.Runtime.InteropServices;
@@ -1853,21 +1856,21 @@ public static class Incantation_SCINTILLA {
         return false;
     }
     // -- dark theme colors 
-    private static Color foreground_color = Color.FromArgb(255, 255, 255);
-    private static Color background_color = Color.FromArgb(10, 10, 12);
-    private static Color locked_background_color = Color.FromArgb(20, 20, 35);
-    private static Color fold_fore_color = Color.FromArgb(60, 60, 60);
-    private static Color fold_back_color = Color.FromArgb(255, 255, 255);
-    private static Color margin_fore_color = Color.FromArgb(120,120,120);
-    private static Color margin_back_color = Color.FromArgb(30,30,30); 
-    private static Color keyword1_color = Color.FromArgb(255, 133, 50); // orange 
+    private static Color foreground_color = Color.FromArgb(255, 255, 255); // white
+    private static Color background_color = Color.FromArgb(10, 10, 12); // black slight blue
+    private static Color locked_background_color = Color.FromArgb(20, 20, 35); // black slight green
+    private static Color fold_fore_color = Color.FromArgb(60, 60, 60); // gray 
+    private static Color fold_back_color = Color.FromArgb(255, 255, 255); // white 
+    private static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
+    private static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
+    private static Color keyword1_color = Color.FromArgb(255, 133, 20); // orange 
     private static Color keyword2_color = Color.FromArgb(0, 255, 70); // green 
     private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
     private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
     private static Color number_fore_color = Color.Cyan;
-    private static Color number_back_color = Color.FromArgb(0, 0, 73);
-    private static Color string_fore_color = Color.FromArgb(230, 230, 230); 
-    private static Color string_back_color = Color.FromArgb(40, 40, 40); 
+    private static Color number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
+    private static Color string_fore_color = Color.FromArgb(230, 230, 230); // white
+    private static Color string_back_color = Color.FromArgb(40, 40, 40); // gray
     // -- 
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
@@ -2482,43 +2485,81 @@ public static class Incantation_SCINTILLA {
 //            }
 //        }
 //    }
+//    public static void apply_highlight_for_file_directives(Scintilla editor) {
+//        return ;
+//        var directivePattern = @"\{Notepad--;([^}]*)\}";
+//        var regex = new Regex(directivePattern);
+//        var text_len = editor.TextLength;
+//        for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
+//            var lineText = editor.Lines[i].Text;
+//            var match = regex.Match(lineText);
+//            if (!match.Success) continue;
+//            var directives = match.Groups[1].Value.Split(';');
+//            int styleId = 32; // start custom styles after predefined ones
+//            foreach (var directive in directives) {
+//                var parts = directive.Split(':');
+//                if (parts.Length != 2) continue;
+//                var colorName = parts[0].Trim();
+//                var keywords = parts[1].Split(',')
+//                                       .Select(k => k.Trim())
+//                                       .Where(k => k.Length > 0);
+//                Color c = Color.FromName(colorName);
+//                editor.Styles[styleId].ForeColor = c;
+//                foreach (var keyword in keywords) {
+//                    int startPos = 0;
+//                    while (true) {
+//                        editor.TargetStart = startPos;
+//                        editor.TargetEnd = text_len;
+//                        int foundPos = editor.SearchInTarget(keyword);
+//                        if (foundPos == -1) break;
+//                        editor.StartStyling(foundPos);
+//                        editor.SetStyling(keyword.Length, styleId);
+//                        startPos = foundPos + keyword.Length;
+//                    }
+//                }
+//                styleId++;
+//            }
+//        }
+//    }
+
     public static void apply_highlight_for_file_directives(Scintilla editor) {
         var directivePattern = @"\{Notepad--;([^}]*)\}";
         var regex = new Regex(directivePattern);
-        var text_len = editor.TextLength;
+        // Clear all indicators you plan to use
+        for (int i = 8; i < 32; i++) editor.IndicatorClearRange(0, editor.TextLength);
+        int indicatorIndex = 8; // start at 8, go up for each color
         for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
             var lineText = editor.Lines[i].Text;
             var match = regex.Match(lineText);
             if (!match.Success) continue;
             var directives = match.Groups[1].Value.Split(';');
-            int styleId = 32; // start custom styles after predefined ones
             foreach (var directive in directives) {
                 var parts = directive.Split(':');
                 if (parts.Length != 2) continue;
                 var colorName = parts[0].Trim();
-                var keywords = parts[1].Split(',')
-                                       .Select(k => k.Trim())
-                                       .Where(k => k.Length > 0);
-                // Assign style color
+                var keywords = parts[1]
+                    .Split(',')
+                    .Select(k => k.Trim())
+                    .Where(k => k.Length > 0);
                 Color c = Color.FromName(colorName);
-                editor.Styles[styleId].ForeColor = c;
-                foreach (var keyword in keywords) {
-                    int startPos = 0;
-                    while (true) {
-                        editor.TargetStart = startPos;
-                        editor.TargetEnd = text_len;
-                        int foundPos = editor.SearchInTarget(keyword);
-                        if (foundPos == -1) break;
-                        editor.StartStyling(foundPos);
-                        editor.SetStyling(keyword.Length, styleId);
-                        startPos = foundPos + keyword.Length;
+                // Configure this indicator
+                editor.Indicators[indicatorIndex].Style = IndicatorStyle.StraightBox;
+                editor.Indicators[indicatorIndex].ForeColor = c;
+                editor.Indicators[indicatorIndex].Alpha = 60;
+                editor.Indicators[indicatorIndex].OutlineAlpha = 255;
+                foreach (var keyword in keywords){
+                    int pos = 0;
+                    while ((pos = editor.Text.IndexOf(keyword, pos, StringComparison.Ordinal)) != -1) {
+                        editor.IndicatorCurrent = indicatorIndex;
+                        editor.IndicatorFillRange(pos, keyword.Length);
+                        pos += keyword.Length;
                     }
                 }
-                styleId++;
+                indicatorIndex++; // next color → next indicator
             }
         }
     }
-    
+
     // -- comment helpers 
     public static void toggle_comment_lines(Scintilla editor) {
         if (editor == null) return;
