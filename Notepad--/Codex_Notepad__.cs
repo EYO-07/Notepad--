@@ -2,7 +2,7 @@
 // -- BEGIN 
 
 // -- Custom Highlights 
-// {Notepad--;Red:BUG,ISSUE;Yellow:?;Cyan:TODO;Silver:SOLVED}
+// {Notepad--;Red:BUG,ISSUE,DEPRECATED;Yellow:?,TESTING;Cyan:TODO;Silver:SOLVED}
 
 namespace Codex;
 // -- 
@@ -2018,13 +2018,14 @@ public static class Incantation_SCINTILLA {
         }
     }
     
+    // DEPRECATED - but you should confirm if no other function use this!
     public static void set_language_folding(Scintilla scintilla, string lexer) {
 		// --
 		// Set the lexer
 		scintilla.LexerName = lexer;
 		// Instruct the lexer to calculate folding
 		scintilla.SetProperty("fold", "1");
-		// scintilla.SetProperty("fold.compact", "1");
+		scintilla.SetProperty("fold.compact", "0"); // TESTING 
         scintilla.SetProperty("fold.comment", "1");
 		// Configure a margin to display folding symbols
 		scintilla.Margins[2].Type = MarginType.Symbol;
@@ -2127,6 +2128,7 @@ public static class Incantation_SCINTILLA {
     public static void set_folding(Scintilla scintilla) {
         // Instruct the lexer to calculate folding
 		scintilla.SetProperty("fold", "1");
+        scintilla.SetProperty("fold.compact", "0"); // TESTING 
         scintilla.SetProperty("fold.comment", "1");
 		// Configure a margin to display folding symbols
 		scintilla.Margins[2].Type = MarginType.Symbol;
