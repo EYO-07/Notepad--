@@ -1,10 +1,13 @@
 // Codex Library in Magic Oriented Programming 
 
 // -- text marker highlight 
-// {Notepad--;Red:BUG,ISSUE,DEPRECATED,BUG/ISSUE} 
-// {Notepad--;Yellow:?,TESTING,NOT_TESTED,REVISION}
-// {Notepad--;Cyan:TODO} 
-// {Notepad--;Silver:SOLVED} 
+// {Notepad--T;Red:BUG,ISSUE,DEPRECATED,BUG/ISSUE} 
+// {Notepad--T;Yellow:TESTING,NOT_TESTED,REVISION}
+// {Notepad--T;Cyan:TODO,WORKING_>>>,<<<_WORKING} 
+// {Notepad--T;Silver:SOLVED} 
+// {Notepad--T;Cyan:Inventory;Silver:Logic,Dialetic;Red:Workflow} 
+// {Notepad--T;magenta:methods,attributes,variables}
+// {Notepad--H;1:silver}
 
 // -- BEGIN 
 
@@ -57,10 +60,10 @@ public static class Transmutation {
 	} 
 	
 	// Conversion methods 
-	public static float to_float(object obj)	{
+	public static float to_float(object obj) {
 		return Convert.ToSingle(obj);
 	}
-	public static int to_int(object obj)	{
+	public static int to_int(object obj) {
 		return Convert.ToInt32(obj);
 	}
 	public static double to_double(object obj) {
@@ -189,6 +192,10 @@ public static class Transmutation {
 	public static T? Get<T>(this List<T> list, int index) {
 		return (index >= 0 && index < list.Count) ? list[index] : default;
 	}   
+
+    // Regex 
+    // TODO/TESTING 
+//    public static IEnumerable<string> comma_separated_iterator(ref string content) {}
 }
 
 // ===================================== incantation 
@@ -203,10 +210,7 @@ public static class Incantation {
 	public static void register_icon(Form mainForm, string icon_name, string namespace_str) {
 		var assembly = Assembly.GetExecutingAssembly();
         using Stream? stream = assembly.GetManifestResourceStream(namespace_str+"."+icon_name+".ico");
-        if (stream != null)
-        {
-            mainForm.Icon = new Icon(stream);
-        }
+        if (stream != null) mainForm.Icon = new Icon(stream);
 	}
 	
     // utils
@@ -1839,28 +1843,50 @@ foreach ($file in $files) {{
 }
 
 public static class Incantation_SCINTILLA {
+    // TODO
     public static bool is_file_modified(Scintilla editor, string filename) {
         // check if the editor.Text match the content in filename 
         return false;
     }
-    // -- dark theme colors 
+    
+    // variables -- dark theme colors 
+    // variables || background, locked_background, foreground 
     public static Color foreground_color = Color.FromArgb(255, 255, 255); // white
     public static Color background_color = Color.FromArgb(10, 10, 12); // black slight blue
     public static Color locked_background_color = Color.FromArgb(0, 5, 0); // black slight green
-    public static Color fold_fore_color = Color.FromArgb(60, 60, 60); // gray 
-    public static Color fold_back_color = Color.FromArgb(255, 255, 255); // white 
-    public static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
-    public static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
-    public static Color keyword1_color = Color.FromArgb(255, 124, 0); // orange 
-    public static Color keyword1_backcolor;
-    public static Color keyword2_color = Color.FromArgb(0, 255, 95); // green 
-    public static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
-    public static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
-    public static Color number_fore_color = Color.Cyan;
-    public static Color number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
-    public static Color string_fore_color = Color.Red; //Color.FromArgb(230, 200, 0); // Color.FromArgb(230, 230, 230); // white
-    public static Color string_back_color = Color.FromArgb(60, 10, 10); // gray
-    // --     
+    // variables || folding and margin
+    private static Color fold_fore_color = Color.FromArgb(60, 60, 60); // gray 
+    private static Color fold_back_color = Color.FromArgb(255, 255, 255); // white 
+    private static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
+    private static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
+    // variables || language specific style
+    private static Color keyword1_color = Color.FromArgb(115, 187, 255); // orange 
+    private static Color keyword1_backcolor;
+    private static Color keyword2_color = Color.FromArgb(0, 255, 95); // green 
+    private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
+    private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
+    private static Color number_fore_color = Color.Cyan;
+    private static Color number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
+    private static Color string_fore_color = Color.Red; //Color.FromArgb(230, 200, 0); // Color.FromArgb(230, 230, 230); // white
+    private static Color string_back_color = Color.FromArgb(60, 10, 10); // gray
+    // variables | methods 
+    public static void reset_global_dark_theme_colors() {
+        foreground_color = Color.FromArgb(255, 255, 255); // white
+        background_color = Color.FromArgb(10, 10, 12); // black slight blue
+        locked_background_color = Color.FromArgb(0, 5, 0); // black slight green
+        fold_fore_color = Color.FromArgb(60, 60, 60); // gray 
+        fold_back_color = Color.FromArgb(255, 255, 255); // white 
+        margin_fore_color = Color.FromArgb(120,120,120); // gray
+        margin_back_color = Color.FromArgb(30,30,30); // dark gray 
+        keyword1_color = Color.FromArgb(115, 187, 255); // orange 
+        keyword2_color = Color.FromArgb(0, 255, 95); // green 
+        comment_fore_color = Color.FromArgb(0, 255, 153); // Green
+        comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
+        number_fore_color = Color.Cyan;
+        number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
+        string_fore_color = Color.Red; //Color.FromArgb(230, 200, 0); // Color.FromArgb(230, 230, 230); // white
+        string_back_color = Color.FromArgb(60, 10, 10); // gray
+    }
     public static void neon_green(ref Color fore,ref Color back) {
         fore = Color.FromArgb(0, 255, 153);
         back = Color.FromArgb(0, 51, 0);
@@ -1886,7 +1912,7 @@ public static class Incantation_SCINTILLA {
         back = Color.FromArgb(32, 0, 51);       // dark purple background
     }
 
-    // -- 
+    // variables
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
         ".csproj",
@@ -1916,32 +1942,15 @@ public static class Incantation_SCINTILLA {
         ".md",
         ".tex"
 	};
-	public static bool is_code_file(string filename_or_ext) {
+	// variables | methods 
+    public static bool is_code_file(string filename_or_ext) {
 		if ( string.IsNullOrWhiteSpace(filename_or_ext) ) return false;
 		string ext = filename_or_ext;
 		if (filename_or_ext.Contains(".")) ext = Path.GetExtension(filename_or_ext);
 		ext = ext.ToLower();
 		return CODE_EXTS.Contains(ext);
 	}
-	// --
-    public static void init_dark_theme_scintilla(Scintilla editor) {
-        editor.StyleResetDefault();
-		editor.Styles[Style.Default].Font = "Consolas";
-		editor.Styles[Style.Default].Size = 8;
-		editor.Styles[Style.Default].Bold = true;
-		editor.Styles[Style.Default].ForeColor = foreground_color;
-		editor.Styles[Style.Default].BackColor = background_color;
-        editor.StyleClearAll();
-        editor.Styles[Style.LineNumber].ForeColor = Color.FromArgb(120,120,120);
-		editor.Styles[Style.LineNumber].BackColor = margin_back_color;
-        editor.Styles[Style.IndentGuide].ForeColor = Color.FromArgb(60,60,60);
-        editor.EdgeColor = Color.FromArgb(60,60,60);
-        editor.CaretForeColor = Color.White;
-        editor.CaretLineBackColor = Color.FromArgb(40, 40, 40);
-        editor.SetSelectionBackColor(true, Color.FromArgb(70, 70, 70));
-		editor.SetSelectionForeColor(true, Color.White);
-    }
-    
+	
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
 		editor.Dock = DockStyle.Fill;
@@ -1973,7 +1982,24 @@ public static class Incantation_SCINTILLA {
 //        set_language_style(editor, filename);
 //		fold_all(editor);
 	}
-	public static void set_keyshortcuts(Scintilla editor) {
+	public static void init_dark_theme_scintilla(Scintilla editor) {
+        editor.StyleResetDefault();
+		editor.Styles[Style.Default].Font = "Consolas";
+		editor.Styles[Style.Default].Size = 8;
+		editor.Styles[Style.Default].Bold = true;
+		editor.Styles[Style.Default].ForeColor = foreground_color;
+		editor.Styles[Style.Default].BackColor = background_color;
+        editor.StyleClearAll();
+        editor.Styles[Style.LineNumber].ForeColor = Color.FromArgb(120,120,120);
+		editor.Styles[Style.LineNumber].BackColor = margin_back_color;
+        editor.Styles[Style.IndentGuide].ForeColor = Color.FromArgb(60,60,60);
+        editor.EdgeColor = Color.FromArgb(60,60,60);
+        editor.CaretForeColor = Color.White;
+        editor.CaretLineBackColor = Color.FromArgb(40, 40, 40);
+        editor.SetSelectionBackColor(true, Color.FromArgb(70, 70, 70));
+		editor.SetSelectionForeColor(true, Color.White);
+    }
+    public static void set_keyshortcuts(Scintilla editor) {
         key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
 		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
 		key_shortcut(editor, "alt", "o", ()=>{toggle_fold_marker(editor);});
@@ -2093,7 +2119,6 @@ public static class Incantation_SCINTILLA {
 		string ext = Path.GetExtension(filename).ToLowerInvariant();
         if ( string.IsNullOrWhiteSpace(ext) ) return false;
         // -- hand picked lexer names which will mismatch extension names 
-//        reset_dark_theme_scintilla(editor);
         switch (ext) {
             case ".md":
                 editor.LexerName = "markdown";
@@ -2195,7 +2220,6 @@ public static class Incantation_SCINTILLA {
             case ".ahk":
             case ".c":
                 set_c_style(scintilla);
-//                set_cpp_style(scintilla);
                 break;
             case ".h":
             case ".hpp":
@@ -2233,6 +2257,16 @@ public static class Incantation_SCINTILLA {
                 break;
 		}
 	}
+    public static void refresh(Scintilla editor) {
+        string path = (string) editor.Tag;
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if ( !is_code_file(path) ) return; 
+        set_lexer(editor, path);
+        set_folding(editor);
+        apply_custom_highlight_override_for_file_directives(editor);
+        set_language_style(editor, path);
+        apply_textmarker_highlight_for_file_directives(editor);
+    }
     // --     
     public static void set_py_style(Scintilla scintilla) {
         scintilla.Styles[Style.Python.Default].ForeColor = Color.Silver;
@@ -2499,15 +2533,21 @@ public static class Incantation_SCINTILLA {
         }
     }
 
-    public static void apply_highlight_for_file_directives(Scintilla editor) {
-        var directivePattern = @"\{Notepad--;([^}]*)\}";
-        var regex = new Regex(directivePattern);
+    // variables -- custom highlight 
+    private static string textmarker_pattern = @"\{Notepad--T;([^}]*)\}";
+    private static Regex? textmarker_pattern_regex = null;
+    private static string highlight_override_pattern = @"\{Notepad--H;([^}]*)\}";
+    private static Regex? highlight_override_pattern_regex = null;
+    private static int line_count_for_directive_search = 50;
+    // variables | methods -- custom highlight 
+    public static void apply_textmarker_highlight_for_file_directives(Scintilla editor) {
+        if (textmarker_pattern_regex==null) textmarker_pattern_regex = new Regex(textmarker_pattern);
         // Clear all indicators you plan to use
         for (int i = 8; i < 32; i++) editor.IndicatorClearRange(0, editor.TextLength);
         int indicatorIndex = 8; // start at 8, go up for each color
-        for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
+        for (int i = 0; i < Math.Min(line_count_for_directive_search, editor.Lines.Count); i++) {
             var lineText = editor.Lines[i].Text;
-            var match = regex.Match(lineText);
+            var match = textmarker_pattern_regex.Match(lineText);
             if (!match.Success) continue;
             var directives = match.Groups[1].Value.Split(';');
             foreach (var directive in directives) {
@@ -2534,6 +2574,38 @@ public static class Incantation_SCINTILLA {
                 }
                 indicatorIndex++; // next color → next indicator
             }
+        }
+    }
+    public static void apply_custom_highlight_override_for_file_directives(Scintilla editor) {
+        if (highlight_override_pattern_regex==null) highlight_override_pattern_regex = new Regex(highlight_override_pattern);
+        bool has_match = false;
+        for (int i = 0; i < Math.Min(line_count_for_directive_search, editor.Lines.Count); i++) {
+            var lineText = editor.Lines[i].Text;
+            var match = highlight_override_pattern_regex.Match(lineText);
+            if (!match.Success) continue;
+            has_match = true;
+            var directives = match.Groups[1].Value.Split(';');
+            foreach (var directive in directives) {
+                var parts = directive.Split(':');
+                if (parts.Length != 2) continue;
+                var lexerComponentName = parts[0].Trim();
+                var colorName = parts[1].Trim();
+                apply_lexer_color_directive(lexerComponentName, colorName);
+            }
+        }
+        if (!has_match) reset_global_dark_theme_colors();
+    }
+    // REVISION
+    private static void apply_lexer_color_directive(string lexer_component, string color_name) {
+        switch (lexer_component) {
+            case "1":
+            case "keyword1":
+                keyword1_color = Color.FromName(color_name);
+                break;
+            case "2":
+            case "keyword2":
+                keyword2_color = Color.FromName(color_name);
+                break;
         }
     }
 
@@ -2617,11 +2689,7 @@ public static class Incantation_SCINTILLA {
     }
 	
 	// -- fold helpers
-
-    // :D just use NativeMethods.SCI_LINEFROMPOSITION , dumb 
-//    private static const int SCI_LINEFROMPOSITION = 2166;
-//    private static const int SCI_GETFOLDPARENT = 2225; // SCI_GETFOLDPARENT (2225) returns the index of the line that is the parent of the current line's fold block.
-    
+    // REVISION
 	public static void fold_all(Scintilla editor) {
 		const int SCI_FOLDALL = 2662;
 		const int SC_FOLDACTION_CONTRACT = 0;
@@ -2698,12 +2766,10 @@ public static class Incantation_SCINTILLA {
         }
     }
     
-    // fail to get the right fold marker for c++ - SOLVED 
     public static void toggle_fold_marker(Scintilla editor) {
         int line = get_current_caret_line(editor);
         if (line >= 0) editor.DirectMessage(NM.SCI_TOGGLEFOLD, (IntPtr)line); 
     }
-
     public static int get_current_caret_line(Scintilla editor) {
         if (editor == null) return -1;
         int pos = (int)editor.DirectMessage(NM.SCI_GETCURRENTPOS); 
@@ -2787,334 +2853,6 @@ public static class Incantation_SCINTILLA {
     }
     
 }
-
-/* for web view 2 which will not be used on this version !!! 
-public static class Incantation_WEBVIEW {
-	public static WebView2 new_web_view(string url){
-		WebView2 webView = new WebView2 { Dock = DockStyle.Fill };
-		InitializeWebViewAsync(webView, url);
-		return webView;
-	}
-	public static Panel new_simple_web_view(
-		string url, 
-		Func<string, string> parser, 
-		string data_dir_path
-	) {
-		Panel panel = new Panel { Dock = DockStyle.Fill };
-        TextBox urlTextBox = new TextBox {
-            Dock = DockStyle.Top,
-            Text = url,
-            Height = 30
-        };
-        WebView2 webView = new WebView2 { Dock = DockStyle.Fill };
-        panel.Controls.Add(webView); 
-        panel.Controls.Add(urlTextBox); 
-        InitializeWebViewAsync(webView, url, data_dir_path);
-        urlTextBox.KeyDown += (sender, e) => {
-            if (e.KeyCode == Keys.Enter) {
-                e.SuppressKeyPress = true; // Prevent beep sound
-				urlTextBox.Text = parser(urlTextBox.Text);
-                if (!string.IsNullOrWhiteSpace(urlTextBox.Text)) {
-                    if (webView.CoreWebView2 != null) {
-                        webView.CoreWebView2.Navigate(urlTextBox.Text);
-                    }
-                }
-            }
-        };
-        return panel;
-	}
-	public static Panel add_simple_web_view(Form form, string url) {
-		return add_simple_web_view(form, url, (e)=>{return e;});
-	}
-	public static Panel add_simple_web_view(Form form, string url, string data_dir_path) {
-		return add_simple_web_view(form, url, (e)=>{return e;}, data_dir_path);
-	}
-	public static Panel add_simple_web_view(
-		Form form, 
-		string url, 
-		Func<string, string> parser
-	) {
-        return add_simple_web_view(form, url, parser, null);
-    }
-    public static Panel add_simple_web_view(Form form, string url, Func<string, string> parser, string data_dir_path) {
-		Panel panel = new Panel { Dock = DockStyle.Fill };
-        TextBox urlTextBox = new TextBox {
-            Dock = DockStyle.Top,
-            Text = url,
-            Height = 30
-        };
-        WebView2 webView = new WebView2 { Dock = DockStyle.Fill };
-        panel.Controls.Add(webView); 
-        panel.Controls.Add(urlTextBox); 
-        form.Controls.Add(panel);
-        InitializeWebViewAsync(webView, url, data_dir_path);
-        urlTextBox.KeyDown += (sender, e) => {
-            if (e.KeyCode == Keys.Enter) {
-                e.SuppressKeyPress = true; // Prevent beep sound
-				urlTextBox.Text = parser(urlTextBox.Text);
-                if (!string.IsNullOrWhiteSpace(urlTextBox.Text)) {
-                    if (webView.CoreWebView2 != null) {
-                        webView.CoreWebView2.Navigate(urlTextBox.Text);
-                    }
-                }
-            }
-        };
-        return panel;
-	}
-	private static async void InitializeWebViewAsync(WebView2 webView, string url) {
-        InitializeWebViewAsync(webView, url, null);
-    }
-	private static async void InitializeWebViewAsync(WebView2 webView, string url, string data_dir_path) {
-		InitializeWebViewAsync(
-			webView, 
-			url, 
-			data_dir_path,
-			true 
-		);
-	}
-	private static async void InitializeWebViewAsync(
-		WebView2 webView, 
-		string url, 
-		string data_dir_path,
-		bool no_script_new_window
-	) {
-		try {
-			// Cria um ambiente do WebView2 com o diretório especificado
-			if (string.IsNullOrWhiteSpace(data_dir_path)) { 
-				await webView.EnsureCoreWebView2Async(null);
-			} else {
-				var env = await CoreWebView2Environment.CreateAsync(null, data_dir_path);
-				// Inicializa o WebView2 com o ambiente personalizado
-				await webView.EnsureCoreWebView2Async(env);
-			}
-			if (!string.IsNullOrWhiteSpace(url))
-			{
-				webView.CoreWebView2.Navigate(url);
-			}
-			if (no_script_new_window) disable_new_window_creation(webView);
-		}
-		catch (Exception ex)
-		{
-			MessageBox.Show($"Failed to initialize WebView2 with custom data dir: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-		}
-	}
-	public static string GenericUrlParser(string inputUrl) {
-		if (string.IsNullOrWhiteSpace(inputUrl)) return string.Empty;
-		inputUrl = inputUrl.Trim();
-		// Try to parse with a scheme first 
-		if (Uri.TryCreate(inputUrl, UriKind.Absolute, out Uri parsedUri) &&
-			(parsedUri.Scheme == Uri.UriSchemeHttp || parsedUri.Scheme == Uri.UriSchemeHttps))
-		{
-			return parsedUri.AbsoluteUri;
-		}
-		// If missing scheme, try to fix it by adding "https://"
-		string tentativeUrl = "https://" + inputUrl;
-		if (Uri.TryCreate(tentativeUrl, UriKind.Absolute, out parsedUri)) {
-			return parsedUri.AbsoluteUri;
-		}
-		// As a fallback, try to prepend "www." and parse again
-		if (!inputUrl.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) {
-			tentativeUrl = "https://www." + inputUrl;
-			if (Uri.TryCreate(tentativeUrl, UriKind.Absolute, out parsedUri)) {
-				return parsedUri.AbsoluteUri;
-			}
-		}
-		// Final fallback
-		return string.Empty;
-	}
-	// utils 
-	public static void disable_new_window_creation(WebView2 view) {
-		view.CoreWebView2.NewWindowRequested += (sender, e) =>	{
-			e.Handled = true;
-		}; 
-	}
-	public static async Task firewall_whitelist_filter(
-		WebView2 view,
-		ConcurrentDictionary<string, byte> whitelist
-	) {
-		if (domainParser == null) await InitializeParserAsync();
-		view.CoreWebView2.NavigationStarting += (s, e) => {
-			Uri destination;
-			try {
-				destination = new Uri(e.Uri);
-			} catch {
-				e.Cancel = true; // Block malformed URLs
-				return;
-			}
-			string host = destination.Host.ToLowerInvariant();
-			string baseDomain = GetBaseDomain(host); // Normalize here
-			if (!whitelist.ContainsKey(baseDomain)) {
-				e.Cancel = true;
-				if (confirmation_dialog("Add to whitelist", "Do you trust this domain? " + baseDomain + " | " + host)) {
-					whitelist.TryAdd(baseDomain, 0);
-				}
-			}
-		};
-	}
-	public static async Task firewall_filter(
-		WebView2 view,
-		ConcurrentDictionary<string, byte> whitelist,
-		ConcurrentDictionary<string, byte> blacklist
-	) {
-		if (domainParser == null) await InitializeParserAsync();
-		view.CoreWebView2.NavigationStarting += (s, e) => {
-			Uri destination;
-			try {
-				destination = new Uri(e.Uri);
-			} catch {
-				e.Cancel = true; // Block malformed URLs
-				return;
-			}
-			// 
-			string scheme = destination.Scheme.ToLowerInvariant();
-			if (scheme == "data" && destination.Fragment == "#trusted_internal") return; 
-			// 
-			string host = destination.Host.ToLowerInvariant();
-			string baseDomain = GetBaseDomain(host); // Normalize here
-			if (blacklist.ContainsKey(baseDomain)) {
-				e.Cancel = true ;
-				return ; 
-			} 
-			
-			if (!whitelist.ContainsKey(baseDomain)) {
-				e.Cancel = true;
-				if (confirmation_dialog("Add to whitelist", "Do you trust this domain? " + baseDomain + " | " + host)) {
-					whitelist.TryAdd(baseDomain, 0);
-				} else {
-					blacklist.TryAdd(baseDomain, 0);
-				}
-			}
-		};
-	}
-	private static DomainParser domainParser = null;
-	public static async Task InitializeParserAsync() {
-		string filePath = Path.Combine(get_exec_dir(), "public_suffix_list.dat");
-
-		if (!File.Exists(filePath))
-		{
-			using var client = new HttpClient();
-
-			using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)); // 20 seconds timeout
-
-			try
-			{
-				var list = await client.GetStringAsync("https://publicsuffix.org/list/public_suffix_list.dat", cts.Token);
-				await File.WriteAllTextAsync(filePath, list, cts.Token);
-			}
-			catch (OperationCanceledException)
-			{
-				// Handle timeout here, e.g., log or rethrow
-				throw new TimeoutException("Downloading the public suffix list timed out.");
-			}
-		}
-
-		var ruleProvider = new LocalFileRuleProvider(filePath);
-		await ruleProvider.BuildAsync();
-
-		domainParser = new DomainParser(ruleProvider);
-	}
-	private static string GetBaseDomain(string host) {
-		if (string.IsNullOrEmpty(host)) return host;
-		if (domainParser == null)
-			throw new InvalidOperationException("DomainParser not initialized. Call InitializeParserAsync() before using GetBaseDomain().");
-		try
-		{
-			var domainInfo = domainParser.Parse(host);
-			return domainInfo.RegistrableDomain ?? host;
-		}
-		catch
-		{
-			// If parsing fails, fallback to the host itself
-			return host;
-		}
-	}
-	// html generators 
-	public static string GenerateSpeedDial(List<string> urls) {
-		var sb = new System.Text.StringBuilder();
-
-		sb.AppendLine("<!DOCTYPE html>");
-		sb.AppendLine("<html lang='en'>");
-		sb.AppendLine("<head>");
-		sb.AppendLine("<meta charset='UTF-8'>");
-		sb.AppendLine("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
-		sb.AppendLine("<title>Speed Dial</title>");
-		sb.AppendLine(@"
-	<style>
-		body {
-			background: gray;
-			font-family: sans-serif;
-			display: flex;
-			flex-wrap: wrap;
-			justify-content: center;
-			align-items: flex-start;
-			padding: 40px;
-			gap: 20px;
-		}
-		.tile {
-			width: 120px;
-			height: 120px;
-			background: lightgray;
-			border-radius: 12px;
-			box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			text-align: center;
-			cursor: pointer;
-			transition: transform 0.2s;
-			text-decoration: none;
-			color: black;
-		}
-		.tile:hover {
-			transform: scale(1.05);
-		}
-		.tile img {
-			width: 32px;
-			height: 32px;
-			margin-bottom: 10px;
-		}
-		.tile span {
-			font-size: 12px;
-			word-break: break-word;
-		}
-	</style>
-	");
-		sb.AppendLine("</head>");
-		sb.AppendLine("<body>");
-
-		foreach (var url in urls)
-		{
-			// Ensure URL starts with http:// or https://
-			string normalizedUrl = url.StartsWith("http://") || url.StartsWith("https://")
-				? url
-				: "https://" + url;
-
-			if (!Uri.TryCreate(normalizedUrl, UriKind.Absolute, out Uri uri))
-				continue; // skip invalid URLs
-
-			string host = uri.Host;
-			string faviconUrl = $"https://www.google.com/s2/favicons?sz=64&domain={host}";
-			string displayText = host.Replace("www.", "");
-
-			sb.AppendLine($@"
-	<a class='tile' href='{normalizedUrl}' target='_self'>
-		<img src='{faviconUrl}' alt='icon' />
-		<span>{System.Net.WebUtility.HtmlEncode(displayText)}</span>
-	</a>");
-		}
-
-		sb.AppendLine("</body>");
-		sb.AppendLine("</html>");
-
-		string html = sb.ToString();
-		string base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(html));
-		string dataUrl = $"data:text/html;base64,{base64}#trusted_internal";
-		return dataUrl;
-	}
-}
-
-*/
 
 // custom widget classes 
 public class DarkTabControl : TabControl {
@@ -3611,6 +3349,15 @@ public class OverlayForm : Form {
 // ===================================== conjuration 
 // ... system integration  
 public static class Conjuration {
+    // TESTING
+    public static bool start_process(string processname, string arguments) {
+        if (string.IsNullOrWhiteSpace(processname)) return false;
+        if (!File.Exists(processname)) return false; 
+        if (Directory.Exists(processname)) return false;
+        Process.Start(processname, arguments);
+        return true;
+    }
+
 	public static bool default_program_start(string filename) {
 		if (string.IsNullOrWhiteSpace(filename) || !File.Exists(filename))
 			return false;
@@ -3804,67 +3551,5 @@ public static class Conjuration {
     }
     */
 }
-
-// NOT WORKING 
-public static class Conjuration_GLOBALHOTKEY {
-    // Win32 API imports
-    [DllImport("user32.dll")]
-    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
-    [DllImport("user32.dll")]
-    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-
-    // Modifier keys
-    private const uint MOD_ALT = 0x0001;
-    private const uint MOD_CONTROL = 0x0002;
-    private const uint MOD_SHIFT = 0x0004;
-    private const uint MOD_WIN = 0x0008;
-    private const int WM_HOTKEY = 0x0312;
-
-    // Store registered hotkeys
-    private static Dictionary<int, Action> hotkeyActions = new Dictionary<int, Action>();
-    private static int hotkeyIdCounter = 0;
-
-    public static bool register_global_hotkey(Keys modifier, Keys key, Action action) {
-        try {
-            uint mod = 0;
-            if (modifier.HasFlag(Keys.Alt)) mod |= MOD_ALT;
-            if (modifier.HasFlag(Keys.Control)) mod |= MOD_CONTROL;
-            if (modifier.HasFlag(Keys.Shift)) mod |= MOD_SHIFT;
-            if (modifier.HasFlag(Keys.LWin) || modifier.HasFlag(Keys.RWin)) mod |= MOD_WIN;
-            int id = ++hotkeyIdCounter;
-            bool success = RegisterHotKey(IntPtr.Zero, id, mod, (uint)key);
-            if (success) hotkeyActions[id] = action;
-            return success;
-        } catch {
-            return false;
-        }
-    }
-    public static void unregister_all_hotkeys() {
-        try {
-            foreach (var id in hotkeyActions.Keys) UnregisterHotKey(IntPtr.Zero, id);
-            hotkeyActions.Clear();
-        } catch {}
-    }
-
-    // Hook into Application message loop
-    public static void ProcessHotKeyMessage(ref Message m) {
-        if (m.Msg == WM_HOTKEY) {
-            int id = m.WParam.ToInt32();
-            if (hotkeyActions.TryGetValue(id, out var action)) {
-                action?.Invoke();
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
 
 // -- END 

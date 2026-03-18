@@ -1,6 +1,13 @@
 // Notepad-- : Simpler version of Notepad++ 
 // -- BEGIN 
-// {Notepad--;Red:BUG,ISSUE;Yellow:?;Cyan:TODO;Silver:SOLVED}
+
+// -- text marker highlight 
+// {Notepad--T;Red:BUG,ISSUE,DEPRECATED,BUG/ISSUE} 
+// {Notepad--T;Yellow:TESTING,NOT_TESTED,REVISION}
+// {Notepad--T;Cyan:TODO,WORKING_>>>,<<<_WORKING} 
+// {Notepad--T;Silver:SOLVED} 
+// {Notepad--T;Cyan:Inventory;Silver:Logic,Dialetic;Red:Workflow} 
+// {Notepad--T;magenta:methods,attributes,variables}
 
 /* === BUG/ISSUE === 
 1. Toggle Outlining/Folding : Alt+P don't always put the caret visible - ...
@@ -112,7 +119,10 @@ public partial class Notepad__Form : Form {
 // ... build on top of Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ) by desjarlais
 
 "Use comments like this on top of document to set textmarker highlighting, use comment style of the language used."
-{Notepad--;Red:BUG,ISSUE,Close,Titlebar;Yellow:TODO;Silver:SOLVED,Switch}
+{Notepad--T;red:BUG,ISSUE,Close,Titlebar;yellow:TODO;silver:SOLVED,Switch}
+
+"Use comments like this on top of document to override highlighting for language specific keyword groups."
+{Notepad--H;1:gray;2:green}
 
 // Features--
 1. "Fixed Dark Theme" // I don't care about your bad taste, it's hardcoded.
@@ -282,7 +292,7 @@ public partial class Notepad__Form : Form {
 		// help 
 		set_language_folding(this.help_scintilla, "cpp");
 		set_cs_style(this.help_scintilla);
-        apply_highlight_for_file_directives(this.help_scintilla);
+        apply_textmarker_highlight_for_file_directives(this.help_scintilla);
 		this.help_scintilla.ReadOnly = true;
 	} 
 	// -- subroutines 
@@ -309,9 +319,6 @@ public partial class Notepad__Form : Form {
 		ns.TextChanged += (s,e) => {
 			page.Text = unsave_marker+ get_filename(page.ToolTipText);
 		};
-        key_shortcut(ns, "ctrl","f", () => {
-            // -- todo 
-        });
 		key_shortcut(ns, "ctrl","s", () => {
 			TabPage current_page = page;
 			if (current_page == null) return ;
@@ -332,11 +339,7 @@ public partial class Notepad__Form : Form {
             this.fullpath_scintilla_map[path] = editor;
             current_page.Text = get_filename(path);
             update_border_color(ns, page);
-            refresh_style(editor);
-//            set_lexer(editor, path);
-//            set_folding(editor);
-//            set_language_style(editor, path);
-//            apply_highlight_for_file_directives(editor);
+            refresh(editor);
 		});	
 		key_shortcut(ns, "ctrl","r", async () => {
             Scintilla editor = ns;
@@ -345,15 +348,9 @@ public partial class Notepad__Form : Form {
             } else {
                 _ = get_document_words_async(editor); // fire and forget
             }
-//            string content = ns.Text; // testing
             toggle_read_only(editor);
             update_border_color(editor, page);
-            refresh_style(editor);
-//            string path = page.ToolTipText;
-//            set_lexer(editor, path);
-//            set_folding(editor);
-//            set_language_style(editor, path);
-//            apply_highlight_for_file_directives(editor);
+            refresh(editor);
 		});
 		key_shortcut(ns, "alt","z", () => {});
         key_shortcut(ns, "alt","x", () => {});
@@ -416,7 +413,7 @@ public partial class Notepad__Form : Form {
 		scintilla_tab_logic(editor, page);
         toggle_read_only(editor);
         update_border_color(editor, page);
-        refresh_style(editor);
+        refresh(editor);
         fold_all(editor);
 		return true;
 	}
@@ -518,17 +515,6 @@ public partial class Notepad__Form : Form {
             tabs.change_border_color(border_color);
         }
         repaint_tab(page);
-    }
-    private void refresh_style(Scintilla editor) {
-        string path = (string) editor.Tag;
-        if (string.IsNullOrWhiteSpace(path)) return;
-        if ( !is_code_file(path) ) return; 
-        set_lexer(editor, path);
-        set_folding(editor);
-//        configure_manual_fold_markers(editor);
-        set_language_style(editor, path);
-        apply_highlight_for_file_directives(editor);
-//        apply_fold_marks_for_file_directives(editor);
     }
     private DarkTabControl? get_focused_tab() {
 		if ( this.left_tabs.ContainsFocus ) return this.left_tabs;
