@@ -1,6 +1,6 @@
 # Notepad--
 
-![](Notepad__2.png)
+![](Notepad__6.png)
 
 A slop and much lesser version of Notepad++, don't like it? Use Notepad++ instead.
 
