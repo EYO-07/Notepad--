@@ -1850,7 +1850,7 @@ public static class Incantation_SCINTILLA {
     public static Color fold_back_color = Color.FromArgb(255, 255, 255); // white 
     public static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
     public static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
-    public static Color keyword1_color = Color.Magenta; //Color.FromArgb(220, 133, 0); // (230, 184, 0); // orange 
+    public static Color keyword1_color = Color.LightGray; // Color.Magenta; //Color.FromArgb(220, 133, 0); // (230, 184, 0); // orange 
     public static Color keyword2_color = Color.FromArgb(0, 255, 90); // green 
     public static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
     public static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
