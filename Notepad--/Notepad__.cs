@@ -78,8 +78,8 @@ public partial class Notepad__Form : Form {
     private Scintilla help_scintilla;
     private OverlayForm message_overlay = null;
     // -- theme
-    private static Color background_color = Color.FromArgb(10, 10, 12);
-	private static Color locked_background_color = Color.FromArgb(0, 12, 0);
+//    private static Color background_color = Color.FromArgb(10, 10, 12);
+//	private static Color locked_background_color = Color.FromArgb(0, 12, 0);
     private static Color border_color = Color.FromArgb(0, 0, 255);
     private static Color locked_border_color = Color.FromArgb(0, 255, 0);
     // -- gui options 
@@ -227,35 +227,6 @@ public partial class Notepad__Form : Form {
                 this.Opacity = work_opacity;
             }
         }, 100 );
-//        key_shortcut(this, "ctrl", Keys.Insert, ()=>{
-//            MouseScrollBackWindow(this, true);
-//        });
-//        key_shortcut(this, "ctrl", Keys.Delete, ()=>{
-//            MouseScrollBackWindow(this, false);
-//        });
-//        OnTick( this, (s,e)=>{
-//            if ( get_focused_panel(this.main_panel) == 2 ){
-//                if ( current_split_percentage > 40 ) { 
-//                    current_split_percentage--; 
-//                    set_splitter_distance(this.main_panel, this.current_split_percentage);
-//                }
-//            } else {
-//                if ( current_split_percentage < 60 ) { 
-//                    current_split_percentage++; 
-//                    set_splitter_distance(this.main_panel, this.current_split_percentage);
-//                }
-//            }
-//        }, 1);
-
-        // to z-order
-//        key_shortcut(this, "ctrl", Keys.Insert, ()=>{
-//            bring_window_to_least(this);
-//        });
-//        if ( !register_global_hotkey( Keys.Control, Keys.Delete, ()=>{
-//            bring_window_to_top(this);
-//        } ) ) { 
-//            MessageBox.Show("Failed to Register Hotkey"); 
-//        }
         // tabs 
 		drag_window(this.left_tabs);
 		drag_window(this.right_tabs);
@@ -383,15 +354,10 @@ public partial class Notepad__Form : Form {
 //            set_language_style(editor, path);
 //            apply_highlight_for_file_directives(editor);
 		});
-		key_shortcut(ns, "alt","z", () => {
-//            add_begin_fold_marker(ns);
-        });
-        key_shortcut(ns, "alt","x", () => {
-//            add_end_fold_marker(ns);
-        });
-        key_shortcut(ns, "alt","c", () => {
-//            remove_fold_marker(ns);
-        });
+		key_shortcut(ns, "alt","z", () => {});
+        key_shortcut(ns, "alt","x", () => {});
+        key_shortcut(ns, "alt","c", () => {});
+        key_shortcut(ns, "ctrl","e", () => {});
         ns.CharAdded += (s, e) => {
             var editor = (Scintilla)s;
             int line_count = -1;
@@ -682,24 +648,6 @@ public partial class Notepad__Form : Form {
 		_theme(); 
     }
     // -- overrides
-//    protected override void OnFormClosing(FormClosingEventArgs e) {
-//        unregister_all_hotkeys();
-//        base.OnFormClosing(e);
-//    }
-//    protected override void WndProc(ref Message m) {
-//        ProcessHotKeyMessage(ref m);
-//        base.WndProc(ref m);
-//    }
-//    protected override void OnLoad(EventArgs e) {
-//        base.OnLoad(e);
-//        if ( register_global_hotkey(Keys.Control, Keys.J, () => {
-//            MessageBox.Show("Hotkey pressed!");
-//        }) ) {
-//            MessageBox.Show("Registered!"); 
-//        } 
-//    }
-
-
 
 }
 

@@ -1,14 +1,15 @@
 // Codex Library in Magic Oriented Programming 
+
+// -- text marker highlight 
+// {Notepad--;Red:BUG,ISSUE,DEPRECATED} 
+// {Notepad--;Yellow:?,TESTING,NOT_TESTED}
+// {Notepad--;Cyan:TODO} 
+// {Notepad--;Silver:SOLVED} 
+
 // -- BEGIN 
 
-// -- Custom Highlights 
-// {Notepad--;Red:BUG,ISSUE,DEPRECATED;Yellow:?,TESTING;Cyan:TODO;Silver:SOLVED}
-
 namespace Codex;
-// -- 
 using System.Runtime.InteropServices;
-//<PackageReference Include="Microsoft.PowerShell.SDK" Version="7.5.5" />
-//using System.Management.Automation; // Add reference to System.Management.Automation.dll
 using System.Drawing;
 using System.Windows.Forms;
 using System.IO;
@@ -17,27 +18,13 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-//using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Reflection;
 using System.Linq;
-// --
 using Microsoft.VisualBasic.FileIO;
 using ScintillaNET;
-//using NetFwTypeLib; 
-
-// web view page will not be used on this version !!! 
-//using Microsoft.Web.WebView2.Core;
-//using Microsoft.Web.WebView2.WinForms;
-//using System.Net.Http;
-//using Nager.PublicSuffix;
-//using Nager.PublicSuffix.RuleProviders;
-//<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3800.47" />
-//<PackageReference Include="Nager.PublicSuffix" Version="3.5.0" />
-
-// -- 
 using static Codex.Transmutation;
 using static Codex.Incantation;
 using static Codex.Incantation_TREEVIEW;
@@ -1856,21 +1843,21 @@ public static class Incantation_SCINTILLA {
         return false;
     }
     // -- dark theme colors 
-    private static Color foreground_color = Color.FromArgb(255, 255, 255); // white
-    private static Color background_color = Color.FromArgb(10, 10, 12); // black slight blue
-    private static Color locked_background_color = Color.FromArgb(20, 20, 35); // black slight green
-    private static Color fold_fore_color = Color.FromArgb(60, 60, 60); // gray 
-    private static Color fold_back_color = Color.FromArgb(255, 255, 255); // white 
-    private static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
-    private static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
-    private static Color keyword1_color = Color.FromArgb(255, 133, 20); // orange 
-    private static Color keyword2_color = Color.FromArgb(0, 255, 70); // green 
-    private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
-    private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
-    private static Color number_fore_color = Color.Cyan;
-    private static Color number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
-    private static Color string_fore_color = Color.FromArgb(230, 230, 230); // white
-    private static Color string_back_color = Color.FromArgb(40, 40, 40); // gray
+    public static Color foreground_color = Color.FromArgb(255, 255, 255); // white
+    public static Color background_color = Color.FromArgb(10, 10, 12); // black slight blue
+    public static Color locked_background_color = Color.FromArgb(0, 5, 0); // black slight green
+    public static Color fold_fore_color = Color.FromArgb(60, 60, 60); // gray 
+    public static Color fold_back_color = Color.FromArgb(255, 255, 255); // white 
+    public static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
+    public static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
+    public static Color keyword1_color = Color.Magenta; //Color.FromArgb(220, 133, 0); // (230, 184, 0); // orange 
+    public static Color keyword2_color = Color.FromArgb(0, 255, 90); // green 
+    public static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
+    public static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
+    public static Color number_fore_color = Color.Cyan;
+    public static Color number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
+    public static Color string_fore_color = Color.FromArgb(230, 0, 0); // Color.FromArgb(230, 230, 230); // white
+    public static Color string_back_color = Color.FromArgb(30, 10, 10); // gray
     // -- 
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
@@ -2404,6 +2391,11 @@ public static class Incantation_SCINTILLA {
 		scintilla.Styles[Style.Cpp.Number].BackColor = number_back_color;
 		scintilla.Styles[Style.Cpp.Word].ForeColor = keyword1_color;
 		scintilla.Styles[Style.Cpp.Word2].ForeColor = keyword2_color;
+        scintilla.Styles[Style.Cpp.GlobalClass].ForeColor = Color.FromArgb(255, 77, 77); // Set 2
+//        scintilla.Styles[Style.Cpp.UserLiteral2].ForeColor = Color.Green;       // Set 4
+//        scintilla.Styles[Style.Cpp.UserLiteral3].ForeColor = Color.Brown;       // Set 5
+//        scintilla.Styles[Style.Cpp.UserLiteral4].ForeColor = Color.DarkRed;     // Set 6
+//        scintilla.Styles[Style.Cpp.UserLiteral5].ForeColor = Color.DarkMagenta; // Set 7
 		scintilla.Styles[Style.Cpp.String].ForeColor = string_fore_color;
 		scintilla.Styles[Style.Cpp.String].BackColor = string_back_color;
 		scintilla.Styles[Style.Cpp.Character].ForeColor = string_fore_color;
@@ -2417,8 +2409,12 @@ public static class Incantation_SCINTILLA {
 	public static void set_cs_style(Scintilla scintilla) {
 		set_c_family_style(scintilla);
 		// Set the keywords
-		scintilla.SetKeywords(0, "abstract as base break case catch checked continue default delegate do else event explicit extern false finally fixed for foreach goto if implicit in interface internal is lock namespace new null object operator out override params private protected public readonly ref return sealed sizeof stackalloc switch this throw true try typeof unchecked unsafe using virtual while");
-		scintilla.SetKeywords(1, "bool byte char class const decimal double enum float int long sbyte short static string struct uint ulong ushort void var");
+        scintilla.SetKeywords(0, "abstract as base break case catch checked continue default delegate do else event explicit extern false finally fixed for foreach goto if implicit in interface internal is lock namespace new null object operator out override params private protected public readonly ref return sealed sizeof stackalloc switch this throw true try typeof unchecked unsafe using virtual while");
+		scintilla.SetKeywords(1, "partial bool byte char class const decimal double enum float int long sbyte short static string struct uint ulong ushort void var");
+
+//		scintilla.SetKeywords(0, "abstract as base break case catch checked continue default delegate do else event explicit extern finally fixed for foreach goto if implicit in interface internal is lock namespace new object operator out override params private protected public readonly ref return sealed sizeof stackalloc switch this throw try typeof unchecked unsafe using virtual while");
+//		scintilla.SetKeywords(1, "bool byte char class decimal double enum float int long sbyte short string struct uint ulong ushort void var");
+//        scintilla.SetKeywords(3, "const static partial false true null");
 	}
 	public static void set_cpp_style(Scintilla scintilla) {
         set_c_family_style(scintilla);
@@ -2437,8 +2433,10 @@ public static class Incantation_SCINTILLA {
         scintilla.SetKeywords(1,"bool size_t ptrdiff_t");
     }
 
+    // TODO 
     public static void set_ahk_style(Scintilla scintilla) {}
 
+    // NOT_TESTED
     public static void highlight_set(HashSet<string> set, Scintilla editor, Color forecolor, Color backcolor) {
         // Define a custom style ID that won't clash with the lexer
         const int CUSTOM_STYLE = 32; // pick a number > 31 to avoid conflicts
@@ -2469,60 +2467,6 @@ public static class Incantation_SCINTILLA {
             }
         }
     }
-
-//    public static void apply_fold_marks_for_file_directives(Scintilla editor) {
-//        var directivePattern = @"\{Notepad--Fold;([^}]*)\}";
-//        var regex = new Regex(directivePattern);
-//        for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
-//            var lineText = editor.Lines[i].Text;
-//            var match = regex.Match(lineText);
-//            if (!match.Success) continue;
-//            var directives = match.Groups[1].Value.Split(';');            
-//            foreach (var directive in directives) {
-//                var parts = directive.Split(',');
-//                if (parts.Length != 2) continue;
-//                var begin = parts[0].Trim();
-//                var end = parts[1].Trim();
-//                set_custom_fold_markers(editor, begin, end);
-//            }
-//        }
-//    }
-//    public static void apply_highlight_for_file_directives(Scintilla editor) {
-//        return ;
-//        var directivePattern = @"\{Notepad--;([^}]*)\}";
-//        var regex = new Regex(directivePattern);
-//        var text_len = editor.TextLength;
-//        for (int i = 0; i < Math.Min(30, editor.Lines.Count); i++) {
-//            var lineText = editor.Lines[i].Text;
-//            var match = regex.Match(lineText);
-//            if (!match.Success) continue;
-//            var directives = match.Groups[1].Value.Split(';');
-//            int styleId = 32; // start custom styles after predefined ones
-//            foreach (var directive in directives) {
-//                var parts = directive.Split(':');
-//                if (parts.Length != 2) continue;
-//                var colorName = parts[0].Trim();
-//                var keywords = parts[1].Split(',')
-//                                       .Select(k => k.Trim())
-//                                       .Where(k => k.Length > 0);
-//                Color c = Color.FromName(colorName);
-//                editor.Styles[styleId].ForeColor = c;
-//                foreach (var keyword in keywords) {
-//                    int startPos = 0;
-//                    while (true) {
-//                        editor.TargetStart = startPos;
-//                        editor.TargetEnd = text_len;
-//                        int foundPos = editor.SearchInTarget(keyword);
-//                        if (foundPos == -1) break;
-//                        editor.StartStyling(foundPos);
-//                        editor.SetStyling(keyword.Length, styleId);
-//                        startPos = foundPos + keyword.Length;
-//                    }
-//                }
-//                styleId++;
-//            }
-//        }
-//    }
 
     public static void apply_highlight_for_file_directives(Scintilla editor) {
         var directivePattern = @"\{Notepad--;([^}]*)\}";
