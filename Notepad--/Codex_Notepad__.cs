@@ -1,8 +1,8 @@
 // Codex Library in Magic Oriented Programming 
 
 // -- text marker highlight 
-// {Notepad--;Red:BUG,ISSUE,DEPRECATED} 
-// {Notepad--;Yellow:?,TESTING,NOT_TESTED}
+// {Notepad--;Red:BUG,ISSUE,DEPRECATED,BUG/ISSUE} 
+// {Notepad--;Yellow:?,TESTING,NOT_TESTED,REVISION}
 // {Notepad--;Cyan:TODO} 
 // {Notepad--;Silver:SOLVED} 
 
@@ -42,6 +42,7 @@ using MethodInvoker = System.Windows.Forms.MethodInvoker;
 using BorderStyle = System.Windows.Forms.BorderStyle;
 using TabDrawMode = System.Windows.Forms.TabDrawMode;
 using Timer = System.Windows.Forms.Timer; 
+using NM = ScintillaNET.NativeMethods;
 
 // ===================================== transmutation 
 // ... data manipulation 
@@ -1850,14 +1851,41 @@ public static class Incantation_SCINTILLA {
     public static Color fold_back_color = Color.FromArgb(255, 255, 255); // white 
     public static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
     public static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
-    public static Color keyword1_color = Color.LightGray; // Color.Magenta; //Color.FromArgb(220, 133, 0); // (230, 184, 0); // orange 
-    public static Color keyword2_color = Color.FromArgb(0, 255, 90); // green 
+    public static Color keyword1_color = Color.FromArgb(255, 124, 0); // orange 
+    public static Color keyword1_backcolor;
+    public static Color keyword2_color = Color.FromArgb(0, 255, 95); // green 
     public static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
     public static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
     public static Color number_fore_color = Color.Cyan;
     public static Color number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
-    public static Color string_fore_color = Color.FromArgb(230, 0, 0); // Color.FromArgb(230, 230, 230); // white
-    public static Color string_back_color = Color.FromArgb(30, 10, 10); // gray
+    public static Color string_fore_color = Color.Red; //Color.FromArgb(230, 200, 0); // Color.FromArgb(230, 230, 230); // white
+    public static Color string_back_color = Color.FromArgb(60, 10, 10); // gray
+    // --     
+    public static void neon_green(ref Color fore,ref Color back) {
+        fore = Color.FromArgb(0, 255, 153);
+        back = Color.FromArgb(0, 51, 0);
+    }
+    public static void neon_red(ref Color fore,ref Color back) {
+        fore = Color.Red;
+        back = Color.FromArgb(60, 10, 10);
+    }
+    public static void neon_blue(ref Color fore,ref Color back) {
+        fore = Color.Cyan;
+        back = Color.FromArgb(0, 0, 73);
+    }
+    public static void neon_gray(ref Color fore,ref Color back) {
+        fore = Color.LightGray;
+        back = Color.FromArgb(40,40,40);
+    }
+    public static void neon_yellow(ref Color fore, ref Color back) {
+        fore = Color.FromArgb(255, 255, 102);   // bright neon yellow
+        back = Color.FromArgb(51, 51, 0);       // deep muted yellow/olive background
+    }
+    public static void neon_purple(ref Color fore, ref Color back) {
+        fore = Color.FromArgb(204, 102, 255);   // neon purple/magenta
+        back = Color.FromArgb(32, 0, 51);       // dark purple background
+    }
+
     // -- 
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
@@ -1948,7 +1976,7 @@ public static class Incantation_SCINTILLA {
 	public static void set_keyshortcuts(Scintilla editor) {
         key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
 		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
-		key_shortcut(editor, "alt", "o", ()=>{toggle_closest_fold_marker(editor);});
+		key_shortcut(editor, "alt", "o", ()=>{toggle_fold_marker(editor);});
         key_shortcut(editor, "ctrl", "d", ()=>{
             string token = get_selected_token(editor);
             if ( string.IsNullOrWhiteSpace(token) ) { 
@@ -2389,7 +2417,10 @@ public static class Incantation_SCINTILLA {
 		scintilla.Styles[Style.Cpp.CommentLineDoc].BackColor = comment_back_color;
 		scintilla.Styles[Style.Cpp.Number].ForeColor = number_fore_color;
 		scintilla.Styles[Style.Cpp.Number].BackColor = number_back_color;
-		scintilla.Styles[Style.Cpp.Word].ForeColor = keyword1_color;
+
+        scintilla.Styles[Style.Cpp.Word].ForeColor = keyword1_color;
+        // scintilla.Styles[Style.Cpp.Word].BackColor = keyword1_backcolor; // TESTING 
+
 		scintilla.Styles[Style.Cpp.Word2].ForeColor = keyword2_color;
         scintilla.Styles[Style.Cpp.GlobalClass].ForeColor = Color.FromArgb(255, 77, 77); // Set 2
 //        scintilla.Styles[Style.Cpp.UserLiteral2].ForeColor = Color.Green;       // Set 4
@@ -2587,7 +2618,7 @@ public static class Incantation_SCINTILLA {
 	
 	// -- fold helpers
 
-    // :D just use `using NativeMethods`, dumb 
+    // :D just use NativeMethods.SCI_LINEFROMPOSITION , dumb 
 //    private static const int SCI_LINEFROMPOSITION = 2166;
 //    private static const int SCI_GETFOLDPARENT = 2225; // SCI_GETFOLDPARENT (2225) returns the index of the line that is the parent of the current line's fold block.
     
@@ -2623,6 +2654,8 @@ public static class Incantation_SCINTILLA {
             }
         }
     }
+    
+    // REVISION
     public static void smart_fold_all(Scintilla editor) {
         if (editor == null) return;
         const int SCI_GETLINECOUNT = 2154;
@@ -2664,37 +2697,26 @@ public static class Incantation_SCINTILLA {
             }
         }
     }
-    public static void toggle_closest_fold_marker(Scintilla editor) {
-        int pos = editor.CurrentPosition;        
-        // 1. Force the lexer to update the fold levels for the current area
-        // This ensures C++ levels are accurate before we check them.
-        int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
-        // 2. Use the built-in logic to find the fold header for this line
-        
-        int parentLine = (int)editor.DirectMessage(2225, (IntPtr)line);
-        // If the current line itself is a header, SCI_GETFOLDPARENT usually 
-        // returns the parent above it. We check if the current line is a header first.
-        int currentLevel = (int)editor.DirectMessage(2223, (IntPtr)line);
-        bool isHeader = (currentLevel & 0x2000) != 0;
-        int targetLine = isHeader ? line : parentLine;
-        if (targetLine >= 0) {
-            editor.DirectMessage(2231, (IntPtr)targetLine); // SCI_TOGGLEFOLD
-        }
+    
+    // fail to get the right fold marker for c++ - SOLVED 
+    public static void toggle_fold_marker(Scintilla editor) {
+        int line = get_current_caret_line(editor);
+        if (line >= 0) editor.DirectMessage(NM.SCI_TOGGLEFOLD, (IntPtr)line); 
     }
+
     public static int get_current_caret_line(Scintilla editor) {
         if (editor == null) return -1;
-        int pos = (int)editor.DirectMessage(2008); // SCI_GETCURRENTPOS
-        int line = (int)editor.DirectMessage(2166, (IntPtr)pos); // SCI_LINEFROMPOSITION
+        int pos = (int)editor.DirectMessage(NM.SCI_GETCURRENTPOS); 
+        int line = (int)editor.DirectMessage(NM.SCI_LINEFROMPOSITION, (IntPtr)pos); 
         return line;
-    }
+    }    
     public static void unfold_line(Scintilla editor, int line) {
         if (editor == null) return;
-        // SCI_SETFOLDEXPANDED
-        editor.DirectMessage(2229, (IntPtr)line, (IntPtr)1);
+        editor.DirectMessage(NM.SCI_SETFOLDEXPANDED, (IntPtr)line, (IntPtr)1);
         // show the lines hidden under this fold
-        int lastChild = (int)editor.DirectMessage(2225, (IntPtr)line); // SCI_GETLASTCHILD
+        int lastChild = (int)editor.DirectMessage(NM.SCI_GETLASTCHILD, (IntPtr)line); 
         if (lastChild > line) {
-            editor.DirectMessage(2226, (IntPtr)(line + 1), (IntPtr)lastChild); // SCI_SHOWLINES
+            editor.DirectMessage(NM.SCI_SHOWLINES, (IntPtr)(line + 1), (IntPtr)lastChild); 
         }
     }
     public static void unfold_line(Scintilla editor) {
@@ -2702,6 +2724,8 @@ public static class Incantation_SCINTILLA {
         if (line<0) return ;
         unfold_line(editor, line);
     }
+    public static void fold_line(Scintilla editor, int line) {}
+    public static void fold_line(Scintilla editor) {}
 
     // -- find helpers 
     public static string get_selected_token(Scintilla editor) {

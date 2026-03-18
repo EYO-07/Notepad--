@@ -4,6 +4,7 @@
 
 /* === BUG/ISSUE === 
 1. Toggle Outlining/Folding : Alt+P don't always put the caret visible - ...
+.. Toggle Outlining/Folding : Alt+P/Alt+O inconsistent behaviour on cpp - ...
 2. Message Overlay : Display OverlayForm steals the window focus and don't return - SOLVED
 3. files.c not recognized - SOLVED 
 4. custom hightlight not been applied to all lines - SOLVED
