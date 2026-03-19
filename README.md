@@ -13,6 +13,15 @@ Build on top of winforms and Scintilla5.NET ( https://github.com/desjarlais/Scin
 4. Beeps and Boops Sounds on some keybinds. Don't know why, it's vibecoded ...
 5. It's under self-development. I use this editor to build better versions of this editor, if something happens to this repo the development ends.
 
+## Actual Features:
+1. Syntax Highlighting and Special Text Marker Highlighting for custom keywords.
+2. Autocompletion.
+3. Partial theme configuration by comment directives per file.
+4. Embedded minimal file explorer using treeview.
+5. No internet connection and no auto-update. (I never will, it's a text editor)
+
+It's under active development, so expect some bugs.
+
 ## Installation 
 1. Download .NET 10 at https://dotnet.microsoft.com/download
 2. Install .NET SDK
