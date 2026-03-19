@@ -4,7 +4,7 @@
 
 A slop and much lesser version of Notepad++, don't like it? Use Notepad++ instead.
 
-Build on top of winforms and Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ) by desjarlais.
+Build on top of winforms and Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ).
 
 ## Features--
 1. Fixed Dark Theme. I don't care about your bad taste, it's hardcoded.
