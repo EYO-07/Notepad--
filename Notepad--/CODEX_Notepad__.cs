@@ -229,7 +229,15 @@ public static class Incantation {
 		}
 		return result;
 	}
-	
+	public static T? get_first_nested<T>(Control parent) where T : Control { // TESTING
+        foreach (Control child in parent.Controls) {
+            if (child is T match) return match;
+            var nested = get_first_nested<T>(child);
+            if (nested != null) return nested;
+        }
+        return null;
+    }
+
     // Size and position
 	public static void size(Form form, int width, int height) {
         form.Size = new Size(width, height);
@@ -1850,7 +1858,7 @@ public static class Incantation_SCINTILLA {
         return false;
     }
     
-    // variables -- dark theme colors 
+    // variables -- shared colors
     // variables || background, locked_background, foreground 
     public static Color foreground_color = Color.FromArgb(255, 255, 255); // white
     public static Color background_color = Color.FromArgb(10, 10, 12); // black slight blue
@@ -1869,11 +1877,11 @@ public static class Incantation_SCINTILLA {
     private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
     private static Color number_fore_color = Color.Cyan;
     private static Color number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
-    private static Color string_fore_color = Color.Red; //Color.FromArgb(230, 200, 0); // Color.FromArgb(230, 230, 230); // white
+    private static Color string_fore_color = Color.Red; 
     private static Color string_back_color = Color.FromArgb(60, 10, 10); // gray
     private static Color operator_color = Color.Yellow;
     private static Color preprocessor_color = Color.Gray;
-    // variables | methods 
+    // variables | methods -- shared colors
     public static void reset_global_dark_theme_colors() {
         foreground_color = Color.FromArgb(255, 255, 255); // white
         background_color = Color.FromArgb(10, 10, 12); // black slight blue
@@ -1978,17 +1986,21 @@ public static class Incantation_SCINTILLA {
         set_keyshortcuts(editor);
 		return editor;
 	}
-	public static void load_file(Scintilla editor, string filename) {
+	public static void load_file(Scintilla editor, string filename) { // REVISION
 		if ( string.IsNullOrWhiteSpace(filename) ) return ;
+        if ( !is_file(filename) ) return ;
+        bool b_or_ed_ro = editor.ReadOnly;
+        editor.ReadOnly = true;
 		string? text = load(filename); 
-		if (string.IsNullOrWhiteSpace(text)) return ;
+		
+		if (string.IsNullOrWhiteSpace(text)) { 
+            editor.ReadOnly = b_or_ed_ro;
+            return ;
+        }
+		editor.ReadOnly = false;
 		editor.Text = text;
         editor.Tag = filename;
-//		set_fold_and_style(editor, filename);
-//        set_lexer(editor, filename);
-//        set_folding(editor);
-//        set_language_style(editor, filename);
-//		fold_all(editor);
+        editor.ReadOnly = b_or_ed_ro;
 	}
 	public static void init_dark_theme_scintilla(Scintilla editor) {
         editor.StyleResetDefault();
@@ -2143,6 +2155,7 @@ public static class Incantation_SCINTILLA {
             case ".java":
             case ".ts":
             case ".js":
+            case ".ahk":
                 editor.LexerName = "cpp";
                 return true;
             case ".bat":
@@ -2229,6 +2242,8 @@ public static class Incantation_SCINTILLA {
 		ext = ext.ToLower();
 		switch (ext) {
             case ".ahk":
+                set_ahk_style(scintilla);
+                break;
             case ".c":
                 set_c_style(scintilla);
                 break;
@@ -2271,9 +2286,7 @@ public static class Incantation_SCINTILLA {
 		}
 	}
     
-    // WORKING_>>>
- 
-    // TESTING
+    // --
     public static void refresh(Scintilla editor) {
         string path = (string) editor.Tag;
         if (string.IsNullOrWhiteSpace(path)) return;
@@ -2287,11 +2300,7 @@ public static class Incantation_SCINTILLA {
         set_language_style(editor, path);
         apply_textmarker_highlight_for_file_directives(editor);
     }
-    
-    // <<<_WORKING
-
-
-    // --     
+    // --
     public static void set_py_style(Scintilla scintilla) { // REVISION
         scintilla.Styles[Style.Python.Default].ForeColor = Color.Silver;
         scintilla.Styles[Style.Python.CommentLine].ForeColor = comment_fore_color;
@@ -2518,8 +2527,11 @@ public static class Incantation_SCINTILLA {
         scintilla.SetKeywords(1,"bool size_t ptrdiff_t");
     }
 
-    // TODO 
-    public static void set_ahk_style(Scintilla scintilla) {}
+    // TESTING BUG/ISSUE
+    public static void set_ahk_style(Scintilla editor) {
+        set_c_family_style(editor);
+        post_styling_comment_line(editor, ";");
+    }
     public static void set_bat_style(Scintilla scintilla) {
         // Default
         scintilla.Styles[0].ForeColor = Color.Silver;
@@ -2591,7 +2603,28 @@ public static class Incantation_SCINTILLA {
         }
     }
 
-    // WORKING_>>> 
+    // WORKING_>>>
+    
+    // TESTING BUG/ISSUE
+    public static void post_styling_comment_line(Scintilla editor, string comment_line_marker) {
+        // Loop through all lines
+        foreach (var line in editor.Lines) {
+            string text = line.Text;
+            int pos = line.Position;
+            // Find the first occurrence of the comment marker
+            int idx = text.IndexOf(comment_line_marker);
+            if (idx >= 0) {
+                // Apply styling from marker to end of line
+                int start = pos + idx;
+                int length = text.Length - idx;
+                editor.StartStyling(start); 
+                editor.SetStyling(length, Style.Cpp.CommentLine);
+            }
+        }
+    }
+
+    // <<<_WORKING
+
 
     // variables -- custom highlight 
     private static string textmarker_pattern = @"\{Notepad--T;([^}]*)\}";
@@ -2673,7 +2706,6 @@ public static class Incantation_SCINTILLA {
                 break;
         }
     }
-    // TESTING
     public static string apply_lexer_override_directive(Scintilla editor, string filename) {
         if (lexer_override_pattern_regex==null) lexer_override_pattern_regex = new Regex(lexer_override_pattern);
         for (int i = 0; i < Math.Min(line_count_for_directive_search, editor.Lines.Count); i++) {
@@ -2686,8 +2718,6 @@ public static class Incantation_SCINTILLA {
         }
         return filename;
     }
-
-    // <<<_WORKING
 
     // -- comment helpers 
     public static void toggle_comment_lines(Scintilla editor) {
@@ -3278,56 +3308,6 @@ public class MultiSelectTreeView : TreeView {
 		return new List<TreeNode>(selectedNodes);
 	}
 }
-
-//public class ToggleablePanel : Panel {
-//    private int current_index = 0;
-//    private List<Control> toggleable_controls = new List<Control>();
-//	public event EventHandler<Control> ControlChanged;
-//    public void SetControls(List<Control> controls) {
-//        toggleable_controls.Clear();
-//        this.Controls.Clear();
-//        current_index = 0;
-//
-//        bool first = true;
-//        foreach (var control in controls) {
-//            control.Dock = DockStyle.Fill;
-//            this.Controls.Add(control);
-//            toggleable_controls.Add(control);
-//            control.Visible = first;
-//            first = false;
-//        }
-//    }
-//    public void Toggle() {
-//        if (toggleable_controls.Count == 0) return;
-//        current_index = (current_index + 1) % toggleable_controls.Count;
-//        ShowControl(current_index);
-//    }
-//    public void ShowControl(int index) {
-//        if (index < 0 || index >= toggleable_controls.Count) return;
-//        current_index = index;
-//        ShowControl(toggleable_controls[index]);
-//    }
-//    public void ShowControl(Control controlToShow) {
-//		if (!toggleable_controls.Contains(controlToShow)) return;
-//        foreach (Control ctrl in toggleable_controls) {
-//            ctrl.Visible = (ctrl == controlToShow);
-//        }
-//		int last_index = current_index;
-//		current_index = toggleable_controls.IndexOf(controlToShow);
-//        controlToShow.BringToFront();
-//		if (last_index != current_index) OnControlChanged(controlToShow); 
-//    }
-//    public void Previous() {
-//        if (toggleable_controls.Count == 0) return;
-//        current_index = (current_index - 1 + toggleable_controls.Count) % toggleable_controls.Count;
-//        ShowControl(current_index);
-//    }
-//	public void Next() => Toggle();
-//	protected virtual void OnControlChanged(Control control) {
-//		ControlChanged?.Invoke(this, control);
-//	}
-//}
-//
 
 public class OverlayForm : Form {
     protected Label LabelRef;

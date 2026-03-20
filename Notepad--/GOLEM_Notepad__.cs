@@ -2,10 +2,10 @@
 // -- BEGIN 
 
 // -- text marker highlight 
-// {Notepad--T;Red:BUG,ISSUE,DEPRECATED,BUG/ISSUE} 
+// {Notepad--T;Red:BUG,ISSUE,DEPRECATED,BUG/ISSUE,PLACEHOLDER} 
 // {Notepad--T;Yellow:TESTING,NOT_TESTED,REVISION}
 // {Notepad--T;Cyan:TODO,WORKING_>>>,<<<_WORKING} 
-// {Notepad--T;Silver:SOLVED} 
+// {Notepad--T;Silver:SOLVED,OPTIMIZABLE} 
 // {Notepad--T;magenta:methods,attributes,variables}
 // {Notepad--T;lightgreen:debug}
 // {Notepad--;1:darkcyan;2:silver}
@@ -33,7 +33,6 @@ using static Codex.Incantation_TEXTBOX;
 using static Codex.Incantation_TABS;
 using static Codex.Incantation_EVENTS;
 using static Codex.Conjuration;
-//using static Codex.Conjuration_GLOBALHOTKEY;
 // -- ambiguities 
 using BorderStyle = System.Windows.Forms.BorderStyle;
 
@@ -217,6 +216,9 @@ public partial class Notepad__Form : Form {
             current_split_percentage -= 5;
             set_splitter_distance(this.main_panel, this.current_split_percentage);
         } );
+        key_shortcut(this, "ctrl", Keys.F5, ()=>{
+            SBR_reload_all_tabs();
+        });
         OnTick( this, (s,e) => {
             // opacity logic 
             if ( !is_form_active(this) ) {
@@ -328,7 +330,6 @@ public partial class Notepad__Form : Form {
                 editor.Tag = path;
 			}
             save(path, content); 
-//            this.message_overlay.Display("Saved : "+path);
             this.fullpath_scintilla_map[path] = editor;
             current_page.Text = get_filename(path);
             update_border_color(ns, page);
@@ -374,10 +375,10 @@ public partial class Notepad__Form : Form {
             string list = build_autocomplete_list(autocomplete_hashset, prefix);
             if (list.Length > 0) editor.AutoCShow(prefix.Length, list);
         };
-        key_shortcut(ns, "ctrl", Keys.F1, ()=>{});
+        key_shortcut(ns, "ctrl", Keys.F1, ()=>{dump_lexer_names(ns);}); // debug
         key_shortcut(ns, "ctrl", Keys.F2, ()=>{});
         key_shortcut(ns, "ctrl", Keys.F3, ()=>{});
-        key_shortcut(ns, "ctrl", Keys.F5, ()=>{dump_lexer_names(ns);}); // debug
+        key_shortcut(ns, "ctrl", Keys.F5, ()=>{}); 
     }
     // -- subroutines || new tabs 
     private TabPage add_new_tab(DarkTabControl tabs, Control ctrl, string name) {
@@ -414,6 +415,38 @@ public partial class Notepad__Form : Form {
 		scintilla_tab_logic(ns, page);
 	}
     // -- subroutines 
+    private void SBR_reload_all_tabs() { 
+        // OPTIMIZABLE - can be done with one loop 
+        print("Reloading Files:");
+        Scintilla? editor = null;
+        string? filename = null;
+        Panel? panel = null; 
+        int count = 1;
+        foreach (TabPage tab in this.left_tabs.TabPages) {
+            panel = get_first<Panel>(tab);
+            editor = get_first<Scintilla>(panel);
+            if (editor==null) { continue; }
+            filename = (string) editor.Tag;
+            if ( string.IsNullOrWhiteSpace(filename) ) continue; 
+            if ( !is_file(filename) ) continue;
+            print( to_string(count)+". Reloaded // "+filename );
+            load_file(editor, filename);
+            tab.Text = get_filename(filename);
+            count++;
+        }
+        foreach (TabPage tab in this.right_tabs.TabPages) {
+            panel = get_first<Panel>(tab);
+            editor = get_first<Scintilla>(panel);
+            if (editor==null) continue;
+            filename = (string) editor.Tag;
+            if ( string.IsNullOrWhiteSpace(filename) ) continue; 
+            if ( !is_file(filename) ) continue;
+            print( to_string(count)+". Reloaded // "+filename );
+            load_file(editor, filename);
+            tab.Text = get_filename(filename);
+            count++;
+        }
+    }
     private void SBR_load_modules() {
         // modules 
         print("loading modules:");
@@ -425,6 +458,9 @@ public partial class Notepad__Form : Form {
         if (!b_has_any) print("... no modules found");
     }
     private void SBR_load_module_ghcmd() {
+        string mouse_command_args = " MOUSE_UP:.num5 MOUSE_DOWN:.num2 MOUSE_LEFT:.num1 MOUSE_RIGHT:.num3 MOUSE_LBUTTON:num4 MOUSE_RBUTTON:num6 MOUSE_SCROLLUP:.num7 MOUSE_SCROLLDOWN:.num0 MOUSE_TOGGLE_SPEED:num8 ";
+        string window_resize_and_position_args = " WINDOW_UP:win|alt+up WINDOW_DOWN:win|alt+down WINDOW_LEFT:win|alt+left WINDOW_RIGHT:win|alt+right WINDOW_INCREASE:win|alt+pgup WINDOW_DECREASE:win|alt+pgdown WINDOW_VERTICAL:win|alt+end WINDOW_HORIZONTAL:win|alt+home ";
+        string window_z_order_args = " TOGGLE_TITLEBAR:win|alt+delete SELECT_WORKING_WINDOW:win|alt+insert BRING_TO_TOP:win|alt+o BRING_TO_LAST:win|alt+p ";
         if ( !is_file( join(get_exec_dir(),"modules\\ghcmd.exe") ) ) return ;
         print("1. ghcmd.exe - global hotkeys module");
         if (  confirmation_dialog(
@@ -433,7 +469,7 @@ public partial class Notepad__Form : Form {
         ) ) {
             if (start_process_adm(
                 "modules\\ghcmd.exe",
-                "WINDOW_UP:win|alt+up WINDOW_DOWN:win|alt+down WINDOW_LEFT:win|alt+left WINDOW_RIGHT:win|alt+right WINDOW_INCREASE:win|alt+pgup WINDOW_DECREASE:win|alt+pgdown WINDOW_VERTICAL:win|alt+end WINDOW_HORIZONTAL:win|alt+home TOGGLE_TITLEBAR:win|alt+delete SELECT_WORKING_WINDOW:win|alt+insert BRING_TO_TOP:win|alt+o BRING_TO_LAST:win|alt+p"
+                window_resize_and_position_args+window_z_order_args+mouse_command_args
             )) {
                 print("... module loaded sucessfully");
                 print("========================================================");
