@@ -98,6 +98,7 @@ public partial class Notepad__Form : Form {
         this.current_split_percentage = this.data.split_percentage;
 		this.explorer = new_file_explorer_dark_tree(this.data.Directories);
         add_context_menu_item(this.explorer, "Open File/Directory");
+        add_context_menu_item(this.explorer, "Close File(s)");
 		this.help_scintilla = new_scintilla();
 		this.help_scintilla.Text = """
 // [ Notepad-- ] : A lesser version of Notepad++, don't like it? Use Notepad++ instead.
@@ -270,6 +271,10 @@ public partial class Notepad__Form : Form {
 		set_action(this.explorer.ContextMenuStrip, "Open File/Directory", (s,e)=>{
             SBR_open_file_or_dir();
         });
+        set_action(this.explorer.ContextMenuStrip, "Close File(s)", (s,e)=>{
+            string path = get_selected_filename_from_explorer(this.explorer);
+            close_tabs_by_path(path);
+        });
         // ... some logic features are on add_new_scintilla_tab, scintilla_tab_logic function !
         SBR_load_modules();
         key_shortcut(this.help_scintilla, "ctrl", Keys.F1, ()=>{
@@ -379,6 +384,9 @@ public partial class Notepad__Form : Form {
         key_shortcut(ns, "ctrl", Keys.F2, ()=>{});
         key_shortcut(ns, "ctrl", Keys.F3, ()=>{});
         key_shortcut(ns, "ctrl", Keys.F5, ()=>{}); 
+        // set_action(ns.ContextMenuStrip, "Close File", (s,e)=>{
+            // close_tab_by_path( (string) ns.Tag );
+        // });
     }
     // -- subroutines || new tabs 
     private TabPage add_new_tab(DarkTabControl tabs, Control ctrl, string name) {
@@ -401,6 +409,7 @@ public partial class Notepad__Form : Form {
         this.fullpath_lines_map[filename] = editor.Lines.Count;
 		TabPage page = add_new_tab(tabs, editor, get_filename(filename) );
 		page.ToolTipText = filename;
+        //add_context_menu_item(editor.ContextMenuStrip, "Close File");
 		// extra logic 
 		scintilla_tab_logic(editor, page);
         toggle_read_only(editor);
@@ -556,6 +565,64 @@ public partial class Notepad__Form : Form {
 		hidden_titlebar = !hidden_titlebar;
 	}
     // -- subroutines 
+    private void close_tabs_by_path(string path) {
+        if ( string.IsNullOrWhiteSpace(path) ) return;
+        TabPage? page = null;
+        DarkTabControl? tabs = null;
+        if ( is_file(path) ) {    
+            foreach(TabPage p in this.left_tabs.TabPages) {
+                if (path == p.ToolTipText){
+                    page = p;
+                    tabs = this.left_tabs;
+                    break;
+                }
+            }
+            foreach(TabPage p in this.right_tabs.TabPages) {
+                if (page != null) break;
+                if (path == p.ToolTipText) {
+                    page = p;
+                    tabs = this.right_tabs;
+                    break;
+                }
+            }
+            if (page == null) return;
+            if (tabs == null) return;
+            close_tab(tabs, page);
+            fullpath_scintilla_map.Remove(page.ToolTipText);
+            this.data.LeftFiles.Remove(page.ToolTipText);
+            this.data.RightFiles.Remove(page.ToolTipText);
+        } else if ( is_dir(path) ) {
+            foreach(TabPage p in this.left_tabs.TabPages) {
+                if ( p.ToolTipText.StartsWith(path) ) {
+                    page = p;
+                    tabs = this.left_tabs;
+                    close_tab(tabs, page);
+                    fullpath_scintilla_map.Remove(page.ToolTipText);
+                    this.data.LeftFiles.Remove(page.ToolTipText);
+                    this.data.RightFiles.Remove(page.ToolTipText);
+                }
+            }
+            foreach(TabPage p in this.right_tabs.TabPages) {
+                if ( p.ToolTipText.StartsWith(path) ) {
+                    page = p;
+                    tabs = this.right_tabs;
+                    close_tab(tabs, page);
+                    fullpath_scintilla_map.Remove(page.ToolTipText);
+                    this.data.LeftFiles.Remove(page.ToolTipText);
+                    this.data.RightFiles.Remove(page.ToolTipText);
+                }
+            }
+        }
+    }
+    private TabPage? get_tab_by_filename(string filename) {
+        foreach(TabPage page in this.left_tabs.TabPages) {
+            if (filename == page.ToolTipText) return page;
+        }
+        foreach(TabPage page in this.right_tabs.TabPages) {
+            if (filename == page.ToolTipText) return page;
+        }
+        return null;
+    }
     private Scintilla? get_scintilla(TabPage page) {
         string filename = page.ToolTipText as string; 
         if ( string.IsNullOrWhiteSpace(filename) ) return null;
