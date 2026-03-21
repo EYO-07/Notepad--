@@ -2,16 +2,10 @@
 // -- BEGIN 
 
 // -- text marker highlight 
-// {Notepad--T;Red:BUG,ISSUE,DEPRECATED,BUG/ISSUE,PLACEHOLDER} 
-// {Notepad--T;Yellow:TESTING,NOT_TESTED,REVISION}
-// {Notepad--T;Cyan:TODO,WORKING_>>>,<<<_WORKING} 
-// {Notepad--T;Silver:SOLVED,OPTIMIZABLE} 
+// {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED;cyan:TODO,>>>,<<<}
 // {Notepad--T;magenta:methods,attributes,variables}
 // {Notepad--T;lightgreen:debug}
-// {Notepad--;1:darkcyan;2:silver}
 // {Notepad--H;1:silver;2:lightblue}
-
-/* === BUG/ISSUE === */
 
 namespace Notepad__;
 // -- 
@@ -48,8 +42,8 @@ public class Form_DATA {
 	public float FontSize { get; set; } 
 	public string DialogDir { get;set; }
     public Form_DATA() { // defaults 
-        Width = 1200;
-        Height = 600;
+        Width = 1300;
+        Height = 700;
         X = 20;
         Y = 20;
         split_percentage = 55;
@@ -84,9 +78,9 @@ public partial class Notepad__Form : Form {
 	private Dictionary<string, Scintilla> fullpath_scintilla_map = new();
     private Dictionary<string, int> fullpath_lines_map = new();
 	private string unsave_marker = "!! ";
-	private float font_step = 0.5f;
+	private float font_step = 0.5f; // TODO 
     private HashSet<string> autocomplete_hashset = new();
-    private string search_token = "";
+    // private string search_token = "";
     private int char_added_debouncer = 0;
     private int char_added_debouncer_max = 20;
     private int current_split_percentage = 55;
@@ -97,7 +91,7 @@ public partial class Notepad__Form : Form {
 		this.right_tabs = new_dark_tabs();
         this.current_split_percentage = this.data.split_percentage;
 		this.explorer = new_file_explorer_dark_tree(this.data.Directories);
-        add_context_menu_item(this.explorer, "Open File/Directory");
+//        add_context_menu_item(this.explorer, "Open File/Directory");
         add_context_menu_item(this.explorer, "Close File(s)");
 		this.help_scintilla = new_scintilla();
 		this.help_scintilla.Text = """
@@ -106,6 +100,9 @@ public partial class Notepad__Form : Form {
 
 "Use comments like this on top of document to set textmarker highlighting, use comment style of the language used."
 {Notepad--T;red:BUG,ISSUE,Close,Titlebar;yellow:TODO;silver:SOLVED,Switch}
+
+// -- text marker highlight - tags example 
+// {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED;cyan:TODO,>>>,<<<} 
 
 "Use comments like this on top of document to override highlighting for language specific keyword groups."
 {Notepad--H;1:gray;2:green}
@@ -143,9 +140,14 @@ public partial class Notepad__Form : Form {
 // Editor Commands || Misc
 1. Alt+S            // Switch Select Tabs Between Views 
 2. Alt+A / Alt+D    // Change the splitter position 
-3. Ctrl+F           // Go To Next Selection Match
-4. Ctrl+D           // Go To Previous Selection Match
-5. Ctrl+Q           // Comment out selected lines 
+1. Ctrl+Q           // Comment out selected lines 
+2. Ctrl+F           // Go To Next Selection Match
+3. Ctrl+D           // Go To Previous Selection Match
+
+"Use comment-blocks like this on top of document to set search token explicitly using ctrl+f or ctrl+d."
+// -- search tokens 
+// {Notepad--T;red:meaning_of_life}
+// {Notepad--S:meaning_of_life}
 
 // Tab Commands
 1. Right Click on Tab       // Switch the tab between panels
@@ -384,9 +386,6 @@ public partial class Notepad__Form : Form {
         key_shortcut(ns, "ctrl", Keys.F2, ()=>{});
         key_shortcut(ns, "ctrl", Keys.F3, ()=>{});
         key_shortcut(ns, "ctrl", Keys.F5, ()=>{}); 
-        // set_action(ns.ContextMenuStrip, "Close File", (s,e)=>{
-            // close_tab_by_path( (string) ns.Tag );
-        // });
     }
     // -- subroutines || new tabs 
     private TabPage add_new_tab(DarkTabControl tabs, Control ctrl, string name) {

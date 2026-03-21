@@ -1,10 +1,7 @@
 // Codex Library in Magic Oriented Programming 
 
-// -- text marker highlight 
-// {Notepad--T;Red:BUG,ISSUE,DEPRECATED,BUG/ISSUE} 
-// {Notepad--T;Yellow:TESTING,NOT_TESTED,REVISION}
-// {Notepad--T;Cyan:TODO,WORKING_>>>,<<<_WORKING} 
-// {Notepad--T;Silver:SOLVED} 
+// -- text marker highlight - tags example 
+// {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED;cyan:TODO,>>>,<<<}
 // {Notepad--T;Cyan:Inventory;Silver:Logic,Dialetic;lightgreen:Workflow} 
 // {Notepad--T;magenta:methods,attributes,variables}
 // {Notepad--T;lightgreen:debug, interception}
@@ -1174,7 +1171,7 @@ public static class Incantation_TREEVIEW {
 			}
 		};
 	}
-	public static void refresh_filesystem_node(TreeNode node) {
+	public static void refresh_filesystem_node(TreeNode node) { // REVISION
 		string? path = node.Tag as string;
 		if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
 		clear_non_existent_filesystem_node_childs(node);
@@ -1424,7 +1421,9 @@ public static class Incantation_TREEVIEW {
 		}
 		set_as_filesystem_tree(explorer);
         var context_menu = add_context_menu(explorer, new List<object>{ 
-            "Open CMD"
+            "Open File/Directory",
+            "Open CMD",
+            "Open CMD (admin)"
 		});
         set_action(context_menu, "Open CMD", (s,e) => {
             ToolStripMenuItem clickedItem = s as ToolStripMenuItem;
@@ -1438,7 +1437,19 @@ public static class Incantation_TREEVIEW {
 			if ( !is_dir(path) && !is_file(path) ) return ;
 			open_in_cmd(path);
 		});
-		explorer.MouseClick += (s,e) => {
+        set_action(context_menu, "Open CMD (admin)", (s,e)=>{ // TESTING
+            ToolStripMenuItem clickedItem = s as ToolStripMenuItem;
+            if (clickedItem == null) return ;
+            ContextMenuStrip ownerMenu = clickedItem.Owner as ContextMenuStrip;
+            if (ownerMenu == null) return ;
+            DarkTreeView exp = ownerMenu.SourceControl as DarkTreeView;
+            if (exp == null) return ;
+			string path = get_path_from_selected_node(exp);
+			if (string.IsNullOrEmpty(path)) return ;
+			if ( !is_dir(path) && !is_file(path) ) return ;
+			open_in_cmd_adm(path);
+        });
+        explorer.MouseClick += (s,e) => {
             var node = get_selected_one_node(explorer);
             if (node != null && node.Tag is string path) {
                 if ( is_dir(path) ) {
@@ -2019,22 +2030,42 @@ public static class Incantation_SCINTILLA {
         editor.SetSelectionBackColor(true, Color.FromArgb(70, 70, 70));
 		editor.SetSelectionForeColor(true, Color.White);
     }
-    public static void set_keyshortcuts(Scintilla editor) {
+    
+    // WORKING_>>>
+
+    public static void clear_cmd_keys(Scintilla editor) { // TODO BUG/ISSUE
+        editor.ClearCmdKey(Keys.Control | Keys.F);
+        editor.ClearCmdKey(Keys.Control | Keys.D);
+        editor.ClearCmdKey(Keys.Control | Keys.Q);
+        editor.ClearCmdKey(Keys.Control | Keys.S);
+        editor.ClearCmdKey(Keys.Control | Keys.A);
+    }
+
+    // <<<_WORKING
+
+    public static void set_keyshortcuts(Scintilla editor) { // TESTING
+        clear_cmd_keys(editor);
         key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
 		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
 		key_shortcut(editor, "alt", "o", ()=>{toggle_fold_marker(editor);});
         key_shortcut(editor, "ctrl", "d", ()=>{
+            bool b_read_only_back = editor.ReadOnly;
             string token = get_selected_token(editor);
             if ( string.IsNullOrWhiteSpace(token) ) { 
+                editor.ReadOnly = true;
                 token =  input_dialog(null, "Find Previous", "Input Token", "");
+                editor.ReadOnly = b_read_only_back;
             }
             if ( string.IsNullOrWhiteSpace(token) ) return ;
             find_prev_token(editor, token);
         });
         key_shortcut(editor, "ctrl", "f", ()=>{
+            bool b_read_only_back = editor.ReadOnly;
             string token = get_selected_token(editor);
             if ( string.IsNullOrWhiteSpace(token) ) { 
+                editor.ReadOnly = true;
                 token =  input_dialog(null, "Find Next", "Input Token", "");
+                editor.ReadOnly = b_read_only_back;
             }
             if ( string.IsNullOrWhiteSpace(token) ) return ;
             find_next_token(editor, token);
@@ -2625,7 +2656,6 @@ public static class Incantation_SCINTILLA {
 
     // <<<_WORKING
 
-
     // variables -- custom highlight 
     private static string textmarker_pattern = @"\{Notepad--T;([^}]*)\}";
     private static Regex? textmarker_pattern_regex = null;
@@ -2633,6 +2663,8 @@ public static class Incantation_SCINTILLA {
     private static Regex? highlight_override_pattern_regex = null;
     private static string lexer_override_pattern = @"\{Notepad--L:([^}]*)\}";
     private static Regex? lexer_override_pattern_regex = null;
+    private static string search_token_pattern = @"\{Notepad--S:([^}]*)\}"; // TODO
+    private static Regex? search_token_pattern_regex = null; // TODO 
     private static int line_count_for_directive_search = 50;
     // variables | methods -- custom highlight 
     public static void apply_textmarker_highlight_for_file_directives(Scintilla editor) {
@@ -2693,8 +2725,7 @@ public static class Incantation_SCINTILLA {
         }
         if (!has_match) reset_global_dark_theme_colors();
     }
-    // REVISION
-    private static void apply_lexer_color_directive(string lexer_component, string color_name) {
+    private static void apply_lexer_color_directive(string lexer_component, string color_name) { // REVISION
         switch (lexer_component) {
             case "1":
             case "keyword1":
@@ -2799,8 +2830,7 @@ public static class Incantation_SCINTILLA {
     }
 	
 	// -- fold helpers
-    // REVISION
-	public static void fold_all(Scintilla editor) {
+	public static void fold_all(Scintilla editor) { // REVISION
 		const int SCI_FOLDALL = 2662;
 		const int SC_FOLDACTION_CONTRACT = 0;
 		editor.DirectMessage(SCI_FOLDALL, (IntPtr)SC_FOLDACTION_CONTRACT);
@@ -2832,9 +2862,7 @@ public static class Incantation_SCINTILLA {
             }
         }
     }
-    
-    // REVISION
-    public static void smart_fold_all(Scintilla editor) {
+    public static void smart_fold_all(Scintilla editor) { // REVISION
         if (editor == null) return;
         const int SCI_GETLINECOUNT = 2154;
         const int SCI_LINEFROMPOSITION = 2166;
@@ -2875,7 +2903,6 @@ public static class Incantation_SCINTILLA {
             }
         }
     }
-    
     public static void toggle_fold_marker(Scintilla editor) {
         int line = get_current_caret_line(editor);
         if (line >= 0) editor.DirectMessage(NM.SCI_TOGGLEFOLD, (IntPtr)line); 
@@ -2903,10 +2930,38 @@ public static class Incantation_SCINTILLA {
     public static void fold_line(Scintilla editor, int line) {}
     public static void fold_line(Scintilla editor) {}
 
+    /* Logic [ Search Tokens ]
+    Incantation_SCINTILLA.set_keyshortcuts() || sets Ctrl+F and Ctrl+D logic 
+    Ctrl+F || $token | %* input_dialog | %* | find_next_token()
+    Ctrl+D || $token | %* input_dialog | find_prev_token()
+    ... || $token | %* input_dialog || input_dialog() 
+    ... || $token || get_selected_token() || get selected text | !% get search token by directive | %* | ... 
+    ... || $token || ... | !% get search token by directive || get_selected_token_by_directive() 
+    GSTD := get_selected_token_by_directive 
+    GSTD() || &f document head lines || %f directive match || parse and return token 
+    1. Selected text has priority 
+    2. Second priority is the directive token 
+    3. Third attempt is dialog 
+    */
+
     // -- find helpers 
+    public static string get_selected_token_by_directive(Scintilla editor) {  // TESTING
+        if ( search_token_pattern_regex==null ) search_token_pattern_regex = new Regex( search_token_pattern );
+        string token = "";
+        for (int i = 0; i < Math.Min(line_count_for_directive_search, editor.Lines.Count); i++) {
+            var lineText = editor.Lines[i].Text;
+            var match = search_token_pattern_regex.Match(lineText);
+            if (!match.Success) continue;
+            token = match.Groups[1].Value;
+            if ( string.IsNullOrWhiteSpace(token) ) continue;
+            break;
+        }
+        return token;
+    }
     public static string get_selected_token(Scintilla editor) {
         if (editor == null) return "";
         string text = editor.SelectedText;
+        if (string.IsNullOrWhiteSpace(text)) text = get_selected_token_by_directive(editor);
         if (string.IsNullOrWhiteSpace(text)) return "";
         text = text.TrimStart();
         int i = 0;
@@ -3404,7 +3459,6 @@ public class OverlayForm : Form {
 // ===================================== conjuration 
 // ... system integration  
 public static class Conjuration {
-    // TESTING
     public static bool start_process(string processname, string arguments) {
         if (string.IsNullOrWhiteSpace(processname)) return false;
         if (!File.Exists(processname)) return false; 
@@ -3422,7 +3476,6 @@ public static class Conjuration {
             Verb = "runas",          // <-- This requests elevation
             UseShellExecute = true   // <-- Required for "runas"
         };
-
         try {
             Process.Start(psi);
             return true;
@@ -3433,7 +3486,6 @@ public static class Conjuration {
             throw;
         }
     }
-
 	public static bool default_program_start(string filename) {
 		if (string.IsNullOrWhiteSpace(filename) || !File.Exists(filename))
 			return false;
@@ -3473,19 +3525,15 @@ public static class Conjuration {
 		}
 	}
 	public static bool open_in_cmd(string filename) {
-		if (string.IsNullOrWhiteSpace(filename))
-			return false;
-
+		if (string.IsNullOrWhiteSpace(filename)) return false;
 		try {
 			string? directory = null;
-
 			if (Directory.Exists(filename)) {
 				directory = filename;
 			}
 			else if (File.Exists(filename)) {
 				directory = Path.GetDirectoryName(filename);
 			}
-
 			if (directory != null) {
 				Process.Start(new ProcessStartInfo {
 					FileName = "cmd.exe",
@@ -3494,7 +3542,31 @@ public static class Conjuration {
 				});
 				return true;
 			}
-
+			return false; // File or folder doesn't exist
+		}
+		catch {
+			return false;
+		}
+	}
+    public static bool open_in_cmd_adm(string filename) { // TESTING
+		if (string.IsNullOrWhiteSpace(filename)) return false;
+		try {
+			string? directory = null;
+			if (Directory.Exists(filename)) {
+				directory = filename;
+			}
+			else if (File.Exists(filename)) {
+				directory = Path.GetDirectoryName(filename);
+			}
+			if (directory != null) {
+				Process.Start(new ProcessStartInfo {
+					FileName = "cmd.exe",
+					Arguments = $"/K cd /d \"{directory}\"",
+                    Verb = "runas",
+					UseShellExecute = true
+				});
+				return true;
+			}
 			return false; // File or folder doesn't exist
 		}
 		catch {
@@ -3556,7 +3628,7 @@ public static class Conjuration {
     
     [DllImport("user32.dll")] private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
     [DllImport("user32.dll")] private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-    [DllImport("user32.dll")]static extern bool GetCursorPos(out POINT lpPoint);
+    [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT lpPoint);
     struct POINT { public int X; public int Y; }
     private const uint GW_HWNDNEXT = 2;
     private const uint WM_MOUSEWHEEL = 0x020A;
