@@ -1,12 +1,11 @@
-// Notepad-- : Simpler version of Notepad++ 
-// -- BEGIN 
-
 // -- text marker highlight 
 // {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED;cyan:TODO,>>>,<<<}
 // {Notepad--T;magenta:methods,attributes,variables}
 // {Notepad--T;lightgreen:debug}
 // {Notepad--H;1:silver;2:lightblue}
 
+// -- BEGIN 
+// Notepad-- : Simpler version of Notepad++ 
 namespace Notepad__;
 // -- 
 using System.IO;
@@ -219,9 +218,8 @@ public partial class Notepad__Form : Form {
             current_split_percentage -= 5;
             set_splitter_distance(this.main_panel, this.current_split_percentage);
         } );
-        key_shortcut(this, "ctrl", Keys.F5, () => {
-            SBR_reload_all_tabs();
-        });
+        key_shortcut(this, "ctrl", Keys.F1, ()=>{SBR_load_module_ghcmd();});
+        key_shortcut(this, "ctrl", Keys.F5, () => {SBR_reload_all_tabs();});
         OnTick( this, (s,e) => {
             // opacity logic 
             if ( !is_form_active(this) ) {
@@ -279,9 +277,6 @@ public partial class Notepad__Form : Form {
         });
         // ... some logic features are on add_new_scintilla_tab, scintilla_tab_logic function !
         SBR_load_modules();
-        key_shortcut(this.help_scintilla, "ctrl", Keys.F1, ()=>{
-            SBR_load_module_ghcmd();
-        });
 	}
 	private void _theme() {
         hide_titlebar(this);

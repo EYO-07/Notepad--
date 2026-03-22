@@ -1,5 +1,3 @@
-// Codex Library in Magic Oriented Programming 
-
 // -- text marker highlight - tags example 
 // {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED,REVISION;cyan:TODO,>>>,<<<}
 // {Notepad--T;Cyan:Inventory;Silver:Logic,Dialetic;lightgreen:Workflow} 
@@ -8,7 +6,7 @@
 // {Notepad--H;1:silver;2:lightblue}
 
 // -- BEGIN 
-
+// Codex Library in Magic Oriented Programming 
 namespace Codex;
 using System.Runtime.InteropServices;
 using System.Drawing;
