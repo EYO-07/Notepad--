@@ -1,7 +1,7 @@
 // Codex Library in Magic Oriented Programming 
 
 // -- text marker highlight - tags example 
-// {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED;cyan:TODO,>>>,<<<}
+// {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED,REVISION;cyan:TODO,>>>,<<<}
 // {Notepad--T;Cyan:Inventory;Silver:Logic,Dialetic;lightgreen:Workflow} 
 // {Notepad--T;magenta:methods,attributes,variables}
 // {Notepad--T;lightgreen:debug, interception}
@@ -2031,9 +2031,9 @@ public static class Incantation_SCINTILLA {
 		editor.SetSelectionForeColor(true, Color.White);
     }
     
-    // WORKING_>>>
+    // >>>
 
-    public static void clear_cmd_keys(Scintilla editor) { // TODO BUG/ISSUE
+    public static void clear_cmd_keys(Scintilla editor) { // TODO ISSUE
         editor.ClearCmdKey(Keys.Control | Keys.F);
         editor.ClearCmdKey(Keys.Control | Keys.D);
         editor.ClearCmdKey(Keys.Control | Keys.Q);
@@ -2041,7 +2041,7 @@ public static class Incantation_SCINTILLA {
         editor.ClearCmdKey(Keys.Control | Keys.A);
     }
 
-    // <<<_WORKING
+    // <<<
 
     public static void set_keyshortcuts(Scintilla editor) { // TESTING
         clear_cmd_keys(editor);
@@ -2265,8 +2265,13 @@ public static class Incantation_SCINTILLA {
 		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
     }
 	
-    // TODO/REVISION
-    public static void set_language_style(Scintilla scintilla, string filename) {
+    // variables -- styling 
+    public static Dictionary<string, List<string>> LEXERNAME_KEYWORDS1_LIST_MAP = new Dictionary<string, List<string>>(); // TODO 
+    public static Dictionary<string, List<string>> LEXERNAME_KEYWORDS2_LIST_MAP = new Dictionary<string, List<string>>(); // TODO 
+    private static Dictionary<string,string> LEXERNAME_KEYWORDS1_STR_MAP = new Dictionary<string,string>(); // TODO 
+    private static Dictionary<string,string> LEXERNAME_KEYWORDS2_STR_MAP = new Dictionary<string,string>(); // TODO 
+    // variables | methods -- styling 
+    public static void set_language_style(Scintilla scintilla, string filename) { // TODO/REVISION
 		if ( string.IsNullOrWhiteSpace(filename) ) return ;
 		string ext = filename;
 		if (filename.Contains(".")) ext = Path.GetExtension(filename);
@@ -2316,8 +2321,6 @@ public static class Incantation_SCINTILLA {
                 break;
 		}
 	}
-    
-    // --
     public static void refresh(Scintilla editor) {
         string path = (string) editor.Tag;
         if (string.IsNullOrWhiteSpace(path)) return;
@@ -2331,7 +2334,6 @@ public static class Incantation_SCINTILLA {
         set_language_style(editor, path);
         apply_textmarker_highlight_for_file_directives(editor);
     }
-    // --
     public static void set_py_style(Scintilla scintilla) { // REVISION
         scintilla.Styles[Style.Python.Default].ForeColor = Color.Silver;
         scintilla.Styles[Style.Python.CommentLine].ForeColor = comment_fore_color;
@@ -2558,7 +2560,7 @@ public static class Incantation_SCINTILLA {
         scintilla.SetKeywords(1,"bool size_t ptrdiff_t");
     }
 
-    // TESTING BUG/ISSUE
+    // TESTING ISSUE
     public static void set_ahk_style(Scintilla editor) {
         set_c_family_style(editor);
         post_styling_comment_line(editor, ";");
@@ -2602,41 +2604,41 @@ public static class Incantation_SCINTILLA {
             "echo printf read cd pwd export unset alias unalias exit return test true false shift source");
     }
 
-    // NOT_TESTED
-    public static void highlight_set(HashSet<string> set, Scintilla editor, Color forecolor, Color backcolor) {
-        // Define a custom style ID that won't clash with the lexer
-        const int CUSTOM_STYLE = 32; // pick a number > 31 to avoid conflicts
+    // DEPRECATED
+//    public static void highlight_set(HashSet<string> set, Scintilla editor, Color forecolor, Color backcolor) {
+//         Define a custom style ID that won't clash with the lexer
+//        const int CUSTOM_STYLE = 32; // pick a number > 31 to avoid conflicts
+//
+//         Configure the style appearance
+//        editor.Styles[CUSTOM_STYLE].ForeColor = forecolor;
+//        editor.Styles[CUSTOM_STYLE].BackColor = backcolor;
+//        editor.Styles[CUSTOM_STYLE].Bold = true;
+//
+//         Reset all previous custom styling
+//        editor.StartStyling(0);
+//        editor.SetStyling(editor.TextLength, 0);
+//
+//         Scan through the text and apply custom style to matches
+//        foreach (string keyword in set)
+//        {
+//            int startPos = 0;
+//            while (true)
+//            {
+//                int foundPos = editor.Text.IndexOf(keyword, startPos, StringComparison.OrdinalIgnoreCase);
+//                if (foundPos == -1) break;
+//
+//                 Apply style to the keyword range
+//                editor.StartStyling(foundPos);
+//                editor.SetStyling(keyword.Length, CUSTOM_STYLE);
+//
+//                startPos = foundPos + keyword.Length;
+//            }
+//        }
+//    }
 
-        // Configure the style appearance
-        editor.Styles[CUSTOM_STYLE].ForeColor = forecolor;
-        editor.Styles[CUSTOM_STYLE].BackColor = backcolor;
-        editor.Styles[CUSTOM_STYLE].Bold = true;
-
-        // Reset all previous custom styling
-        editor.StartStyling(0);
-        editor.SetStyling(editor.TextLength, 0);
-
-        // Scan through the text and apply custom style to matches
-        foreach (string keyword in set)
-        {
-            int startPos = 0;
-            while (true)
-            {
-                int foundPos = editor.Text.IndexOf(keyword, startPos, StringComparison.OrdinalIgnoreCase);
-                if (foundPos == -1) break;
-
-                // Apply style to the keyword range
-                editor.StartStyling(foundPos);
-                editor.SetStyling(keyword.Length, CUSTOM_STYLE);
-
-                startPos = foundPos + keyword.Length;
-            }
-        }
-    }
-
-    // WORKING_>>>
+    // >>>
     
-    // TESTING BUG/ISSUE
+    // TESTING ISSUE
     public static void post_styling_comment_line(Scintilla editor, string comment_line_marker) {
         // Loop through all lines
         foreach (var line in editor.Lines) {
@@ -2654,7 +2656,7 @@ public static class Incantation_SCINTILLA {
         }
     }
 
-    // <<<_WORKING
+    // <<<
 
     // variables -- custom highlight 
     private static string textmarker_pattern = @"\{Notepad--T;([^}]*)\}";
@@ -2663,9 +2665,9 @@ public static class Incantation_SCINTILLA {
     private static Regex? highlight_override_pattern_regex = null;
     private static string lexer_override_pattern = @"\{Notepad--L:([^}]*)\}";
     private static Regex? lexer_override_pattern_regex = null;
-    private static string search_token_pattern = @"\{Notepad--S:([^}]*)\}"; // TODO
-    private static Regex? search_token_pattern_regex = null; // TODO 
-    private static int line_count_for_directive_search = 50;
+    private static string search_token_pattern = @"\{Notepad--S:([^}]*)\}"; 
+    private static Regex? search_token_pattern_regex = null; 
+    private static int line_count_for_directive_search = 100;
     // variables | methods -- custom highlight 
     public static void apply_textmarker_highlight_for_file_directives(Scintilla editor) {
         if (textmarker_pattern_regex==null) textmarker_pattern_regex = new Regex(textmarker_pattern);

@@ -211,15 +211,15 @@ public partial class Notepad__Form : Form {
             this.right_tabs.SelectedTab = LST;
             this.left_tabs.SelectedTab = RST; 
         });
-        key_shortcut(this, "alt","d", ()=>{
+        key_shortcut(this, "alt","d", () => {
             current_split_percentage += 5;
             set_splitter_distance(this.main_panel, this.current_split_percentage);
         } );
-        key_shortcut(this, "alt","a", ()=>{
+        key_shortcut(this, "alt","a", () => {
             current_split_percentage -= 5;
             set_splitter_distance(this.main_panel, this.current_split_percentage);
         } );
-        key_shortcut(this, "ctrl", Keys.F5, ()=>{
+        key_shortcut(this, "ctrl", Keys.F5, () => {
             SBR_reload_all_tabs();
         });
         OnTick( this, (s,e) => {
@@ -466,7 +466,7 @@ public partial class Notepad__Form : Form {
         if (!b_has_any) print("... no modules found");
     }
     private void SBR_load_module_ghcmd() {
-        string mouse_command_args = " MOUSE_UP:.num5 MOUSE_DOWN:.num2 MOUSE_LEFT:.num1 MOUSE_RIGHT:.num3 MOUSE_LBUTTON:num4 MOUSE_RBUTTON:num6 MOUSE_SCROLLUP:.num7 MOUSE_SCROLLDOWN:.num0 MOUSE_TOGGLE_SPEED:num8 ";
+        string mouse_command_args = " MOUSE_UP:.num5 MOUSE_DOWN:.num2 MOUSE_LEFT:.num1 MOUSE_RIGHT:.num3 MOUSE_LBUTTON_DOWN:.num4 MOUSE_RBUTTON_DOWN:.num6 MOUSE_SCROLLUP:.num7 MOUSE_SCROLLDOWN:.num0 MOUSE_TOGGLE_SPEED:num8 ";
         string window_resize_and_position_args = " WINDOW_UP:win|alt+up WINDOW_DOWN:win|alt+down WINDOW_LEFT:win|alt+left WINDOW_RIGHT:win|alt+right WINDOW_INCREASE:win|alt+pgup WINDOW_DECREASE:win|alt+pgdown WINDOW_VERTICAL:win|alt+end WINDOW_HORIZONTAL:win|alt+home ";
         string window_z_order_args = " TOGGLE_TITLEBAR:win|alt+delete SELECT_WORKING_WINDOW:win|alt+insert BRING_TO_TOP:win|alt+o BRING_TO_LAST:win|alt+p ";
         if ( !is_file( join(get_exec_dir(),"modules\\ghcmd.exe") ) ) return ;
