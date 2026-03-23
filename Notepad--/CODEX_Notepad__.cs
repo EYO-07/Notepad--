@@ -221,7 +221,9 @@ public static class Transmutation {
         ".ltx",
         ".script",
         ".md",
-        ".tex"
+        ".tex",
+        ".ada",
+        ".adb"
 	};
 	// variables | methods 
     public static bool is_code_file(string filename_or_ext) {

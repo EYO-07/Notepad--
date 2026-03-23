@@ -1,5 +1,6 @@
 // -- text marker highlight 
 // {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED;cyan:TODO,>>>,<<<}
+// {Notepad--T;Cyan:Inventory;Silver:Logic,Dialetic;lightgreen:Workflow} 
 // {Notepad--T;magenta:methods,attributes,variables}
 // {Notepad--T;lightgreen:debug}
 // {Notepad--H;1:silver;2:lightblue}
@@ -339,7 +340,16 @@ public partial class Notepad__Form : Form {
             update_border_color(ns, page);
             refresh(editor);
 		});	
-		key_shortcut(ns, "ctrl","r", async () => {
+		/* Logic [ Ctrl+R ] 
+        A := activate or kill async document words update
+        T := toggle_read_only
+        U := update_border_color
+        R := Incantation_SCINTILLA.refresh
+        -> Ctrl+R || A | T() | U() | R()
+        -> Ctrl+R || A || % readonly || kill_document_words_async()
+        -> Ctrl+R || A || % readonly | % else || get_document_words_async() 
+        */
+        key_shortcut(ns, "ctrl","r", async () => {
             Scintilla editor = ns;
             if (editor.ReadOnly) {
                 kill_document_words_async();
