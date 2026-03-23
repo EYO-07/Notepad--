@@ -162,6 +162,8 @@ public partial class Notepad__Form : Form {
 
 // General Commands 
 1. RCtrl // See through window 
+2. Ctrl+F5 // Reload all files 
+3. Ctrl+F1 // Reload ghcmd.exe (Global Hotkeys) module 
 
 >>> 
 
@@ -461,7 +463,7 @@ public partial class Notepad__Form : Form {
         if (!b_has_any) print("... no modules found");
     }
     private void SBR_load_module_ghcmd() {
-        string mouse_command_args = " MOUSE_UP:.num5 MOUSE_DOWN:.num2 MOUSE_LEFT:.num1 MOUSE_RIGHT:.num3 MOUSE_LBUTTON_DOWN:.num4 MOUSE_RBUTTON_DOWN:.num6 MOUSE_SCROLLUP:.num7 MOUSE_SCROLLDOWN:.num0 MOUSE_TOGGLE_SPEED:num8 ";
+        string mouse_command_args = " MOUSE_UP:.num5 MOUSE_DOWN:.num2 MOUSE_LEFT:.num1 MOUSE_RIGHT:.num3 MOUSE_LBUTTON_DOWN:.num4 MOUSE_RBUTTON_DOWN:.num6 MOUSE_SCROLLUP:.num7 MOUSE_SCROLLDOWN:.num0 MOUSE_TOGGLE_SPEED:num8 MOUSE_LBUTTON:num9 ";
         string window_resize_and_position_args = " WINDOW_UP:win|alt+up WINDOW_DOWN:win|alt+down WINDOW_LEFT:win|alt+left WINDOW_RIGHT:win|alt+right WINDOW_INCREASE:win|alt+pgup WINDOW_DECREASE:win|alt+pgdown WINDOW_VERTICAL:win|alt+end WINDOW_HORIZONTAL:win|alt+home ";
         string window_z_order_args = " TOGGLE_TITLEBAR:win|alt+delete SELECT_WORKING_WINDOW:win|alt+insert BRING_TO_TOP:win|alt+o BRING_TO_LAST:win|alt+p ";
         if ( !is_file( join(get_exec_dir(),"modules\\ghcmd.exe") ) ) return ;
@@ -474,15 +476,20 @@ public partial class Notepad__Form : Form {
                 "modules\\ghcmd.exe",
                 window_resize_and_position_args+window_z_order_args+mouse_command_args
             )) {
-                print("... module loaded sucessfully");
+                print("... ghcmd.exe loaded sucessfully");
                 print("========================================================");
                 print("-- List of Global Hotkeys");
-                print("0. Exit gmcmd - ctrl+shift+del // Quit the ghcmd.exe module");
-                print("1. Window Move - Win+Alt+Arrow Keys // Moves Any Window");
-                print("2. Window Resize - Win+Alt+PgUp, Win+Alt+PgDn // Keep aspect ratio");
-                print("3. Window Resize - Win+Alt+End, Win+Alt+Home // Change Orientation");
-                print("4. Compact Mode - Win+Alt+Del // Hide Titlebar");
-
+                print("0.  Exit gmcmd - ctrl+shift+del // Quit the ghcmd.exe module");
+                print("1.  Window Move - Win+Alt+Arrow Keys // Moves Any Window");
+                print("2.  Window Resize - Win+Alt+PgUp, Win+Alt+PgDn // Keep aspect ratio");
+                print("3.  Window Resize - Win+Alt+End, Win+Alt+Home // Change Orientation");
+                print("4.  Compact Mode - Win+Alt+Del // Hide Titlebar");
+                print("5.  Mouse Move - Numpad 5,1,2,3");
+                print("6.  Mouse Left Button - Numpad 4 // Hold");
+                print("7.  Mouse Right Button - Numpad 6 // Hold");
+                print("8.  Mouse Left Button - Numpad 9 // Click");
+                print("9.  Mouse Scroll - Numpad 0, Numpad 7");
+                print("10. Mouse Toggle Speed - Numpad 8 // Cursor speed");
             } else {
                 print("... error, failed to initialize module.");
                 print("... this module needs administrative privileges.");

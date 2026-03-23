@@ -1,0 +1,1191 @@
+// -- text marker highlight - tags example 
+// {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED,REVISION;cyan:TODO,>>>,<<<}
+// {Notepad--T;Cyan:Inventory;Silver:Logic,Dialetic;lightgreen:Workflow} 
+// {Notepad--T;magenta:methods,attributes,variables}
+// {Notepad--T;lightgreen:debug, interception}
+// {Notepad--H;1:silver;2:lightblue}
+
+// -- search tokens 
+// {Notepad--T;red:;blue:}
+// {Notepad--S:}
+
+// -- BEGIN 
+// Codex Library in Magic Oriented Programming 
+namespace Codex;
+using System.Runtime.InteropServices;
+using System.Drawing;
+using System.Windows.Forms;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Reflection;
+using System.Linq;
+using Microsoft.VisualBasic.FileIO;
+using ScintillaNET;
+using static Codex.Transmutation;
+using static Codex.Incantation;
+using static Codex.Incantation_TREEVIEW;
+using static Codex.Incantation_DIALOG;
+using static Codex.Incantation_SCINTILLA;
+using static Codex.Incantation_PANEL; 
+using static Codex.Incantation_CONTEXTMENU; 
+using static Codex.Incantation_TEXTBOX;
+using static Codex.Incantation_TABS;
+using static Codex.Incantation_EVENTS;
+using static Codex.Conjuration;
+using static Codex.Incantation_MOUSE;
+// -- ambiguities
+using MethodInvoker = System.Windows.Forms.MethodInvoker;
+using BorderStyle = System.Windows.Forms.BorderStyle;
+using TabDrawMode = System.Windows.Forms.TabDrawMode;
+using Timer = System.Windows.Forms.Timer; 
+using NM = ScintillaNET.NativeMethods;
+
+// ===================================== incantation 
+// ... graphical user interface and user interaction 
+public static class Incantation_SCINTILLA {
+    // TODO
+    public static bool is_file_modified(Scintilla editor, string filename) {
+        // check if the editor.Text match the content in filename 
+        return false;
+    }
+    
+    // variables -- shared colors
+    // variables || background, locked_background, foreground 
+    public static Color foreground_color = Color.FromArgb(255, 255, 255); // white
+    public static Color background_color = Color.FromArgb(10, 10, 12); // black slight blue
+    public static Color locked_background_color = Color.FromArgb(0, 5, 0); // black slight green
+    // variables || folding and margin
+    private static Color fold_fore_color = Color.FromArgb(60, 60, 60); // gray 
+    private static Color fold_back_color = Color.FromArgb(255, 255, 255); // white 
+    private static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
+    private static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
+    // variables || language specific style
+    private static Color default_word_color = Color.Silver;
+    private static Color keyword1_color = Color.FromArgb(115, 187, 255); // orange 
+    private static Color keyword1_backcolor;
+    private static Color keyword2_color = Color.FromArgb(0, 255, 95); // green 
+    private static Color keyword2_backcolor; 
+    private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
+    private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
+    private static Color number_fore_color = Color.Cyan;
+    private static Color number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
+    private static Color string_fore_color = Color.Red; 
+    private static Color string_back_color = Color.FromArgb(60, 10, 10); // gray
+    private static Color operator_color = Color.Yellow;
+    private static Color preprocessor_color = Color.Gray;
+    // variables | methods -- shared colors
+    public static void reset_global_dark_theme_colors() {
+        foreground_color = Color.FromArgb(255, 255, 255); // white
+        background_color = Color.FromArgb(10, 10, 12); // black slight blue
+        locked_background_color = Color.FromArgb(0, 5, 0); // black slight green
+        fold_fore_color = Color.FromArgb(60, 60, 60); // gray 
+        fold_back_color = Color.FromArgb(255, 255, 255); // white 
+        margin_fore_color = Color.FromArgb(120,120,120); // gray
+        margin_back_color = Color.FromArgb(30,30,30); // dark gray 
+        // -- 
+        default_word_color = Color.Silver;
+        keyword1_color = Color.FromArgb(115, 187, 255); // orange 
+        keyword2_color = Color.FromArgb(0, 255, 95); // green 
+        comment_fore_color = Color.FromArgb(0, 255, 153); // Green
+        comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
+        number_fore_color = Color.Cyan;
+        number_back_color = Color.FromArgb(0, 0, 73); // dark blue 
+        string_fore_color = Color.Red; //Color.FromArgb(230, 200, 0); // Color.FromArgb(230, 230, 230); // white
+        string_back_color = Color.FromArgb(60, 10, 10); // gray
+        operator_color = Color.Yellow;
+        preprocessor_color = Color.Gray;
+    }
+    public static void neon_green(ref Color fore,ref Color back) {
+        fore = Color.FromArgb(0, 255, 153);
+        back = Color.FromArgb(0, 51, 0);
+    }
+    public static void neon_red(ref Color fore,ref Color back) {
+        fore = Color.Red;
+        back = Color.FromArgb(60, 10, 10);
+    }
+    public static void neon_blue(ref Color fore,ref Color back) {
+        fore = Color.Cyan;
+        back = Color.FromArgb(0, 0, 73);
+    }
+    public static void neon_gray(ref Color fore,ref Color back) {
+        fore = Color.LightGray;
+        back = Color.FromArgb(40,40,40);
+    }
+    public static void neon_yellow(ref Color fore, ref Color back) {
+        fore = Color.FromArgb(255, 255, 102);   // bright neon yellow
+        back = Color.FromArgb(51, 51, 0);       // deep muted yellow/olive background
+    }
+    public static void neon_purple(ref Color fore, ref Color back) {
+        fore = Color.FromArgb(204, 102, 255);   // neon purple/magenta
+        back = Color.FromArgb(32, 0, 51);       // dark purple background
+    }
+
+    // methods - factory
+	public static Scintilla new_scintilla() {
+		var editor = new Scintilla();
+		editor.Dock = DockStyle.Fill;
+		editor.BorderStyle = ScintillaNET.BorderStyle.None;
+		editor.CaretWidth = 2;
+		editor.CaretLineVisible = true;
+		editor.Margins[0].Type = MarginType.Number;
+		editor.Margins[0].Width = 40;
+		editor.EdgeMode = EdgeMode.Line;
+		editor.EdgeColumn = 120;
+        editor.WrapMode = WrapMode.Word;
+        editor.WrapIndentMode = WrapIndentMode.Indent;
+        editor.AutoCIgnoreCase = true;
+        editor.AutoCMaxHeight = 30;
+        editor.AutoCSeparator = ' ';
+        init_dark_theme_scintilla(editor);
+        set_keyshortcuts(editor);
+		return editor;
+	}
+	public static void load_file(Scintilla editor, string filename) { // REVISION
+		if ( string.IsNullOrWhiteSpace(filename) ) return ;
+        if ( !is_file(filename) ) return ;
+        bool b_or_ed_ro = editor.ReadOnly;
+        editor.ReadOnly = true;
+		string? text = load(filename); 
+		
+		if (string.IsNullOrWhiteSpace(text)) { 
+            editor.ReadOnly = b_or_ed_ro;
+            return ;
+        }
+		editor.ReadOnly = false;
+		editor.Text = text;
+        editor.Tag = filename;
+        editor.ReadOnly = b_or_ed_ro;
+	}
+	public static void init_dark_theme_scintilla(Scintilla editor) { // REVISION 
+        editor.StyleResetDefault();
+		editor.Styles[Style.Default].Font = "Consolas";
+		editor.Styles[Style.Default].Size = 8;
+		editor.Styles[Style.Default].Bold = true;
+		editor.Styles[Style.Default].ForeColor = foreground_color;
+		editor.Styles[Style.Default].BackColor = background_color;
+        editor.StyleClearAll();
+        editor.Styles[Style.LineNumber].ForeColor = Color.FromArgb(120,120,120);
+		editor.Styles[Style.LineNumber].BackColor = margin_back_color;
+        editor.Styles[Style.IndentGuide].ForeColor = Color.FromArgb(60,60,60);
+        editor.EdgeColor = Color.FromArgb(60,60,60);
+        editor.CaretForeColor = Color.White;
+        editor.CaretLineBackColor = Color.FromArgb(40, 40, 40);
+        editor.SetSelectionBackColor(true, Color.FromArgb(70, 70, 70));
+		editor.SetSelectionForeColor(true, Color.White);
+    }
+    public static void clear_cmd_keys(Scintilla editor) { // TODO ISSUE
+        editor.ClearCmdKey(Keys.Control | Keys.F);
+        editor.ClearCmdKey(Keys.Control | Keys.D);
+        editor.ClearCmdKey(Keys.Control | Keys.Q);
+        editor.ClearCmdKey(Keys.Control | Keys.S);
+        editor.ClearCmdKey(Keys.Control | Keys.A);
+    }
+    public static void set_keyshortcuts(Scintilla editor) { // TESTING
+        clear_cmd_keys(editor);
+        key_shortcut(editor, "alt", Keys.D0, ()=>{fold_all(editor);});
+		key_shortcut(editor, "alt", "p", ()=>{smart_fold_all(editor);});
+		key_shortcut(editor, "alt", "o", ()=>{toggle_fold_marker(editor);});
+        key_shortcut(editor, "ctrl", "d", ()=>{
+            bool b_read_only_back = editor.ReadOnly;
+            string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) { 
+                editor.ReadOnly = true;
+                token =  input_dialog(null, "Find Previous", "Input Token", "");
+                editor.ReadOnly = b_read_only_back;
+            }
+            if ( string.IsNullOrWhiteSpace(token) ) return ;
+            find_prev_token(editor, token);
+        });
+        key_shortcut(editor, "ctrl", "f", ()=>{
+            bool b_read_only_back = editor.ReadOnly;
+            string token = get_selected_token(editor);
+            if ( string.IsNullOrWhiteSpace(token) ) { 
+                editor.ReadOnly = true;
+                token =  input_dialog(null, "Find Next", "Input Token", "");
+                editor.ReadOnly = b_read_only_back;
+            }
+            if ( string.IsNullOrWhiteSpace(token) ) return ;
+            find_next_token(editor, token);
+        });
+        key_shortcut(editor, "ctrl", "q", ()=>{
+            toggle_comment_lines(editor); 
+        });
+	}
+
+    // Define custom marker indices for begin/end folds
+    private const int BeginFoldMarker = 20; // pick an unused marker index
+    private const int EndFoldMarker   = 21;
+    public static void add_begin_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerAdd(BeginFoldMarker);
+    }
+    public static void add_end_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerAdd(EndFoldMarker);
+    }
+    public static void remove_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerDelete(BeginFoldMarker);
+        editor.Lines[line].MarkerDelete(EndFoldMarker);
+    }
+    public static void configure_manual_fold_markers(Scintilla editor) {
+        editor.Markers[BeginFoldMarker].Symbol = MarkerSymbol.Arrow;
+        editor.Markers[BeginFoldMarker].SetForeColor(System.Drawing.Color.White);
+        editor.Markers[BeginFoldMarker].SetBackColor(System.Drawing.Color.Green);
+        editor.Markers[EndFoldMarker].Symbol = MarkerSymbol.ArrowDown;
+        editor.Markers[EndFoldMarker].SetForeColor(System.Drawing.Color.White);
+        editor.Markers[EndFoldMarker].SetBackColor(System.Drawing.Color.Red);
+    }
+
+    // debug 
+    public static void dump_lexer_names(Scintilla editor){
+        editor.AppendText("=== Lexer Names ===\n");
+        int count = 1;
+        foreach( string name in Lexilla.GetLexerNames() ) {
+            editor.AppendText(to_string(count)+". "+name+"\n");
+            count++;
+        }
+    }
+    
+    // DEPRECATED - but you should confirm if no other function use this!
+    public static void set_language_folding(Scintilla scintilla, string lexer) {
+		// --
+		// Set the lexer
+		scintilla.LexerName = lexer;
+		// Instruct the lexer to calculate folding
+		scintilla.SetProperty("fold", "1");
+		scintilla.SetProperty("fold.compact", "0"); // TESTING 
+        scintilla.SetProperty("fold.comment", "1");
+		// Configure a margin to display folding symbols
+		scintilla.Margins[2].Type = MarginType.Symbol;
+		scintilla.Margins[2].Mask = Marker.MaskFolders;
+		scintilla.Margins[2].Sensitive = true;
+		scintilla.Margins[2].Width = 20;
+		// Set colors for all folding markers
+		for (int i = 25; i <= 31; i++) {
+			scintilla.Markers[i].SetForeColor(fold_fore_color);
+			scintilla.Markers[i].SetBackColor(fold_back_color);
+		}
+		
+		// Marker colors
+		Color fore = fold_fore_color;
+		Color back = fold_back_color;
+		scintilla.Markers[Marker.Folder].SetForeColor(fore);
+		scintilla.Markers[Marker.Folder].SetBackColor(back);
+		scintilla.Markers[Marker.FolderOpen].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderOpen].SetBackColor(back);
+		scintilla.Markers[Marker.FolderEnd].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderEnd].SetBackColor(back);
+		scintilla.Markers[Marker.FolderMidTail].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderMidTail].SetBackColor(back);
+		scintilla.Markers[Marker.FolderOpenMid].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderOpenMid].SetBackColor(back);
+		scintilla.Markers[Marker.FolderSub].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderSub].SetBackColor(back);
+		scintilla.Markers[Marker.FolderTail].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderTail].SetBackColor(back);
+		
+		// Folding margin background
+		scintilla.SetFoldMarginColor(true, Color.FromArgb(30, 30, 30));
+		scintilla.SetFoldMarginHighlightColor(true, Color.FromArgb(30, 30, 30));
+		
+		// Configure folding markers with respective symbols
+		scintilla.Markers[Marker.Folder].Symbol = MarkerSymbol.BoxPlus;
+		scintilla.Markers[Marker.FolderOpen].Symbol = MarkerSymbol.BoxMinus;
+		scintilla.Markers[Marker.FolderEnd].Symbol = MarkerSymbol.BoxPlusConnected;
+		scintilla.Markers[Marker.FolderMidTail].Symbol = MarkerSymbol.TCorner;
+		scintilla.Markers[Marker.FolderOpenMid].Symbol = MarkerSymbol.BoxMinusConnected;
+		scintilla.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
+		scintilla.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
+		// Enable automatic folding
+		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
+	}
+
+    // -- lexer, folding and style
+    public static bool set_lexer(Scintilla editor, string filename) {
+        if ( string.IsNullOrWhiteSpace(filename) ) return false;
+		string ext = Path.GetExtension(filename).ToLowerInvariant();
+        if ( string.IsNullOrWhiteSpace(ext) ) return false;
+        // -- hand picked lexer names which will mismatch extension names 
+        switch (ext) {
+            case ".md":
+                editor.LexerName = "markdown";
+                return true;
+            case ".html":
+            case ".htm":
+            case ".csproj":
+                editor.LexerName = "hypertext";
+                return true;
+            case ".c":
+            case ".h":
+            case ".hpp":
+            case ".cs":
+            case ".java":
+            case ".ts":
+            case ".js":
+            case ".ahk":
+                editor.LexerName = "cpp";
+                return true;
+            case ".bat":
+                editor.LexerName = "batch";
+                return true;
+            case ".sh":
+                editor.LexerName = "bash";
+                return true;
+            case ".tex":
+                editor.LexerName = "latex";
+                return true;
+            case ".ps1":
+                editor.LexerName = "powershell";
+                return true;
+            case ".py":
+            case ".pyw":
+                editor.LexerName = "python";
+                return true;
+            case ".rb":
+                editor.LexerName = "ruby";
+                return true;
+        }
+        // -- the lexer_name directly on GetLexerNames iterator
+        foreach(string lexer_name in Lexilla.GetLexerNames()) {
+            if (ext == "."+lexer_name) {
+                editor.LexerName = lexer_name;
+                return true;
+            }
+        } 
+        return false;
+    }
+    public static void set_folding(Scintilla scintilla) {
+        // Instruct the lexer to calculate folding
+		scintilla.SetProperty("fold", "1");
+        scintilla.SetProperty("fold.compact", "0"); // TESTING 
+        scintilla.SetProperty("fold.comment", "1");
+		// Configure a margin to display folding symbols
+		scintilla.Margins[2].Type = MarginType.Symbol;
+		scintilla.Margins[2].Mask = Marker.MaskFolders;
+		scintilla.Margins[2].Sensitive = true;
+		scintilla.Margins[2].Width = 20;
+		// Set colors for all folding markers
+		for (int i = 25; i <= 31; i++) {
+			scintilla.Markers[i].SetForeColor(fold_fore_color);
+			scintilla.Markers[i].SetBackColor(fold_back_color);
+		}
+		// Marker colors
+		Color fore = fold_fore_color;
+		Color back = fold_back_color;
+		scintilla.Markers[Marker.Folder].SetForeColor(fore);
+		scintilla.Markers[Marker.Folder].SetBackColor(back);
+		scintilla.Markers[Marker.FolderOpen].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderOpen].SetBackColor(back);
+		scintilla.Markers[Marker.FolderEnd].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderEnd].SetBackColor(back);
+		scintilla.Markers[Marker.FolderMidTail].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderMidTail].SetBackColor(back);
+		scintilla.Markers[Marker.FolderOpenMid].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderOpenMid].SetBackColor(back);
+		scintilla.Markers[Marker.FolderSub].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderSub].SetBackColor(back);
+		scintilla.Markers[Marker.FolderTail].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderTail].SetBackColor(back);
+		// Folding margin background
+		scintilla.SetFoldMarginColor(true, Color.FromArgb(30, 30, 30));
+		scintilla.SetFoldMarginHighlightColor(true, Color.FromArgb(30, 30, 30));
+		// Configure folding markers with respective symbols
+		scintilla.Markers[Marker.Folder].Symbol = MarkerSymbol.BoxPlus;
+		scintilla.Markers[Marker.FolderOpen].Symbol = MarkerSymbol.BoxMinus;
+		scintilla.Markers[Marker.FolderEnd].Symbol = MarkerSymbol.BoxPlusConnected;
+		scintilla.Markers[Marker.FolderMidTail].Symbol = MarkerSymbol.TCorner;
+		scintilla.Markers[Marker.FolderOpenMid].Symbol = MarkerSymbol.BoxMinusConnected;
+		scintilla.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
+		scintilla.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
+		// Enable automatic folding
+		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
+    }
+	
+    // variables -- styling 
+    public static Dictionary<string, List<string>> NAME_KEYWORDS1_LIST_MAP = new Dictionary<string, List<string>>(); // TODO 
+    public static Dictionary<string, List<string>> NAME_KEYWORDS2_LIST_MAP = new Dictionary<string, List<string>>(); // TODO 
+    private static Dictionary<string,string> NAME_KEYWORDS1_STR_MAP = new Dictionary<string,string>(); // TODO 
+    private static Dictionary<string,string> NAME_KEYWORDS2_STR_MAP = new Dictionary<string,string>(); // TODO 
+    // variables | methods -- styling 
+    public static void set_language_style(Scintilla scintilla, string filename) { // TODO/REVISION
+		if ( string.IsNullOrWhiteSpace(filename) ) return ;
+		string ext = filename;
+		if (filename.Contains(".")) ext = Path.GetExtension(filename);
+		ext = ext.ToLower();
+		switch (ext) {
+            case ".ahk":
+                set_ahk_style(scintilla);
+                break;
+            case ".c":
+                set_c_style(scintilla);
+                break;
+            case ".h":
+            case ".hpp":
+			case ".cpp":
+				set_cpp_style(scintilla);
+				break;
+			case ".cs":
+				set_cs_style(scintilla);
+				break;
+            case ".pyw":
+            case ".py":
+                set_py_style(scintilla);
+                break;
+            case ".java":
+                set_java_style(scintilla);
+                break;
+            case ".lua":
+                set_lua_style(scintilla);
+                break;
+            case ".js":
+                set_javascript_style(scintilla);
+                break;
+            case ".bat":
+                set_bat_style(scintilla);
+                break;
+            case ".sh":
+                set_bash_style(scintilla);
+                break;
+            case ".htm":
+            case ".html":
+            case ".xml":
+            case ".csproj":
+                set_html_style(scintilla);
+                break;
+            case ".ps1":
+                set_powershell_style(scintilla);
+                break;
+		}
+	}
+    public static void refresh(Scintilla editor) {
+        string path = (string) editor.Tag;
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if ( !is_code_file(path) ) return; 
+        
+        // interception - apply_lexer_override_directive intercepts path or keeps the same 
+        path = apply_lexer_override_directive(editor, path);
+        set_lexer(editor, path);
+        set_folding(editor);
+        apply_custom_highlight_override_for_file_directives(editor);
+        set_language_style(editor, path);
+        apply_textmarker_highlight_for_file_directives(editor);
+    }
+    /* Logic [ update_keywords_str_from_lst ] 
+    U := update_keywords_str_from_lst
+    N := need update
+    -> U() || %* dicts not contains key | % N() || joins with space the keywords 1 and 2 from list 
+    -> N() || %* dicts not contains key || return true 
+    -> N() || %* dicts not contains key | calculate the size of list with space and compare with size of string already there | % size don't match || return true 
+    -> N() || %* dicts not contains key | calculate the size of list with space and compare with size of string already there | % size don't match | % else || return false 
+    */
+    private static bool need_update_str_keywords1(string name) { // TESTING
+        if ( !NAME_KEYWORDS1_LIST_MAP.ContainsKey(name) ) return false; 
+        if ( !NAME_KEYWORDS1_STR_MAP.ContainsKey(name) ) return true; 
+        var LIST = NAME_KEYWORDS1_LIST_MAP[name]; 
+        var STR = NAME_KEYWORDS1_STR_MAP[name];
+        int len = LIST.Count;
+        if (len<1) return false;
+        int string_len_sum = 0;
+        foreach(var s in LIST) string_len_sum += s.Length;
+        string_len_sum += len-1;
+        return string_len_sum!=STR.Length;
+    }
+    private static bool need_update_str_keywords2(string name) { // TESTING
+        if ( !NAME_KEYWORDS2_LIST_MAP.ContainsKey(name) ) return false; 
+        if ( !NAME_KEYWORDS2_STR_MAP.ContainsKey(name) ) return true; 
+        var LIST = NAME_KEYWORDS2_LIST_MAP[name]; 
+        var STR = NAME_KEYWORDS2_STR_MAP[name];
+        int len = LIST.Count;
+        if (len<1) return false;
+        int string_len_sum = 0;
+        foreach(var s in LIST) string_len_sum += s.Length;
+        string_len_sum += len-1;
+        return string_len_sum!=STR.Length;
+    }
+    private static bool update_keywords_str_from_lst(string name) { // TESTING
+        if ( !NAME_KEYWORDS1_LIST_MAP.ContainsKey(name) ) return false; // needs initialization 
+        if ( !NAME_KEYWORDS2_LIST_MAP.ContainsKey(name) ) return false; // needs initialization 
+        if ( need_update_str_keywords1(name) ) {
+            NAME_KEYWORDS1_STR_MAP[name] = string.Join(" ",NAME_KEYWORDS1_LIST_MAP[name]);
+        }
+        if ( need_update_str_keywords2(name) ) {
+            NAME_KEYWORDS2_STR_MAP[name] = string.Join(" ",NAME_KEYWORDS2_LIST_MAP[name]);
+        }
+        return true; 
+    }
+    public static void set_py_style(Scintilla editor) { // TESTING
+        editor.Styles[Style.Python.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Python.CommentLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.Python.CommentLine].BackColor = comment_back_color;
+        editor.Styles[Style.Python.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Python.Number].BackColor = number_back_color;
+        editor.Styles[Style.Python.String].ForeColor = string_fore_color;
+        editor.Styles[Style.Python.String].BackColor = string_back_color;
+        editor.Styles[Style.Python.Character].ForeColor = string_fore_color;
+        editor.Styles[Style.Python.Character].BackColor = string_back_color;
+        editor.Styles[Style.Python.Triple].ForeColor = string_fore_color;
+        editor.Styles[Style.Python.Triple].BackColor = string_back_color;
+        editor.Styles[Style.Python.TripleDouble].ForeColor = string_fore_color;
+        editor.Styles[Style.Python.TripleDouble].BackColor = string_back_color;
+        editor.Styles[Style.Python.Word].ForeColor = keyword1_color;
+        editor.Styles[Style.Python.Word2].ForeColor = keyword2_color;
+        editor.Styles[Style.Python.Operator].ForeColor = operator_color;
+        // TODO 
+        if ( !update_keywords_str_from_lst("python") ) {
+            NAME_KEYWORDS1_LIST_MAP["python"] = new List<string>{
+                "and as assert async await break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield"
+            };
+            NAME_KEYWORDS2_LIST_MAP["python"] = new List<string>{
+                "int float str bool list tuple dict set bytes object type"
+            };
+            update_keywords_str_from_lst("python");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["python"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["python"]);
+    }
+    public static void set_java_style(Scintilla editor) { // TESTING
+        set_c_family_style(editor);
+        // Java keywords
+        if ( !update_keywords_str_from_lst("java") ) {
+            NAME_KEYWORDS1_LIST_MAP["java"] = new List<string>{
+                "abstract assert break case catch class const continue default do else enum extends final finally for goto if implements import instanceof interface native new package private protected public return strictfp super switch synchronized this throw throws transient try volatile while"
+            };
+            NAME_KEYWORDS2_LIST_MAP["java"] = new List<string>{
+                "boolean byte char double float int long short void String Object Class"
+            };
+            update_keywords_str_from_lst("java");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["java"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["java"]);
+    }
+    public static void set_javascript_style(Scintilla editor) { // TESTING
+        set_c_family_style(editor);
+        if ( !update_keywords_str_from_lst("javascript") ) {
+            NAME_KEYWORDS1_LIST_MAP["javascript"] = new List<string>{
+                "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof let new return super switch this throw try typeof var void while with yield"
+            };
+            NAME_KEYWORDS2_LIST_MAP["javascript"] = new List<string>{
+                "Array Boolean Date Error Function JSON Math Number Object Promise RegExp String Map Set WeakMap WeakSet Symbol BigInt console window document"
+            };
+            update_keywords_str_from_lst("javascript");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["javascript"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["javascript"]);
+    }
+    public static void set_lua_style(Scintilla editor) { // TESTING
+        editor.Styles[Style.Lua.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Lua.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.Lua.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Lua.CommentLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.Lua.CommentLine].BackColor = comment_back_color;
+        editor.Styles[Style.Lua.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Lua.Number].BackColor = number_back_color;
+        editor.Styles[Style.Lua.Word].ForeColor = keyword1_color;
+        editor.Styles[Style.Lua.Word2].ForeColor = keyword2_color;
+        editor.Styles[Style.Lua.String].ForeColor = string_fore_color;
+        editor.Styles[Style.Lua.String].BackColor = string_back_color;
+        editor.Styles[Style.Lua.Character].ForeColor = string_fore_color;
+        editor.Styles[Style.Lua.Character].BackColor = string_back_color;
+        editor.Styles[Style.Lua.LiteralString].ForeColor = string_fore_color;
+        editor.Styles[Style.Lua.LiteralString].BackColor = string_back_color;
+        editor.Styles[Style.Lua.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Lua.Preprocessor].ForeColor = preprocessor_color;
+        if ( !update_keywords_str_from_lst("lua") ) {
+            NAME_KEYWORDS1_LIST_MAP["lua"] = new List<string>{
+                "and break do else elseif end false for function goto if in local nil not or repeat return then true until while"
+            };
+            NAME_KEYWORDS2_LIST_MAP["lua"] = new List<string>{
+                "assert collectgarbage dofile error getmetatable ipairs load loadfile next pairs pcall print rawequal rawget rawlen rawset require select setmetatable tonumber tostring type xpcall"
+            };
+            update_keywords_str_from_lst("lua");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["lua"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["lua"]);
+    }
+    public static void set_bash_style(Scintilla editor) { // TESTING
+        set_bash_common_style(editor);
+        if ( !update_keywords_str_from_lst("bash") ) {
+            NAME_KEYWORDS1_LIST_MAP["bash"] = new List<string>{
+                "if then else elif fi for while do done case esac function select in time until"
+            };
+            NAME_KEYWORDS2_LIST_MAP["bash"] = new List<string>{
+                "echo printf read cd pwd export unset alias unalias exit return test true false shift source"
+            };
+            update_keywords_str_from_lst("bash");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["bash"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["bash"]);
+    }
+    public static void set_html_style(Scintilla editor) { // TESTING
+        // Default
+        editor.Styles[Style.Html.Default].ForeColor = default_word_color;
+        // Tags
+        editor.Styles[Style.Html.Tag].ForeColor = keyword1_color;
+        // Unknown tags
+//        editor.Styles[Style.Html.UnknownTag].ForeColor = Color.Red;
+        // Attributes
+        editor.Styles[Style.Html.Attribute].ForeColor = keyword2_color;
+        // Unknown attributes
+//        editor.Styles[Style.Html.UnknownAttribute].ForeColor = Color.Red;
+        // Numbers
+        editor.Styles[Style.Html.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Html.Number].BackColor = number_back_color;
+        // Strings
+//        editor.Styles[Style.Html.String].ForeColor = string_fore_color;
+//        editor.Styles[Style.Html.String].BackColor = string_back_color;
+        editor.Styles[Style.Html.Other].ForeColor = string_fore_color;
+        editor.Styles[Style.Html.Other].BackColor = string_back_color;
+        // Comments
+        editor.Styles[Style.Html.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.Html.Comment].BackColor = comment_back_color;
+        // Entities
+        editor.Styles[Style.Html.Entity].ForeColor = Color.LightGreen;
+        // Operators
+//        editor.Styles[Style.Html.Operator].ForeColor = Color.Yellow;
+        // Keywords (HTML elements)
+        if ( !update_keywords_str_from_lst("html") ) {
+            NAME_KEYWORDS1_LIST_MAP["html"] = new List<string>{
+                "html head body div span p a img h1 h2 h3 h4 h5 h6 table tr td th ul ol li form input button select option textarea script style link meta"
+            };
+            NAME_KEYWORDS2_LIST_MAP["html"] = new List<string>{
+                "id class src href alt title type value name rel action method style"
+            };
+            update_keywords_str_from_lst("html");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["html"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["html"]);
+    }
+    public static void set_powershell_style(Scintilla editor) { // TESTING
+        editor.Styles[Style.PowerShell.Default].ForeColor = default_word_color;
+        editor.Styles[Style.PowerShell.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.PowerShell.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.PowerShell.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.PowerShell.Number].BackColor = number_back_color;
+        editor.Styles[Style.PowerShell.Keyword].ForeColor = keyword1_color;
+        // Strings
+        editor.Styles[Style.PowerShell.String].ForeColor = string_fore_color;
+        editor.Styles[Style.PowerShell.String].BackColor = string_back_color;
+        editor.Styles[Style.PowerShell.Operator].ForeColor = operator_color;
+        // Variables
+        editor.Styles[Style.PowerShell.Variable].ForeColor = Color.LightBlue;
+        // Commands (cmdlets/functions)
+        editor.Styles[Style.PowerShell.Cmdlet].ForeColor = keyword2_color;
+        
+        if ( !update_keywords_str_from_lst("powershell") ) {
+            NAME_KEYWORDS1_LIST_MAP["powershell"] = new List<string>{
+                "begin break catch class continue data do dynamicparam else elseif end enum exit filter finally for foreach function if in param process return switch throw trap try until using var while"
+            };
+            NAME_KEYWORDS2_LIST_MAP["powershell"] = new List<string>{
+                "Get-Item Get-ChildItem Get-Content Set-Content Remove-Item Copy-Item Move-Item New-Item Write-Output Write-Host Import-Module Export-Module Invoke-Command Start-Process Stop-Process"
+            };
+            update_keywords_str_from_lst("powershell");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["powershell"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["powershell"]);
+    }    
+    public static void set_c_family_style(Scintilla editor) { // TESTING 
+		// Configure the CPP (C#) lexer styles
+		editor.Styles[Style.Cpp.Default].ForeColor = default_word_color;
+		editor.Styles[Style.Cpp.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.Cpp.Comment].BackColor = comment_back_color;
+		editor.Styles[Style.Cpp.CommentLine].ForeColor = comment_fore_color;
+		editor.Styles[Style.Cpp.CommentLine].BackColor = comment_back_color;
+		editor.Styles[Style.Cpp.CommentLineDoc].ForeColor = comment_fore_color;
+		editor.Styles[Style.Cpp.CommentLineDoc].BackColor = comment_back_color;
+		editor.Styles[Style.Cpp.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.Cpp.Number].BackColor = number_back_color;
+        editor.Styles[Style.Cpp.Word].ForeColor = keyword1_color;
+        // editor.Styles[Style.Cpp.Word].BackColor = keyword1_backcolor; 
+		editor.Styles[Style.Cpp.Word2].ForeColor = keyword2_color;
+        editor.Styles[Style.Cpp.GlobalClass].ForeColor = Color.FromArgb(255, 77, 77); // Set 2
+//        editor.Styles[Style.Cpp.UserLiteral2].ForeColor = Color.Green;       // Set 4
+//        editor.Styles[Style.Cpp.UserLiteral3].ForeColor = Color.Brown;       // Set 5
+//        editor.Styles[Style.Cpp.UserLiteral4].ForeColor = Color.DarkRed;     // Set 6
+//        editor.Styles[Style.Cpp.UserLiteral5].ForeColor = Color.DarkMagenta; // Set 7
+		editor.Styles[Style.Cpp.String].ForeColor = string_fore_color;
+		editor.Styles[Style.Cpp.String].BackColor = string_back_color;
+		editor.Styles[Style.Cpp.Character].ForeColor = string_fore_color;
+		editor.Styles[Style.Cpp.Character].BackColor = string_back_color;
+		editor.Styles[Style.Cpp.Verbatim].ForeColor = string_fore_color; 
+		editor.Styles[Style.Cpp.Verbatim].BackColor = string_back_color; 
+		editor.Styles[Style.Cpp.StringEol].BackColor = Color.Pink;
+		editor.Styles[Style.Cpp.Operator].ForeColor = operator_color;
+		editor.Styles[Style.Cpp.Preprocessor].ForeColor = preprocessor_color;
+	}
+	public static void set_cs_style(Scintilla editor) { // TESTING
+		set_c_family_style(editor);
+        if ( !update_keywords_str_from_lst("cs") ) {
+            NAME_KEYWORDS1_LIST_MAP["cs"] = new List<string>{
+                "abstract as base break case catch checked continue default delegate do else event explicit extern false finally fixed for foreach goto if implicit in interface internal is lock namespace new null object operator out override params private protected public readonly ref return sealed sizeof stackalloc switch this throw true try typeof unchecked unsafe using virtual while"
+            };
+            NAME_KEYWORDS2_LIST_MAP["cs"] = new List<string>{
+                "partial bool byte char class const decimal double enum float int long sbyte short static string struct uint ulong ushort void var"
+            };
+            update_keywords_str_from_lst("cs");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["cs"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["cs"]);
+	}
+	public static void set_cpp_style(Scintilla editor) { // TESTING
+        set_c_family_style(editor);
+        if ( !update_keywords_str_from_lst("cpp") ) {
+            NAME_KEYWORDS1_LIST_MAP["cpp"] = new List<string>{
+                "alignas alignof asm auto break case catch class const constexpr const_cast continue decltype default delete do dynamic_cast else enum explicit export extern false for friend goto if inline mutable namespace new noexcept nullptr operator private protected public register reinterpret_cast return sizeof static static_assert static_cast struct switch template this thread_local throw true try typedef typeid typename union using virtual volatile while"
+            };
+            NAME_KEYWORDS2_LIST_MAP["cpp"] = new List<string>{
+                "bool char char16_t char32_t double float int long short signed unsigned void wchar_t"
+            };
+            update_keywords_str_from_lst("cpp");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["cpp"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["cpp"]);
+    }
+    public static void set_c_style(Scintilla editor) { // TESTING
+        set_c_family_style(editor);
+        if ( !update_keywords_str_from_lst("c") ) {
+            NAME_KEYWORDS1_LIST_MAP["c"] = new List<string>{
+                "auto break case char const continue default do double else enum extern float for goto if inline int long register restrict return short signed sizeof static struct switch typedef union unsigned void volatile while"
+            };
+            NAME_KEYWORDS2_LIST_MAP["c"] = new List<string>{
+                "bool size_t ptrdiff_t"
+            };
+            update_keywords_str_from_lst("c");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["c"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["c"]);
+    }
+    public static void set_ahk_style(Scintilla editor) { // TESTING ISSUE
+        set_c_family_style(editor);
+        if ( !update_keywords_str_from_lst("autohotkey") ) {
+            NAME_KEYWORDS1_LIST_MAP["autohotkey"] = new List<string>{
+                "return if else true false global for while"
+            };
+            NAME_KEYWORDS2_LIST_MAP["autohotkey"] = new List<string>{
+                "WinActive WinGetProcessName SendInput Send GetKeyState A_TickCount KeyWait Sleep ToolTip",
+                "Push Length Has HasProp"
+            };
+            update_keywords_str_from_lst("autohotkey");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["autohotkey"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["autohotkey"]);
+        post_styling_comment_line(editor, ";");
+    }
+    public static void set_bash_common_style(Scintilla editor) { // TESTING
+        editor.Styles[0].ForeColor = default_word_color;
+        editor.Styles[2].ForeColor = comment_fore_color;
+        editor.Styles[2].BackColor = comment_back_color;
+        editor.Styles[3].ForeColor = number_fore_color;
+        editor.Styles[3].BackColor = number_back_color;
+        editor.Styles[4].ForeColor = keyword1_color;
+        editor.Styles[5].ForeColor = string_fore_color;
+        editor.Styles[5].BackColor = string_back_color;
+        editor.Styles[6].ForeColor = string_fore_color;
+        editor.Styles[6].BackColor = string_back_color;
+        editor.Styles[7].ForeColor = operator_color;
+        // Identifiers
+        editor.Styles[8].ForeColor = Color.LightBlue;
+        // Variables ($var)
+        editor.Styles[9].ForeColor = Color.Orange;
+    }
+    public static void set_bat_style(Scintilla editor) { // TESTING
+        set_bash_common_style(editor);
+        if ( !update_keywords_str_from_lst("bat") ) {
+            NAME_KEYWORDS1_LIST_MAP["bat"] = new List<string>{
+                "taskkill sfc ipconfig netsh start REM if then else elif fi for while do done case esac function select in time until doskey"
+            };
+            NAME_KEYWORDS2_LIST_MAP["bat"] = new List<string>{
+                "echo printf read cd pwd export unset alias unalias exit return test true false shift source set"
+            };
+            update_keywords_str_from_lst("bat");
+        }
+        editor.SetKeywords(0,NAME_KEYWORDS1_STR_MAP["bat"]);
+        editor.SetKeywords(1,NAME_KEYWORDS2_STR_MAP["bat"]);
+    }
+    public static void post_styling_comment_line(Scintilla editor, string comment_line_marker) { // TESTING ISSUE
+        // Loop through all lines
+        foreach (var line in editor.Lines) {
+            string text = line.Text;
+            int pos = line.Position;
+            // Find the first occurrence of the comment marker
+            int idx = text.IndexOf(comment_line_marker);
+            if (idx >= 0) {
+                // Apply styling from marker to end of line
+                int start = pos + idx;
+                int length = text.Length - idx;
+                editor.StartStyling(start); 
+                editor.SetStyling(length, Style.Cpp.CommentLine);
+            }
+        }
+    }
+
+    // variables -- custom highlight 
+    private static string textmarker_pattern = @"\{Notepad--T;([^}]*)\}";
+    private static Regex? textmarker_pattern_regex = null;
+    private static string highlight_override_pattern = @"\{Notepad--H;([^}]*)\}";
+    private static Regex? highlight_override_pattern_regex = null;
+    private static string lexer_override_pattern = @"\{Notepad--L:([^}]*)\}";
+    private static Regex? lexer_override_pattern_regex = null;
+    private static string search_token_pattern = @"\{Notepad--S:([^}]*)\}"; 
+    private static Regex? search_token_pattern_regex = null; 
+    private static int line_count_for_directive_search = 100;
+    // variables | methods -- custom highlight 
+    public static void apply_textmarker_highlight_for_file_directives(Scintilla editor) {
+        if (textmarker_pattern_regex==null) textmarker_pattern_regex = new Regex(textmarker_pattern);
+        // Clear all indicators you plan to use
+        for (int i = 8; i < 32; i++) { 
+            editor.IndicatorCurrent = i;
+            editor.IndicatorClearRange(0, editor.TextLength); 
+        }
+        int indicatorIndex = 8; // start at 8, go up for each color
+        for (int i = 0; i < Math.Min(line_count_for_directive_search, editor.Lines.Count); i++) {
+            var lineText = editor.Lines[i].Text;
+            var match = textmarker_pattern_regex.Match(lineText);
+            if (!match.Success) continue;
+            var directives = match.Groups[1].Value.Split(';');
+            foreach (var directive in directives) {
+                var parts = directive.Split(':');
+                if (parts.Length != 2) continue;
+                var colorName = parts[0].Trim();
+                var keywords = parts[1]
+                    .Split(',')
+                    .Select(k => k.Trim())
+                    .Where(k => k.Length > 0);
+                Color c = Color.FromName(colorName);
+                // Configure this indicator
+                editor.Indicators[indicatorIndex].Style = IndicatorStyle.StraightBox;
+                editor.Indicators[indicatorIndex].ForeColor = c;
+                editor.Indicators[indicatorIndex].Alpha = 60;
+                editor.Indicators[indicatorIndex].OutlineAlpha = 255;
+                foreach (var keyword in keywords){
+                    int pos = 0;
+                    while ((pos = editor.Text.IndexOf(keyword, pos, StringComparison.Ordinal)) != -1) {
+                        editor.IndicatorCurrent = indicatorIndex;
+                        editor.IndicatorFillRange(pos, keyword.Length);
+                        pos += keyword.Length;
+                    }
+                }
+                indicatorIndex++; // next color → next indicator
+            }
+        }
+    }
+    public static void apply_custom_highlight_override_for_file_directives(Scintilla editor) {
+        if (highlight_override_pattern_regex==null) highlight_override_pattern_regex = new Regex(highlight_override_pattern);
+        bool has_match = false;
+        for (int i = 0; i < Math.Min(line_count_for_directive_search, editor.Lines.Count); i++) {
+            var lineText = editor.Lines[i].Text;
+            var match = highlight_override_pattern_regex.Match(lineText);
+            if (!match.Success) continue;
+            has_match = true;
+            var directives = match.Groups[1].Value.Split(';');
+            foreach (var directive in directives) {
+                var parts = directive.Split(':');
+                if (parts.Length != 2) continue;
+                var lexerComponentName = parts[0].Trim();
+                var colorName = parts[1].Trim();
+                apply_lexer_color_directive(lexerComponentName, colorName);
+            }
+        }
+        if (!has_match) reset_global_dark_theme_colors();
+    }
+    private static void apply_lexer_color_directive(string lexer_component, string color_name) { // REVISION
+        switch (lexer_component) {
+            case "1":
+            case "keyword1":
+                keyword1_color = Color.FromName(color_name);
+                break;
+            case "2":
+            case "keyword2":
+                keyword2_color = Color.FromName(color_name);
+                break;
+        }
+    }
+    public static string apply_lexer_override_directive(Scintilla editor, string filename) {
+        if (lexer_override_pattern_regex==null) lexer_override_pattern_regex = new Regex(lexer_override_pattern);
+        for (int i = 0; i < Math.Min(line_count_for_directive_search, editor.Lines.Count); i++) {
+            var lineText = editor.Lines[i].Text;
+            var match = lexer_override_pattern_regex.Match(lineText);
+            if (!match.Success) continue;
+            string directive = match.Groups[1].Value;
+            if ( string.IsNullOrWhiteSpace(directive) ) continue;
+            return directive;
+        }
+        return filename;
+    }
+
+    // -- comment helpers 
+    public static void toggle_comment_lines(Scintilla editor) {
+        if (editor == null) return;
+        string commentString = GetLineCommentString(editor.LexerName);
+        if (string.IsNullOrEmpty(commentString)) return;
+
+        int startLine = editor.LineFromPosition(editor.SelectionStart);
+        int endLine = editor.LineFromPosition(editor.SelectionEnd);
+
+        editor.BeginUndoAction();
+//        editor.SuspendDrawing(); // optional, reduces flicker
+
+        try
+        {
+            for (int line = startLine; line <= endLine; line++)
+            {
+                var sciLine = editor.Lines[line];
+                string text = editor.GetTextRange(sciLine.Position, sciLine.Length);
+
+                if (text.TrimStart().StartsWith(commentString))
+                {
+                    // Remove comment prefix
+                    int pos = sciLine.Position + text.IndexOf(commentString);
+                    editor.TargetStart = pos;
+                    editor.TargetEnd = pos + commentString.Length;
+                    editor.ReplaceTarget(string.Empty);
+                }
+                else
+                {
+                    // Add comment prefix
+                    editor.TargetStart = sciLine.Position;
+                    editor.TargetEnd = sciLine.Position;
+                    editor.ReplaceTarget(commentString);
+                }
+            }
+        }
+        finally
+        {
+//            editor.ResumeDrawing();
+            editor.EndUndoAction();
+        }
+    }
+    public static void comment_out(Scintilla editor) {
+        if (editor == null) return;
+        string commentString = GetLineCommentString(editor.LexerName);
+        if (string.IsNullOrEmpty(commentString)) return; // No line comment style available
+        int startLine = editor.LineFromPosition(editor.SelectionStart);
+        int endLine = editor.LineFromPosition(editor.SelectionEnd);
+        editor.BeginUndoAction();
+        try {
+            for (int line = startLine; line <= endLine; line++) {
+                int pos = editor.Lines[line].Position;
+                editor.InsertText(pos, commentString);
+            }
+        }
+        finally {
+            editor.EndUndoAction();
+        }
+    }
+    private static string GetLineCommentString(string lexerName) {
+        switch (lexerName.ToLowerInvariant())
+        {
+            case "cpp":
+            case "cs":
+            case "java":
+                return "//";
+            case "python":
+            case "perl":
+            case "ruby":
+                return "#";
+            case "sql":
+                return "--";
+            case "lua":
+                return "--";
+            default:
+                return null;
+        }
+    }
+	
+	// -- fold helpers
+	public static void fold_all(Scintilla editor) { // REVISION
+		const int SCI_FOLDALL = 2662;
+		const int SC_FOLDACTION_CONTRACT = 0;
+		editor.DirectMessage(SCI_FOLDALL, (IntPtr)SC_FOLDACTION_CONTRACT);
+        // -- 
+        int lineCount = (int)editor.DirectMessage(2154); // SCI_GETLINECOUNT
+		for (int i = 0; i < lineCount; i++) {
+			int level = (int)editor.DirectMessage(2223, (IntPtr)i); // SCI_GETFOLDLEVEL
+			if ((level & 0x2000) != 0) // SC_FOLDLEVELHEADERFLAG
+			{
+				editor.DirectMessage(2237, (IntPtr)i, (IntPtr)0); // SCI_SETFOLDEXPANDED false
+				int lastChild = (int) editor.DirectMessage(2224, (IntPtr)i, (IntPtr)(-1)); // SCI_GETLASTCHILD
+				editor.DirectMessage(2227, (IntPtr)(i + 1), (IntPtr)lastChild); // SCI_HIDELINES
+			}
+		}
+	}
+    public static void unfold_all(Scintilla editor) {
+        const int SCI_FOLDALL = 2662;
+        const int SC_FOLDACTION_EXPAND = 1;
+        editor.DirectMessage(SCI_FOLDALL, (IntPtr)SC_FOLDACTION_EXPAND);
+        // --
+        int lineCount = (int)editor.DirectMessage(2154); // SCI_GETLINECOUNT
+        for (int i = 0; i < lineCount; i++) {
+            int level = (int)editor.DirectMessage(2223, (IntPtr)i); // SCI_GETFOLDLEVEL
+            if ((level & 0x2000) != 0) // SC_FOLDLEVELHEADERFLAG
+            {
+                editor.DirectMessage(2237, (IntPtr)i, (IntPtr)1); // SCI_SETFOLDEXPANDED true
+                int lastChild = (int)editor.DirectMessage(2224, (IntPtr)i, (IntPtr)(-1)); // SCI_GETLASTCHILD
+                editor.DirectMessage(2226, (IntPtr)(i + 1), (IntPtr)lastChild); // SCI_SHOWLINES
+            }
+        }
+    }
+    public static void smart_fold_all(Scintilla editor) { // REVISION
+        if (editor == null) return;
+        const int SCI_GETLINECOUNT = 2154;
+        const int SCI_LINEFROMPOSITION = 2166;
+        const int SCI_GETFOLDLEVEL = 2223;
+        const int SCI_SETFOLDEXPANDED = 2237;
+        const int SCI_GETLASTCHILD = 2224;
+        const int SCI_HIDELINES = 2227;
+        const int SC_FOLDLEVELHEADERFLAG = 0x2000;
+        const int SC_FOLDLEVELNUMBERMASK = 0x0FFF;
+        int lineCount = (int)editor.DirectMessage(SCI_GETLINECOUNT);
+        // --- detect caret fold level ---
+        int caretPos = editor.CurrentPosition;
+        int caretLine = (int)editor.DirectMessage(SCI_LINEFROMPOSITION, (IntPtr)caretPos);
+        int caretLevel = (int)editor.DirectMessage(SCI_GETFOLDLEVEL, (IntPtr)caretLine);
+        caretLevel &= SC_FOLDLEVELNUMBERMASK;
+        // --- fold everything deeper than caret level ---
+        for (int i = 0; i < lineCount; i++) {
+            int level = (int)editor.DirectMessage(SCI_GETFOLDLEVEL, (IntPtr)i);
+
+            if ((level & SC_FOLDLEVELHEADERFLAG) != 0) {
+                int indent = level & SC_FOLDLEVELNUMBERMASK;
+
+                if (indent >= caretLevel) {
+                    editor.DirectMessage(SCI_SETFOLDEXPANDED, (IntPtr)i, IntPtr.Zero);
+
+                    int lastChild = (int)editor.DirectMessage(
+                        SCI_GETLASTCHILD,
+                        (IntPtr)i,
+                        (IntPtr)(-1)
+                    );
+
+                    editor.DirectMessage(
+                        SCI_HIDELINES,
+                        (IntPtr)(i + 1),
+                        (IntPtr)lastChild
+                    );
+                }
+            }
+        }
+    }
+    public static void toggle_fold_marker(Scintilla editor) {
+        int line = get_current_caret_line(editor);
+        if (line >= 0) editor.DirectMessage(NM.SCI_TOGGLEFOLD, (IntPtr)line); 
+    }
+    public static int get_current_caret_line(Scintilla editor) {
+        if (editor == null) return -1;
+        int pos = (int)editor.DirectMessage(NM.SCI_GETCURRENTPOS); 
+        int line = (int)editor.DirectMessage(NM.SCI_LINEFROMPOSITION, (IntPtr)pos); 
+        return line;
+    }    
+    public static void unfold_line(Scintilla editor, int line) {
+        if (editor == null) return;
+        editor.DirectMessage(NM.SCI_SETFOLDEXPANDED, (IntPtr)line, (IntPtr)1);
+        // show the lines hidden under this fold
+        int lastChild = (int)editor.DirectMessage(NM.SCI_GETLASTCHILD, (IntPtr)line); 
+        if (lastChild > line) {
+            editor.DirectMessage(NM.SCI_SHOWLINES, (IntPtr)(line + 1), (IntPtr)lastChild); 
+        }
+    }
+    public static void unfold_line(Scintilla editor) {
+        int line = get_current_caret_line(editor);
+        if (line<0) return ;
+        unfold_line(editor, line);
+    }
+    public static void fold_line(Scintilla editor, int line) {}
+    public static void fold_line(Scintilla editor) {}
+
+    // -- find helpers 
+    /* Logic [ Search Tokens ]
+    Incantation_SCINTILLA.set_keyshortcuts() || sets Ctrl+F and Ctrl+D logic 
+    Ctrl+F || $token | %* input_dialog | %* | find_next_token()
+    Ctrl+D || $token | %* input_dialog | find_prev_token()
+    ... || $token | %* input_dialog || input_dialog() 
+    ... || $token || get_selected_token() || get selected text | !% get search token by directive | %* | ... 
+    ... || $token || ... | !% get search token by directive || get_selected_token_by_directive() 
+    GSTD := get_selected_token_by_directive 
+    GSTD() || &f document head lines || %f directive match || parse and return token 
+    1. Selected text has priority 
+    2. Second priority is the directive token 
+    3. Third attempt is dialog 
+    */
+    public static string get_selected_token_by_directive(Scintilla editor) { 
+        if ( search_token_pattern_regex==null ) search_token_pattern_regex = new Regex( search_token_pattern );
+        string token = "";
+        for (int i = 0; i < Math.Min(line_count_for_directive_search, editor.Lines.Count); i++) {
+            var lineText = editor.Lines[i].Text;
+            var match = search_token_pattern_regex.Match(lineText);
+            if (!match.Success) continue;
+            token = match.Groups[1].Value;
+            if ( string.IsNullOrWhiteSpace(token) ) continue;
+            break;
+        }
+        return token;
+    }
+    public static string get_selected_token(Scintilla editor) {
+        if (editor == null) return "";
+        string text = editor.SelectedText;
+        if (string.IsNullOrWhiteSpace(text)) text = get_selected_token_by_directive(editor);
+        if (string.IsNullOrWhiteSpace(text)) return "";
+        text = text.TrimStart();
+        int i = 0;
+        while (i < text.Length && !char.IsWhiteSpace(text[i])) {
+            i++;
+        }
+        return text.Substring(0, i);
+    }
+    public static void find_next_token(Scintilla editor, string token) {
+        if (editor == null || string.IsNullOrEmpty(token)) return;
+        unfold_all(editor);
+        int start = editor.CurrentPosition;
+        int end = editor.TextLength;
+        editor.TargetStart = start;
+        editor.TargetEnd = end;
+        int pos = editor.SearchInTarget(token);
+        if (pos != -1) {
+            editor.SetSelection(pos + token.Length, pos);               
+            editor.ScrollCaret();
+            smart_fold_all(editor);
+
+            int line = editor.LineFromPosition(editor.CurrentPosition);
+            editor.DirectMessage(2234, (IntPtr)line, IntPtr.Zero); // Ensure visible
+        }
+    }
+    public static void find_prev_token(Scintilla editor, string token) {
+        if (editor == null || string.IsNullOrEmpty(token)) return;
+        unfold_all(editor);
+        const int SCFIND_WHOLEWORD = 2;
+        int caret = editor.CurrentPosition;
+        // Find bounds of the word under the caret
+        int wordStart = (int)editor.DirectMessage(2266, (IntPtr)caret, (IntPtr)1); // SCI_WORDSTARTPOSITION
+        int wordEnd   = (int)editor.DirectMessage(2267, (IntPtr)caret, (IntPtr)1); // SCI_WORDENDPOSITION
+        int searchEnd = wordStart; // exclude current word completely
+        editor.SearchFlags = (ScintillaNET.SearchFlags) SCFIND_WHOLEWORD;
+        editor.TargetStart = 0;
+        editor.TargetEnd = searchEnd;
+        int lastPos = -1;
+        while (true) {
+            int pos = editor.SearchInTarget(token);
+            if (pos == -1) break;
+            lastPos = pos;
+            editor.TargetStart = pos + token.Length;
+            editor.TargetEnd = searchEnd;
+        }
+        if (lastPos != -1) {
+            editor.SetSelection(lastPos + token.Length, lastPos);
+            editor.ScrollCaret();
+            smart_fold_all(editor);
+
+            int line = editor.LineFromPosition(editor.CurrentPosition);
+            editor.DirectMessage(2234, (IntPtr)line, IntPtr.Zero); // Ensure visible
+        }
+    }
+    
+}
+
+// -- END 
