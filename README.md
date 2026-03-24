@@ -12,6 +12,7 @@ Build on top of winforms and Scintilla5.NET ( https://github.com/desjarlais/Scin
 3. Lot of commands using keyboard shortcuts instead of a proper user interface. Never played a game? Are u a boomer?  
 4. Beeps and Boops Sounds on some keybinds. Don't know why, it's vibecoded ...
 5. It's under self-development. I use this editor to build better versions of this editor, if something happens to this repo the development ends.
+6. No internet connection needed and no auto-update.
 
 ## Actual Features:
 1. Translucent Minimalist Dark Theme.
@@ -19,7 +20,6 @@ Build on top of winforms and Scintilla5.NET ( https://github.com/desjarlais/Scin
 3. Autocompletion.
 4. Partial theme configuration by comment directives per file.
 5. Embedded minimal file explorer using treeview.
-6. No internet connection and no auto-update. (I never will, it's a text editor)
 
 It's under active development, so expect some bugs.  
 
