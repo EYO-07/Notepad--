@@ -5,6 +5,10 @@
 // {Notepad--T;lightgreen:debug}
 // {Notepad--H;1:silver;2:lightblue}
 
+// -- search 
+// {Notepad--T;red:add_new_scintilla_tab;blue:add_new_empty_scintilla_tab}
+// {Notepad--S:}
+
 // -- BEGIN 
 // Notepad-- : Simpler version of Notepad++ 
 namespace Notepad__;
@@ -203,7 +207,7 @@ public partial class Notepad__Form : Form {
 			SBR_compact_toggle();
 		});
 		key_shortcut(this, "ctrl","n", () => {
-			add_new_scintilla_tab(this.left_tabs);
+			add_new_empty_scintilla_tab(this.left_tabs);
 		}); 
 		key_shortcut(this, "alt","s", () => {
             var RST = this.right_tabs.SelectedTab;
@@ -308,16 +312,21 @@ public partial class Notepad__Form : Form {
     private void tabs_click_handler(Object s, MouseEventArgs e) {
         DarkTabControl tabs = (DarkTabControl) s;
         TabPage pointed_page = get_pointed_tab(tabs, e.Location);
-		if (e.Button == MouseButtons.Right)	{	
-			if ((Control.ModifierKeys & Keys.Control) != 0) {
-				if ( fullpath_scintilla_map.ContainsKey( pointed_page.ToolTipText ) ) { 
+		if (e.Button == MouseButtons.Right)	{
+			if ((Control.ModifierKeys & Keys.Control) != 0) { // close tab
+				if ( fullpath_scintilla_map.ContainsKey( pointed_page.ToolTipText ) ) { // is a file tab
 					close_tab(tabs, pointed_page);
 					fullpath_scintilla_map.Remove( pointed_page.ToolTipText );
 					this.data.LeftFiles.Remove(pointed_page.ToolTipText);
 					this.data.RightFiles.Remove(pointed_page.ToolTipText);
                     print_overlay("Tab Closed : "+pointed_page.Text, 30);
-				} 
-			} else {
+				} else { // handle unsaved new scintilla tab 
+                    if ( pointed_page.Text == "?" ) return; 
+                    if ( pointed_page.Text == "[ File Explorer ]" ) return;
+                    close_tab(tabs, pointed_page);
+                    print_overlay("Tab Closed");
+                }
+			} else { // switch view
 				if (pointed_page == null) return;
 				switch_view(pointed_page);
 			}
@@ -336,8 +345,11 @@ public partial class Notepad__Form : Form {
             if (editor.ReadOnly) return ;
             editor.Tag = path;
 			string content = editor.Text;
+            bool b_read_only_back = editor.ReadOnly;
 			if ( !is_file(path) ){
+                editor.ReadOnly = true;
 				path = save_dialog("txt", this.data.DialogDir);
+                editor.ReadOnly = b_read_only_back;
 				if (path == null) return ;
 				current_page.ToolTipText = path;
                 editor.Tag = path;
@@ -434,10 +446,11 @@ public partial class Notepad__Form : Form {
             return true;
         }
 	}
-	private void add_new_scintilla_tab(DarkTabControl tabs) {
+	private void add_new_empty_scintilla_tab(DarkTabControl tabs) {
 		Scintilla ns = new_scintilla();
 		TabPage page = add_new_tab(tabs, ns, "New File" );
 		scintilla_tab_logic(ns, page);
+        tabs.SelectedTab = page;
         update_border_color(ns, page);
 	}
     // -- subroutines 
