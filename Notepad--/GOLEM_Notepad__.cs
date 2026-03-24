@@ -250,13 +250,21 @@ public partial class Notepad__Form : Form {
 		this.explorer.KeyDown += (s,e) => {
 			if (e.KeyCode == Keys.Enter) {
 				SBR_open_file_or_dir();
+                e.Handled = true;
+				e.SuppressKeyPress = true;
+                return ;
 			}
 			if (e.KeyCode == Keys.Delete) {
 				SBR_rem_selected_dir_to_exp();
+                e.Handled = true;
+				e.SuppressKeyPress = true;
 				return ;
 			}
 			if (e.KeyCode == Keys.Insert) {
 				SBR_add_selected_dir_to_exp();
+                print_overlay("Added to Explorer Tree",50);
+                e.Handled = true;
+				e.SuppressKeyPress = true;
 				return ;
 			}
 //			if (e.KeyCode == Keys.Right) {
@@ -307,7 +315,7 @@ public partial class Notepad__Form : Form {
 					fullpath_scintilla_map.Remove( pointed_page.ToolTipText );
 					this.data.LeftFiles.Remove(pointed_page.ToolTipText);
 					this.data.RightFiles.Remove(pointed_page.ToolTipText);
-                    this.message_overlay.Display("Tab Closed : "+pointed_page.Text, 30);
+                    print_overlay("Tab Closed : "+pointed_page.Text, 30);
 				} 
 			} else {
 				if (pointed_page == null) return;
@@ -405,24 +413,26 @@ public partial class Notepad__Form : Form {
     private bool add_new_scintilla_tab(DarkTabControl tabs,string filename) {
 		if (string.IsNullOrWhiteSpace(filename)) return false;
 		if (!is_code_file(filename)) return false;
+        Scintilla? editor = null;
 		if ( this.fullpath_scintilla_map.ContainsKey(filename) ) {	
 			// this.fullpath_scintilla_map[filename].Focus();
 			return false;
-		}
-		Scintilla editor = new_scintilla();
-		this.fullpath_scintilla_map[filename] = editor;
-        load_file(editor, filename);
-        this.fullpath_lines_map[filename] = editor.Lines.Count;
-		TabPage page = add_new_tab(tabs, editor, get_filename(filename) );
-		page.ToolTipText = filename;
-        //add_context_menu_item(editor.ContextMenuStrip, "Close File");
-		// extra logic 
-		scintilla_tab_logic(editor, page);
-        toggle_read_only(editor);
-        update_border_color(editor, page);
-        refresh(editor);
-        fold_all(editor);
-		return true;
+		} else {
+            editor = new_scintilla();
+            if (editor==null) return false;
+            this.fullpath_scintilla_map[filename] = editor;
+            load_file(editor, filename);
+            this.fullpath_lines_map[filename] = editor.Lines.Count;
+            TabPage page = add_new_tab(tabs, editor, get_filename(filename) );
+            page.ToolTipText = filename;
+            // extra logic 
+            scintilla_tab_logic(editor, page);
+            toggle_read_only(editor);
+            update_border_color(editor, page);
+            refresh(editor);
+            fold_all(editor);
+            return true;
+        }
 	}
 	private void add_new_scintilla_tab(DarkTabControl tabs) {
 		Scintilla ns = new_scintilla();
@@ -767,6 +777,12 @@ public partial class Notepad__Form : Form {
         this.help_scintilla.ReadOnly = false;
         this.help_scintilla.AppendText(text+"\n");
         this.help_scintilla.ReadOnly = true;
+    }
+    private void print_overlay(string text, int time) {
+        this.message_overlay.Display(text, time);
+    }
+    private void print_overlay(string text) {
+        print_overlay(text, 30);
     }
     // -- constructor 
     public Notepad__Form() {

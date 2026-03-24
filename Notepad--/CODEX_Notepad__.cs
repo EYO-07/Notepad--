@@ -5,10 +5,6 @@
 // {Notepad--T;lightgreen:debug, interception}
 // {Notepad--H;1:silver;2:lightblue}
 
-// -- search tokens 
-// {Notepad--T;red:scintilla;blue:editor}
-// {Notepad--S:scintilla}
-
 // -- BEGIN 
 // Codex Library in Magic Oriented Programming 
 namespace Codex;
@@ -193,6 +189,7 @@ public static class Transmutation {
     // Regex 
     // TODO/TESTING 
 //    public static IEnumerable<string> comma_separated_iterator(ref string content) {}
+    
     // variables
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",

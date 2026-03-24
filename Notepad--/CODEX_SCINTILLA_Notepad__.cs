@@ -1,13 +1,13 @@
 // -- text marker highlight - tags example 
-// {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER;silver:FIXED,REVISION;cyan:TODO,>>>,<<<}
+// {Notepad--T;red:ISSUE;yellow:DEPRECATED,TESTING,PLACEHOLDER,INCOMPLETE;silver:FIXED,REVISION;cyan:TODO,>>>,<<<}
 // {Notepad--T;Cyan:Inventory;Silver:Logic,Dialetic;lightgreen:Workflow} 
 // {Notepad--T;magenta:methods,attributes,variables}
 // {Notepad--T;lightgreen:debug, interception}
 // {Notepad--H;1:silver;2:lightblue}
 
 // -- search tokens 
-// {Notepad--T;red:update_keywords;blue:}
-// {Notepad--S:update_keywords}
+// {Notepad--T;red:set_folding;blue:}
+// {Notepad--S:set_folding}
 
 // -- BEGIN 
 // Codex Library in Magic Oriented Programming 
@@ -46,6 +46,7 @@ using BorderStyle = System.Windows.Forms.BorderStyle;
 using TabDrawMode = System.Windows.Forms.TabDrawMode;
 using Timer = System.Windows.Forms.Timer; 
 using NM = ScintillaNET.NativeMethods;
+//using FoldLevel = ScintillaNET.FoldLevel;
 
 // ===================================== incantation 
 // ... graphical user interface and user interaction 
@@ -55,7 +56,6 @@ public static class Incantation_SCINTILLA {
         // check if the editor.Text match the content in filename 
         return false;
     }
-    
     // variables -- shared colors
     // variables || background, locked_background, foreground 
     public static Color foreground_color = Color.FromArgb(255, 255, 255); // white
@@ -126,8 +126,14 @@ public static class Incantation_SCINTILLA {
         fore = Color.FromArgb(204, 102, 255);   // neon purple/magenta
         back = Color.FromArgb(32, 0, 51);       // dark purple background
     }
-
-    // methods - factory
+    // Logic [ new_scintilla ] 
+    // -> new_scintilla() || ... | init_dark_theme_scintilla() | set_keyshortcuts() || clear_cmd_keys() | key_shortcut()
+    // Logic [ refresh ]
+    // L := apply_lexer_override_directive
+    // H := apply_custom_highlight_override_for_file_directives
+    // T := apply_textmarker_highlight_for_file_directives
+    // -> refresh() || L() | set_lexer() | set_folding() | H() | set_language_style() | T() 
+    // methods -- factory
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
 		editor.Dock = DockStyle.Fill;
@@ -218,97 +224,7 @@ public static class Incantation_SCINTILLA {
             toggle_comment_lines(editor); 
         });
 	}
-
-    // Define custom marker indices for begin/end folds
-    private const int BeginFoldMarker = 20; // pick an unused marker index
-    private const int EndFoldMarker   = 21;
-    public static void add_begin_fold_marker(Scintilla editor) {
-        int line = editor.CurrentLine;
-        editor.Lines[line].MarkerAdd(BeginFoldMarker);
-    }
-    public static void add_end_fold_marker(Scintilla editor) {
-        int line = editor.CurrentLine;
-        editor.Lines[line].MarkerAdd(EndFoldMarker);
-    }
-    public static void remove_fold_marker(Scintilla editor) {
-        int line = editor.CurrentLine;
-        editor.Lines[line].MarkerDelete(BeginFoldMarker);
-        editor.Lines[line].MarkerDelete(EndFoldMarker);
-    }
-    public static void configure_manual_fold_markers(Scintilla editor) {
-        editor.Markers[BeginFoldMarker].Symbol = MarkerSymbol.Arrow;
-        editor.Markers[BeginFoldMarker].SetForeColor(System.Drawing.Color.White);
-        editor.Markers[BeginFoldMarker].SetBackColor(System.Drawing.Color.Green);
-        editor.Markers[EndFoldMarker].Symbol = MarkerSymbol.ArrowDown;
-        editor.Markers[EndFoldMarker].SetForeColor(System.Drawing.Color.White);
-        editor.Markers[EndFoldMarker].SetBackColor(System.Drawing.Color.Red);
-    }
-
-    // debug 
-    public static void dump_lexer_names(Scintilla editor){
-        editor.AppendText("=== Lexer Names ===\n");
-        int count = 1;
-        foreach( string name in Lexilla.GetLexerNames() ) {
-            editor.AppendText(to_string(count)+". "+name+"\n");
-            count++;
-        }
-    }
-    
-    // DEPRECATED - but you should confirm if no other function use this!
-    public static void set_language_folding(Scintilla scintilla, string lexer) {
-		// --
-		// Set the lexer
-		scintilla.LexerName = lexer;
-		// Instruct the lexer to calculate folding
-		scintilla.SetProperty("fold", "1");
-		scintilla.SetProperty("fold.compact", "0"); // TESTING 
-        scintilla.SetProperty("fold.comment", "1");
-		// Configure a margin to display folding symbols
-		scintilla.Margins[2].Type = MarginType.Symbol;
-		scintilla.Margins[2].Mask = Marker.MaskFolders;
-		scintilla.Margins[2].Sensitive = true;
-		scintilla.Margins[2].Width = 20;
-		// Set colors for all folding markers
-		for (int i = 25; i <= 31; i++) {
-			scintilla.Markers[i].SetForeColor(fold_fore_color);
-			scintilla.Markers[i].SetBackColor(fold_back_color);
-		}
-		
-		// Marker colors
-		Color fore = fold_fore_color;
-		Color back = fold_back_color;
-		scintilla.Markers[Marker.Folder].SetForeColor(fore);
-		scintilla.Markers[Marker.Folder].SetBackColor(back);
-		scintilla.Markers[Marker.FolderOpen].SetForeColor(fore);
-		scintilla.Markers[Marker.FolderOpen].SetBackColor(back);
-		scintilla.Markers[Marker.FolderEnd].SetForeColor(fore);
-		scintilla.Markers[Marker.FolderEnd].SetBackColor(back);
-		scintilla.Markers[Marker.FolderMidTail].SetForeColor(fore);
-		scintilla.Markers[Marker.FolderMidTail].SetBackColor(back);
-		scintilla.Markers[Marker.FolderOpenMid].SetForeColor(fore);
-		scintilla.Markers[Marker.FolderOpenMid].SetBackColor(back);
-		scintilla.Markers[Marker.FolderSub].SetForeColor(fore);
-		scintilla.Markers[Marker.FolderSub].SetBackColor(back);
-		scintilla.Markers[Marker.FolderTail].SetForeColor(fore);
-		scintilla.Markers[Marker.FolderTail].SetBackColor(back);
-		
-		// Folding margin background
-		scintilla.SetFoldMarginColor(true, Color.FromArgb(30, 30, 30));
-		scintilla.SetFoldMarginHighlightColor(true, Color.FromArgb(30, 30, 30));
-		
-		// Configure folding markers with respective symbols
-		scintilla.Markers[Marker.Folder].Symbol = MarkerSymbol.BoxPlus;
-		scintilla.Markers[Marker.FolderOpen].Symbol = MarkerSymbol.BoxMinus;
-		scintilla.Markers[Marker.FolderEnd].Symbol = MarkerSymbol.BoxPlusConnected;
-		scintilla.Markers[Marker.FolderMidTail].Symbol = MarkerSymbol.TCorner;
-		scintilla.Markers[Marker.FolderOpenMid].Symbol = MarkerSymbol.BoxMinusConnected;
-		scintilla.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
-		scintilla.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
-		// Enable automatic folding
-		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
-	}
-
-    // -- lexer, folding and style
+    // methods -- lexer, folding and style
     public static bool set_lexer(Scintilla editor, string filename) {
         if ( string.IsNullOrWhiteSpace(filename) ) return false;
 		string ext = Path.GetExtension(filename).ToLowerInvariant();
@@ -365,10 +281,12 @@ public static class Incantation_SCINTILLA {
         } 
         return false;
     }
-    public static void set_folding(Scintilla scintilla) {
+    public static void set_folding(Scintilla scintilla, string filename) { 
+        if ( string.IsNullOrWhiteSpace(filename) ) return;
+        string ext = Path.GetExtension(filename).ToLowerInvariant();
         // Instruct the lexer to calculate folding
 		scintilla.SetProperty("fold", "1");
-        scintilla.SetProperty("fold.compact", "0"); // TESTING 
+        scintilla.SetProperty("fold.compact", "0"); 
         scintilla.SetProperty("fold.comment", "1");
 		// Configure a margin to display folding symbols
 		scintilla.Margins[2].Type = MarginType.Symbol;
@@ -408,17 +326,57 @@ public static class Incantation_SCINTILLA {
 		scintilla.Markers[Marker.FolderOpenMid].Symbol = MarkerSymbol.BoxMinusConnected;
 		scintilla.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
 		scintilla.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
-		// Enable automatic folding
-		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
+        // -- 
+        scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
+        // -- some languages don't fold automatically
+        if ( !string.IsNullOrWhiteSpace(ext) ) {
+            switch (ext){
+                case ".html":
+                case ".xml":
+                case ".csproj":
+                    set_indent_folding(scintilla);
+                    break;
+            }
+        }
     }
-	
-    // variables -- styling 
-    public static Dictionary<string, List<string>> NAME_KEYWORDS1_LIST_MAP = new Dictionary<string, List<string>>(); // TODO 
-    public static Dictionary<string, List<string>> NAME_KEYWORDS2_LIST_MAP = new Dictionary<string, List<string>>(); // TODO 
-    private static Dictionary<string,string> NAME_KEYWORDS1_STR_MAP = new Dictionary<string,string>(); // TODO 
-    private static Dictionary<string,string> NAME_KEYWORDS2_STR_MAP = new Dictionary<string,string>(); // TODO 
+    public static void set_indent_folding(Scintilla editor) {
+        int lineCount = editor.Lines.Count;
+        for (int i = 0; i < lineCount; i++) {
+            var line = editor.Lines[i];
+            string text = line.Text;
+            int indent = GetIndentLevel(text);
+            // Default level
+            int level = NM.SC_FOLDLEVELBASE | indent;
+            // Look ahead to detect fold header
+            if (i < lineCount - 1) {
+                string nextText = editor.Lines[i + 1].Text;
+                int nextIndent = GetIndentLevel(nextText);
+                if (nextIndent > indent) {
+                    level |= NM.SC_FOLDLEVELHEADERFLAG;
+                }
+            }
+            // Mark empty lines properly
+            if (string.IsNullOrWhiteSpace(text)) level |= NM.SC_FOLDLEVELWHITEFLAG;
+            line.FoldLevel = level;
+        }
+    }
+    private static int GetIndentLevel(string text) {
+        int count = 0;
+        foreach (char c in text) {
+            if (c == ' ') count++;
+            else if (c == '\t') count += 4; // or editor.TabWidth
+            else break;
+        }
+        return count;
+    }
+
+	// variables -- styling 
+    public static Dictionary<string, List<string>> NAME_KEYWORDS1_LIST_MAP = new Dictionary<string, List<string>>(); 
+    public static Dictionary<string, List<string>> NAME_KEYWORDS2_LIST_MAP = new Dictionary<string, List<string>>(); 
+    private static Dictionary<string,string> NAME_KEYWORDS1_STR_MAP = new Dictionary<string,string>(); 
+    private static Dictionary<string,string> NAME_KEYWORDS2_STR_MAP = new Dictionary<string,string>(); 
     // variables | methods -- styling 
-    public static void set_language_style(Scintilla scintilla, string filename) { // TODO/REVISION
+    public static void set_language_style(Scintilla scintilla, string filename) { // INCOMPLETE
 		if ( string.IsNullOrWhiteSpace(filename) ) return ;
 		string ext = filename;
 		if (filename.Contains(".")) ext = Path.GetExtension(filename);
@@ -476,23 +434,20 @@ public static class Incantation_SCINTILLA {
         string path = (string) editor.Tag;
         if (string.IsNullOrWhiteSpace(path)) return;
         if ( !is_code_file(path) ) return; 
-        
-        // interception - apply_lexer_override_directive intercepts path or keeps the same 
         path = apply_lexer_override_directive(editor, path);
         set_lexer(editor, path);
-        set_folding(editor);
+        set_folding(editor, path);
         apply_custom_highlight_override_for_file_directives(editor);
         set_language_style(editor, path);
         apply_textmarker_highlight_for_file_directives(editor);
     }
-    /* Logic [ update_keywords_str_from_lst ] 
-    U := update_keywords_str_from_lst
-    N := need update
-    -> U() || %* dicts not contains key | % N() || joins with space the keywords 1 and 2 from list 
-    -> N() || %* dicts not contains key || return true 
-    -> N() || %* dicts not contains key | calculate the size of list with space and compare with size of string already there | % size don't match || return true 
-    -> N() || %* dicts not contains key | calculate the size of list with space and compare with size of string already there | % size don't match | % else || return false 
-    */
+    // Logic [ update_keywords_str_from_lst ] 
+    // U := update_keywords_str_from_lst
+    // N := need update
+    // -> U() || %* dicts not contains key | % N() || joins with space the keywords 1 and 2 from list 
+    // -> N() || %* dicts not contains key || return true 
+    // -> N() || %* dicts not contains key | calculate the size of list with space and compare with size of string already there | % size don't match || return true 
+    // -> N() || %* dicts not contains key | calculate the size of list with space and compare with size of string already there | % size don't match | % else || return false 
     private static bool need_update_str_keywords1(string name) { 
         if ( !NAME_KEYWORDS1_LIST_MAP.ContainsKey(name) ) return false; 
         if ( !NAME_KEYWORDS1_STR_MAP.ContainsKey(name) ) return true; 
@@ -612,8 +567,8 @@ public static class Incantation_SCINTILLA {
         update_keywords(
             editor,
             "bash",
-            "if then else elif fi for while do done case esac function select in time until",
-            "echo printf read cd pwd export unset alias unalias exit return test true false shift source"
+            "7z adduser alias apt-get ar as asa autoconf automake awk banner base64 basename bash bc bdiff blkid break bsdcpio bsdtar bunzip2 bzcmp bzdiff bzegrep bzfgrep bzgrep bzip2 bzip2recover bzless bzmore c++ cal calendar case cat cc cd cfdisk chattr chgrp chmod chown chroot chvt cksum clang clang++ clear cmp col column comm compgen compress continue convert cp cpio crontab crypt csplit ctags curl cut date dc dd deallocvt declare deluser depmod deroff df dialog diff diff3 dig dircmp dirname disown dmesg do done dpkg dpkg-deb du echo ed egrep elif else env esac eval ex exec exit expand export expr fakeroot false fc fdisk ffmpeg fgrep fi file find flex flock fmt fold for fsck function functions fuser fusermount g++ gas gawk gcc gdb genisoimage getconf getopt getopts git gpg gpgsplit gpgv grep gres groff groups gunzip gzexe hash hd head help hexdump hg history httpd iconv id if ifconfig ifdown ifquery ifup in insmod integer inxi ip ip6tables ip6tables-save ip6tables-restore iptables iptables-save iptables-restore ip jobs join kill killall killall5 lc ld ldd let lex line ln local logname look ls lsattr lsb_release lsblk lscpu lshw lslocks lsmod lsusb lzcmp lzegrep lzfgrep lzgrep lzless lzma lzmainfo lzmore m4 mail mailx make man mkdir mkfifo mkswap mktemp modinfo modprobe mogrify more mount msgfmt mt mv nameif nasm nc ndisasm netcat newgrp nl nm nohup ntps objdump od openssl p7zip pacman passwd paste patch pathchk pax pcat pcregrep pcretest perl pg ping ping6 pivot_root poweroff pr print printf ps pwd python python2 python3 ranlib read readlink readonly reboot reset return rev rm rmdir rmmod rpm rsync sed select service set sh sha1sum sha224sum sha256sum sha3sum sha512sum shift shred shuf shutdown size sleep sort spell split start stop strings strip stty su sudo sum suspend switch_root sync systemctl tac tail tar tee test then time times touch tr trap troff true tsort tty type typeset ulimit umask umount unalias uname uncompress unexpand uniq unlink unlzma unset until unzip unzipsfx useradd userdel uudecode uuencode vi vim wait wc wget whence which while who wpaste wstart xargs xdotool xxd xz xzcat xzcmp xzdiff xzfgrep xzgrep xzless xzmore yes yum zcat zcmp zdiff zegrep zfgrep zforce zgrep zless zmore znew zsh",
+            ""
         );
     }
     public static void set_html_style(Scintilla editor) { 
@@ -646,8 +601,8 @@ public static class Incantation_SCINTILLA {
         update_keywords(
             editor,
             "html",
-            "html head body div span p a img h1 h2 h3 h4 h5 h6 table tr td th ul ol li form input button select option textarea script style link meta",
-            "id class src href alt title type value name rel action method style"
+            "^data- a abbr accept accept-charset accesskey acronym action address align alink alt applet archive area article aside async audio autocomplete autofocus axis b background base basefont bdi bdo bgcolor bgsound big blink blockquote body border br button canvas caption cellpadding cellspacing center char charoff charset checkbox checked cite class classid clear code codebase codetype col colgroup color cols colspan command compact content contenteditable contextmenu coords data datafld dataformatas datalist datapagesize datasrc datetime dd declare defer del details dfn dialog dir disabled div dl draggable dropzone dt element em embed enctype event face fieldset figcaption figure file font footer for form formaction formenctype formmethod formnovalidate formtarget frame frameborder frameset h1 h2 h3 h4 h5 h6 head header headers height hgroup hidden hr href hreflang hspace html http-equiv i id iframe image img input ins isindex ismap kbd keygen label lang language leftmargin legend li link list listing longdesc main manifest map marginheight marginwidth mark marquee max maxlength media menu menuitem meta meter method min minlength multicol multiple name nav nobr noembed noframes nohref noresize noscript noshade novalidate nowrap object ol onabort onafterprint onautocomplete onautocompleteerror onbeforeonload onbeforeprint onblur oncancel oncanplay oncanplaythrough onchange onclick onclose oncontextmenu oncuechange ondblclick ondrag ondragend ondragenter ondragleave ondragover ondragstart ondrop ondurationchange onemptied onended onerror onfocus onhashchange oninput oninvalid onkeydown onkeypress onkeyup onload onloadeddata onloadedmetadata onloadstart onmessage onmousedown onmouseenter onmouseleave onmousemove onmouseout onmouseover onmouseup onmousewheel onoffline ononline onpagehide onpageshow onpause onplay onplaying onpointercancel onpointerdown onpointerenter onpointerleave onpointerlockchange onpointerlockerror onpointermove onpointerout onpointerover onpointerup onpopstate onprogress onratechange onreadystatechange onredo onreset onresize onscroll onseeked onseeking onselect onshow onsort onstalled onstorage onsubmit onsuspend ontimeupdate ontoggle onundo onunload onvolumechange onwaiting optgroup option output p param password pattern picture placeholder plaintext pre profile progress prompt public q radio readonly rel required reset rev reversed role rows rowspan rp rt rtc ruby rules s samp sandbox scheme scope scoped script seamless section select selected shadow shape size sizes small source spacer span spellcheck src srcdoc srcset standby start step strike strong style sub submit summary sup svg svg:svg tabindex table target tbody td template text textarea tfoot th thead time title topmargin tr track tt type u ul usemap valign value valuetype var version video vlink vspace wbr width xml xmlns xmp",
+            "ATTLIST DOCTYPE ELEMENT ENTITY NOTATION"
         );
     }
     public static void set_powershell_style(Scintilla editor) { 
@@ -668,8 +623,8 @@ public static class Incantation_SCINTILLA {
         update_keywords(
             editor,
             "powershell",
-            "begin break catch class continue data do dynamicparam else elseif end enum exit filter finally for foreach function if in param process return switch throw trap try until using var while",
-            "Get-Item Get-ChildItem Get-Content Set-Content Remove-Item Copy-Item Move-Item New-Item Write-Output Write-Host Import-Module Export-Module Invoke-Command Start-Process Stop-Process"
+            "begin break catch class continue data do dynamicparam else elseif end enum exit filter finally for foreach function hidden if in inlinescript parallel param process return sequence static switch throw trap try until using while workflow",
+            ""
         );
     }    
     public static void set_c_family_style(Scintilla editor) { 
@@ -760,8 +715,8 @@ public static class Incantation_SCINTILLA {
         update_keywords(
             editor,
             "bat",
-            "taskkill sfc ipconfig netsh start REM if then else elif fi for while do done case esac function select in time until doskey",
-            "echo printf read cd pwd export unset alias unalias exit return test true false shift source set"
+            "assoc aux break call cd chdir cls cmdextversion color com com1 com2 com3 com4 con copy country ctty date defined del dir do dpath echo else endlocal erase errorlevel exist exit for ftype goto if in loadfix loadhigh lpt lpt1 lpt2 lpt3 lpt4 md mkdir move not nul path pause popd prn prompt pushd rd rem ren rename rmdir set setlocal shift start time title type ver verify vol",
+            "taskkill sfc ipconfig netsh start REM if then else elif fi for while do done case esac function select in time until doskey"
         );
     }
     public static void set_ada_style(Scintilla editor) {
@@ -790,8 +745,37 @@ public static class Incantation_SCINTILLA {
     }
     
     // >>> 
-    public static void set_asm_style(Scintilla editor) {
-        
+    public static void set_asm_style(Scintilla editor) { // INCOMPLETE
+        editor.Styles[Style.Asm.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Asm.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.Asm.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Asm.CommentBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.Asm.CommentBlock].BackColor = comment_back_color;
+        editor.Styles[Style.Asm.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.Asm.Number].BackColor = number_back_color;
+//        editor.Styles[Style.Asm.MathInstruction].BackColor = ;
+//        editor.Styles[Style.Asm.Word].ForeColor = keyword1_color;
+        editor.Styles[Style.Asm.CpuInstruction].ForeColor = keyword1_color; // 0
+        editor.Styles[Style.Asm.MathInstruction].ForeColor = keyword2_color; // 1
+        editor.Styles[Style.Asm.Register].ForeColor = keyword2_color; // 2
+        editor.Styles[Style.Asm.String].ForeColor = string_fore_color;
+		editor.Styles[Style.Asm.String].BackColor = string_back_color;
+        editor.Styles[Style.Asm.Character].ForeColor = string_fore_color;
+		editor.Styles[Style.Asm.Character].BackColor = string_back_color;
+        editor.Styles[Style.Asm.StringEol].BackColor = Color.Pink;
+//        editor.Styles[Style.Asm.CharacterEol].BackColor = Color.Pink;
+        editor.Styles[Style.Asm.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Asm.Directive].ForeColor = operator_color;
+        editor.Styles[Style.Asm.DirectiveOperand].ForeColor = operator_color;
+        editor.Styles[Style.Asm.CommentDirective].ForeColor = preprocessor_color;
+        editor.Styles[Style.Asm.ExtInstruction].ForeColor = operator_color;
+//        editor.Styles[Style.Asm.Identifier].ForeColor = ;
+        update_keywords(
+            editor,
+            "asm",
+            "",
+            ""
+        );
     }
     public static void set_blitzbasic_style(Scintilla editor) {}
     public static void set_batch_style(Scintilla editor) {}
@@ -817,20 +801,24 @@ public static class Incantation_SCINTILLA {
     public static void set_xml_style(Scintilla editor) {}
     // <<< 
 
-    // -- 
-    public static void post_styling_comment_line(Scintilla editor, string comment_line_marker) { // TESTING ISSUE
-        // Loop through all lines
+    public static void post_styling_comment_line(Scintilla editor, string marker) { // TESTING
+        const int INDICATOR_ID = 15; // pick a free one
+
+        // Configure indicator once (you should ideally move this elsewhere)
+        editor.Indicators[INDICATOR_ID].Style = IndicatorStyle.TextFore;
+        editor.Indicators[INDICATOR_ID].ForeColor = comment_fore_color; // comment-like
+        // editor.Indicators[INDICATOR_ID].BackColor = comment_back_color; // comment-like
+        editor.Indicators[INDICATOR_ID].Under = false;
+
+        editor.IndicatorCurrent = INDICATOR_ID;
+        editor.IndicatorClearRange(0, editor.TextLength);
         foreach (var line in editor.Lines) {
             string text = line.Text;
-            int pos = line.Position;
-            // Find the first occurrence of the comment marker
-            int idx = text.IndexOf(comment_line_marker);
+            int idx = text.IndexOf(marker);
             if (idx >= 0) {
-                // Apply styling from marker to end of line
-                int start = pos + idx;
+                int start = line.Position + idx;
                 int length = text.Length - idx;
-                editor.StartStyling(start); 
-                editor.SetStyling(length, Style.Cpp.CommentLine);
+                editor.IndicatorFillRange(start, length);
             }
         }
     }
@@ -849,7 +837,7 @@ public static class Incantation_SCINTILLA {
     public static void apply_textmarker_highlight_for_file_directives(Scintilla editor) {
         if (textmarker_pattern_regex==null) textmarker_pattern_regex = new Regex(textmarker_pattern);
         // Clear all indicators you plan to use
-        for (int i = 8; i < 32; i++) { 
+        for (int i = 8; i < 15; i++) { 
             editor.IndicatorCurrent = i;
             editor.IndicatorClearRange(0, editor.TextLength); 
         }
@@ -1195,6 +1183,98 @@ public static class Incantation_SCINTILLA {
         }
     }
     
+    // REVISION
+    // Define custom marker indices for begin/end folds
+    private const int BeginFoldMarker = 20; // pick an unused marker index
+    private const int EndFoldMarker   = 21;
+    public static void add_begin_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerAdd(BeginFoldMarker);
+    }
+    public static void add_end_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerAdd(EndFoldMarker);
+    }
+    public static void remove_fold_marker(Scintilla editor) {
+        int line = editor.CurrentLine;
+        editor.Lines[line].MarkerDelete(BeginFoldMarker);
+        editor.Lines[line].MarkerDelete(EndFoldMarker);
+    }
+    public static void configure_manual_fold_markers(Scintilla editor) {
+        editor.Markers[BeginFoldMarker].Symbol = MarkerSymbol.Arrow;
+        editor.Markers[BeginFoldMarker].SetForeColor(System.Drawing.Color.White);
+        editor.Markers[BeginFoldMarker].SetBackColor(System.Drawing.Color.Green);
+        editor.Markers[EndFoldMarker].Symbol = MarkerSymbol.ArrowDown;
+        editor.Markers[EndFoldMarker].SetForeColor(System.Drawing.Color.White);
+        editor.Markers[EndFoldMarker].SetBackColor(System.Drawing.Color.Red);
+    }
+
+    // debug 
+    public static void dump_lexer_names(Scintilla editor){
+        editor.AppendText("=== Lexer Names ===\n");
+        int count = 1;
+        foreach( string name in Lexilla.GetLexerNames() ) {
+            editor.AppendText(to_string(count)+". "+name+"\n");
+            count++;
+        }
+    }
+
+    // DEPRECATED - but you should confirm if no other function use this!
+    public static void set_language_folding(Scintilla scintilla, string lexer) {
+		// --
+		// Set the lexer
+		scintilla.LexerName = lexer;
+		// Instruct the lexer to calculate folding
+		scintilla.SetProperty("fold", "1");
+		scintilla.SetProperty("fold.compact", "0"); // TESTING 
+        scintilla.SetProperty("fold.comment", "1");
+		// Configure a margin to display folding symbols
+		scintilla.Margins[2].Type = MarginType.Symbol;
+		scintilla.Margins[2].Mask = Marker.MaskFolders;
+		scintilla.Margins[2].Sensitive = true;
+		scintilla.Margins[2].Width = 20;
+		// Set colors for all folding markers
+		for (int i = 25; i <= 31; i++) {
+			scintilla.Markers[i].SetForeColor(fold_fore_color);
+			scintilla.Markers[i].SetBackColor(fold_back_color);
+		}
+		
+		// Marker colors
+		Color fore = fold_fore_color;
+		Color back = fold_back_color;
+		scintilla.Markers[Marker.Folder].SetForeColor(fore);
+		scintilla.Markers[Marker.Folder].SetBackColor(back);
+		scintilla.Markers[Marker.FolderOpen].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderOpen].SetBackColor(back);
+		scintilla.Markers[Marker.FolderEnd].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderEnd].SetBackColor(back);
+		scintilla.Markers[Marker.FolderMidTail].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderMidTail].SetBackColor(back);
+		scintilla.Markers[Marker.FolderOpenMid].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderOpenMid].SetBackColor(back);
+		scintilla.Markers[Marker.FolderSub].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderSub].SetBackColor(back);
+		scintilla.Markers[Marker.FolderTail].SetForeColor(fore);
+		scintilla.Markers[Marker.FolderTail].SetBackColor(back);
+		
+		// Folding margin background
+		scintilla.SetFoldMarginColor(true, Color.FromArgb(30, 30, 30));
+		scintilla.SetFoldMarginHighlightColor(true, Color.FromArgb(30, 30, 30));
+		
+		// Configure folding markers with respective symbols
+		scintilla.Markers[Marker.Folder].Symbol = MarkerSymbol.BoxPlus;
+		scintilla.Markers[Marker.FolderOpen].Symbol = MarkerSymbol.BoxMinus;
+		scintilla.Markers[Marker.FolderEnd].Symbol = MarkerSymbol.BoxPlusConnected;
+		scintilla.Markers[Marker.FolderMidTail].Symbol = MarkerSymbol.TCorner;
+		scintilla.Markers[Marker.FolderOpenMid].Symbol = MarkerSymbol.BoxMinusConnected;
+		scintilla.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
+		scintilla.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
+		// Enable automatic folding
+		scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
+	}
+
+
+
 }
 
 // -- END 
