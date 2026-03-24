@@ -220,7 +220,8 @@ public static class Transmutation {
         ".md",
         ".tex",
         ".ada",
-        ".adb"
+        ".adb",
+        ".bb"
 	};
 	// variables | methods 
     public static bool is_code_file(string filename_or_ext) {

@@ -397,7 +397,7 @@ public partial class Notepad__Form : Form {
             string list = build_autocomplete_list(autocomplete_hashset, prefix);
             if (list.Length > 0) editor.AutoCShow(prefix.Length, list);
         };
-        key_shortcut(ns, "ctrl", Keys.F1, ()=>{dump_lexer_names(ns);}); // debug
+        key_shortcut(ns, "ctrl", Keys.F12, ()=>{dump_lexer_names(ns);}); // debug
         key_shortcut(ns, "ctrl", Keys.F2, ()=>{});
         key_shortcut(ns, "ctrl", Keys.F3, ()=>{});
         key_shortcut(ns, "ctrl", Keys.F5, ()=>{}); 
@@ -438,6 +438,7 @@ public partial class Notepad__Form : Form {
 		Scintilla ns = new_scintilla();
 		TabPage page = add_new_tab(tabs, ns, "New File" );
 		scintilla_tab_logic(ns, page);
+        update_border_color(ns, page);
 	}
     // -- subroutines 
     private void SBR_reload_all_tabs() { 

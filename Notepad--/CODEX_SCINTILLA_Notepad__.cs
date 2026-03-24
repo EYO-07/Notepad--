@@ -6,8 +6,8 @@
 // {Notepad--H;1:silver;2:lightblue}
 
 // -- search tokens 
-// {Notepad--T;red:set_folding;blue:}
-// {Notepad--S:set_folding}
+// {Notepad--T;red:}
+// {Notepad--S:}
 
 // -- BEGIN 
 // Codex Library in Magic Oriented Programming 
@@ -102,6 +102,31 @@ public static class Incantation_SCINTILLA {
         operator_color = Color.Yellow;
         preprocessor_color = Color.Gray;
     }
+//    public static void neon_color(string color_name, ref Style style) { // TESTING
+//        switch(color_name){
+//            case "green":
+//                neon_green(ref style.ForeColor, ref style.BackColor);
+//                break;
+//            case "red":
+//                neon_red(ref style.ForeColor, ref style.BackColor);
+//                break;
+//            case "blue":
+//                neon_blue(ref style.ForeColor, ref style.BackColor);
+//                break;
+//            case "gray":
+//                neon_gray(ref style.ForeColor, ref style.BackColor);
+//                break;
+//            case "yellow":
+//                neon_yellow(ref style.ForeColor, ref style.BackColor);
+//                break;
+//            case "purple":
+//                neon_purple(ref style.ForeColor, ref style.BackColor);
+//                break;
+//            default:
+//                neon_green(ref style.ForeColor, ref style.BackColor);
+//                break;
+//        }
+//    }
     public static void neon_green(ref Color fore,ref Color back) {
         fore = Color.FromArgb(0, 255, 153);
         back = Color.FromArgb(0, 51, 0);
@@ -133,6 +158,7 @@ public static class Incantation_SCINTILLA {
     // H := apply_custom_highlight_override_for_file_directives
     // T := apply_textmarker_highlight_for_file_directives
     // -> refresh() || L() | set_lexer() | set_folding() | H() | set_language_style() | T() 
+    // -> refresh() || L() | set_lexer() | set_folding() || { set_indent_folding, GetIndentLevel }
     // methods -- factory
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
@@ -271,6 +297,9 @@ public static class Incantation_SCINTILLA {
             case ".adb":
                 editor.LexerName = "ada";
                 return true;
+            case ".bb":
+                editor.LexerName = "blitzbasic";
+                return true;
         }
         // -- the lexer_name directly on GetLexerNames iterator
         foreach(string lexer_name in Lexilla.GetLexerNames()) {
@@ -327,16 +356,25 @@ public static class Incantation_SCINTILLA {
 		scintilla.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
 		scintilla.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
         // -- 
-        scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
+        
         // -- some languages don't fold automatically
         if ( !string.IsNullOrWhiteSpace(ext) ) {
-            switch (ext){
+            switch (ext) {
+                case ".bb":
+                    set_indent_folding(scintilla);
+                    break;
                 case ".html":
                 case ".xml":
                 case ".csproj":
+                    scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
                     set_indent_folding(scintilla);
                     break;
+                default:
+                    scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
+                    break;
             }
+        } else {
+            scintilla.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
         }
     }
     public static void set_indent_folding(Scintilla editor) {
@@ -371,10 +409,19 @@ public static class Incantation_SCINTILLA {
     }
 
 	// variables -- styling 
+    // -- keyword ~ NAME_KEYWORDS1_LIST_MAP ~ index 0 on scintilla functions 
+    // -- keyword 2 ~ NAME_KEYWORDS2_LIST_MAP ~ index 1 on scintilla functions 
     public static Dictionary<string, List<string>> NAME_KEYWORDS1_LIST_MAP = new Dictionary<string, List<string>>(); 
     public static Dictionary<string, List<string>> NAME_KEYWORDS2_LIST_MAP = new Dictionary<string, List<string>>(); 
+    public static Dictionary<string, List<string>> NAME_KEYWORDS3_LIST_MAP = new Dictionary<string, List<string>>(); 
+    public static Dictionary<string, List<string>> NAME_KEYWORDS4_LIST_MAP = new Dictionary<string, List<string>>(); 
+    public static Dictionary<string, List<string>> NAME_KEYWORDS5_LIST_MAP = new Dictionary<string, List<string>>(); 
+    // -- 
     private static Dictionary<string,string> NAME_KEYWORDS1_STR_MAP = new Dictionary<string,string>(); 
     private static Dictionary<string,string> NAME_KEYWORDS2_STR_MAP = new Dictionary<string,string>(); 
+    private static Dictionary<string,string> NAME_KEYWORDS3_STR_MAP = new Dictionary<string,string>(); 
+    private static Dictionary<string,string> NAME_KEYWORDS4_STR_MAP = new Dictionary<string,string>(); 
+    private static Dictionary<string,string> NAME_KEYWORDS5_STR_MAP = new Dictionary<string,string>(); 
     // variables | methods -- styling 
     public static void set_language_style(Scintilla scintilla, string filename) { // INCOMPLETE
 		if ( string.IsNullOrWhiteSpace(filename) ) return ;
@@ -410,7 +457,7 @@ public static class Incantation_SCINTILLA {
                 set_javascript_style(scintilla);
                 break;
             case ".bat":
-                set_bat_style(scintilla);
+                set_batch_style(scintilla);
                 break;
             case ".sh":
                 set_bash_style(scintilla);
@@ -427,6 +474,9 @@ public static class Incantation_SCINTILLA {
             case ".ada":
             case ".adb":
                 set_ada_style(scintilla);
+                break;
+            case ".bb":
+                set_blitzbasic_style(scintilla);
                 break;
 		}
 	}
@@ -571,7 +621,7 @@ public static class Incantation_SCINTILLA {
             ""
         );
     }
-    public static void set_html_style(Scintilla editor) { 
+    public static void set_html_style(Scintilla editor) { // ISSUE - autofolding don't work
         // Default
         editor.Styles[Style.Html.Default].ForeColor = default_word_color;
         // Tags
@@ -710,7 +760,7 @@ public static class Incantation_SCINTILLA {
         // Variables ($var)
         editor.Styles[9].ForeColor = Color.Orange;
     }
-    public static void set_bat_style(Scintilla editor) { 
+    public static void set_batch_style(Scintilla editor) { 
         set_bash_common_style(editor);
         update_keywords(
             editor,
@@ -777,9 +827,66 @@ public static class Incantation_SCINTILLA {
             ""
         );
     }
-    public static void set_blitzbasic_style(Scintilla editor) {}
-    public static void set_batch_style(Scintilla editor) {}
-    public static void set_clw_style(Scintilla editor) {}
+    public static void set_blitzbasic_style(Scintilla editor) { // ISSUE - autofolding don't work
+        editor.Styles[Style.BlitzBasic.Default].ForeColor = default_word_color;
+        editor.Styles[Style.BlitzBasic.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.BlitzBasic.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.BlitzBasic.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.BlitzBasic.Number].BackColor = number_back_color;
+        editor.Styles[Style.BlitzBasic.Keyword].ForeColor = keyword1_color;
+        editor.Styles[Style.BlitzBasic.String].ForeColor = string_fore_color;
+		editor.Styles[Style.BlitzBasic.String].BackColor = string_back_color;
+        editor.Styles[Style.BlitzBasic.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.BlitzBasic.Operator].ForeColor = operator_color;
+//        editor.Styles[Style.BlitzBasic.Identifier].BackColor = ;
+//        editor.Styles[Style.BlitzBasic.Date].ForeColor = ;
+        editor.Styles[Style.BlitzBasic.StringEol].BackColor = Color.Pink;
+        editor.Styles[Style.BlitzBasic.Keyword2].ForeColor = keyword2_color;
+        editor.Styles[Style.BlitzBasic.Keyword3].ForeColor = keyword2_color;
+        editor.Styles[Style.BlitzBasic.Keyword4].ForeColor = keyword2_color;
+//        editor.Styles[Style.BlitzBasic.Constant].ForeColor = keyword2_color;
+//        editor.Styles[Style.BlitzBasic.Asm].ForeColor = keyword2_color;
+//        editor.Styles[Style.BlitzBasic.Label].ForeColor = keyword2_color;
+//        editor.Styles[Style.BlitzBasic.Error].ForeColor = keyword2_color;
+        editor.Styles[Style.BlitzBasic.HexNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.BlitzBasic.HexNumber].BackColor = number_back_color;
+        editor.Styles[Style.BlitzBasic.BinNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.BlitzBasic.BinNumber].BackColor = number_back_color;
+        editor.Styles[Style.BlitzBasic.CommentBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.BlitzBasic.CommentBlock].BackColor = comment_back_color;
+        editor.Styles[Style.BlitzBasic.DocLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.BlitzBasic.DocLine].BackColor = comment_back_color;
+        editor.Styles[Style.BlitzBasic.DocBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.BlitzBasic.DocBlock].BackColor = comment_back_color;
+        editor.Styles[Style.BlitzBasic.DocKeyword].ForeColor = Color.White;
+//        editor.Styles[Style.BlitzBasic.CommentLine].ForeColor = comment_fore_color;
+//		editor.Styles[Style.BlitzBasic.CommentLine].BackColor = comment_back_color;
+//        editor.Styles[Style.BlitzBasic.Word].ForeColor = keyword1_color;
+        update_keywords(
+            editor,
+            "blitzbasic",
+            "abs accepttcpstream acos after and apptitle asc asin atan atan2 automidhandle autosuspend availvidmem backbuffer banksize before bin calldll case ceil changedir channelpan channelpitch channelplaying channelvolume chr closedir closefile closemovie closetcpserver closetcpstream closeudpstream cls clscolor color colorblue colorgreen colorred commandline const copybank copyfile copyimage copypixel copypixelfast copyrect copystream cos countgfxdrivers countgfxmodes counthostips createbank createdir createimage createnetplayer createprocess createtcpserver createtimer createudpstream currentdate currentdir currenttime data debuglog default delay delete deletedir deletefile deletenetplayer desktopbuffer dim dottedip drawblock drawblockrect drawimage drawimagerect drawmovie each else else if elseif end end function end if end select end type endgraphics endif eof execfile exit exp false field filepos filesize filetype first flip float floor flushjoy flushkeys flushmouse fontheight fontname fontsize fontstyle fontwidth for forever freebank freefont freeimage freesound freetimer frontbuffer function gammablue gammagreen gammared getcolor getenv getkey getmouse gfxdrivername gfxmodedepth gfxmodeexists gfxmodeformat gfxmodeheight gfxmodewidth global gosub goto grabimage graphics graphicsbuffer graphicsdepth graphicsformat graphicsheight graphicswidth handleimage hex hidepointer hostip hostnetgame if imagebuffer imageheight imagerectcollide imagerectoverlap imagescollide imagesoverlap imagewidth imagexhandle imageyhandle include input insert instr int joinnetgame joydown joyhat joyhit joypitch joyroll joytype joyu joyudir joyv joyvdir joyx joyxdir joyy joyyaw joyydir joyz joyzdir keydown keyhit keywait last left len line loadanimimage loadbuffer loadfont loadimage loadsound local lockbuffer lockedformat lockedpitch lockedpixels log log10 loopsound lower lset maskimage mid midhandle millisecs mod morefiles mousedown mousehit mousex mousexspeed mousey mouseyspeed mousez mousezspeed movemouse movieheight movieplaying moviewidth netmsgdata netmsgfrom netmsgto netmsgtype netplayerlocal netplayername new next nextfile not null openfile openmovie opentcpstream or origin oval pausechannel pausetimer peekbyte peekfloat peekint peekshort pi playcdtrack playmusic playsound plot pokebyte pokefloat pokeint pokeshort print queryobject rand read readavail readbyte readbytes readdir readfile readfloat readint readline readpixel readpixelfast readshort readstring rect rectsoverlap recvnetmsg recvudpmsg repeat replace resettimer resizebank resizeimage restore resumechannel resumetimer return right rnd rndseed rotateimage rset runtimeerror sar savebuffer saveimage scaleimage scanline seedrnd seekfile select sendnetmsg sendudpmsg setbuffer setenv setfont setgamma setgfxdriver sgn shl showpointer shr sin soundpan soundpitch soundvolume sqr startnetgame step stop stopchannel stopnetgame str string stringheight stringwidth systemproperty tan tcpstreamip tcpstreamport tcptimeouts text tformfilter tformimage then tileblock tileimage timerticks to totalvidmem trim true type udpmsgip udpmsgport udpstreamip udpstreamport udptimeouts unlockbuffer until updategamma upper viewport vwait waitkey waitmouse waittimer wend while write writebyte writebytes writefile writefloat writeint writeline writepixel writepixelfast writeshort writestring xor",
+            ""
+        );
+    }
+    public static void set_clw_style(Scintilla editor) {
+//        editor.Styles[Style.CLW.Default].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.CommentLine].ForeColor = comment_fore_color;
+//        editor.Styles[Style.CLW.CommentLine].BackColor = comment_back_color;
+//        editor.Styles[Style.CLW.Number].ForeColor = number_fore_color;
+//        editor.Styles[Style.CLW.Number].BackColor = number_back_color;
+//        editor.Styles[Style.CLW.String].ForeColor = string_fore_color;
+//        editor.Styles[Style.CLW.String].BackColor = string_back_color;
+//        editor.Styles[Style.CLW.Character].ForeColor = string_fore_color;
+//        editor.Styles[Style.CLW.Character].BackColor = string_back_color;
+//        editor.Styles[Style.CLW.Triple].ForeColor = string_fore_color;
+//        editor.Styles[Style.CLW.Triple].BackColor = string_back_color;
+//        editor.Styles[Style.CLW.TripleDouble].ForeColor = string_fore_color;
+//        editor.Styles[Style.CLW.TripleDouble].BackColor = string_back_color;
+//        editor.Styles[Style.CLW.Word].ForeColor = keyword1_color;
+//        editor.Styles[Style.CLW.Word2].ForeColor = keyword2_color;
+//        editor.Styles[Style.CLW.Operator].ForeColor = operator_color;
+    }
     public static void set_css_style(Scintilla editor) {}
     public static void set_fortran_style(Scintilla editor) {}
     public static void set_freebasic_style(Scintilla editor) {}
