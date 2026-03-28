@@ -6,7 +6,7 @@
 // {Notepad--H;1:silver;2:lightblue}
 
 // -- search 
-// {Notepad--T;red:add_new_scintilla_tab;blue:add_new_empty_scintilla_tab}
+// {Notepad--T;red:;blue:}
 // {Notepad--S:}
 
 // -- BEGIN 
@@ -508,7 +508,7 @@ public partial class Notepad__Form : Form {
         ) ) {
             if (start_process_adm(
                 "modules\\ghcmd.exe",
-                window_resize_and_position_args+window_z_order_args+mouse_command_args
+                window_resize_and_position_args+window_z_order_args //+ mouse_command_args
             )) {
                 print("... ghcmd.exe loaded sucessfully");
                 print("========================================================");
@@ -518,12 +518,12 @@ public partial class Notepad__Form : Form {
                 print("2.  Window Resize - Win+Alt+PgUp, Win+Alt+PgDn // Keep aspect ratio");
                 print("3.  Window Resize - Win+Alt+End, Win+Alt+Home // Change Orientation");
                 print("4.  Compact Mode - Win+Alt+Del // Hide Titlebar");
-                print("5.  Mouse Move - Numpad 5,1,2,3");
-                print("6.  Mouse Left Button - Numpad 4 // Hold");
-                print("7.  Mouse Right Button - Numpad 6 // Hold");
-                print("8.  Mouse Left Button - Numpad 9 // Click");
-                print("9.  Mouse Scroll - Numpad 0, Numpad 7");
-                print("10. Mouse Toggle Speed - Numpad 8 // Cursor speed");
+//                print("5.  Mouse Move - Numpad 5,1,2,3");
+//                print("6.  Mouse Left Button - Numpad 4 // Hold");
+//                print("7.  Mouse Right Button - Numpad 6 // Hold");
+//                print("8.  Mouse Left Button - Numpad 9 // Click");
+//                print("9.  Mouse Scroll - Numpad 0, Numpad 7");
+//                print("10. Mouse Toggle Speed - Numpad 8 // Cursor speed");
             } else {
                 print("... error, failed to initialize module.");
                 print("... this module needs administrative privileges.");
