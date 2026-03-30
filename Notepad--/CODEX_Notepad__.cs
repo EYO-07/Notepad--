@@ -193,6 +193,7 @@ public static class Transmutation {
     // variables
 	private static List<string> CODE_EXTS = new List<string>{
 		".cs",
+        ".css",
         ".csproj",
         ".user",
 		".cpp",

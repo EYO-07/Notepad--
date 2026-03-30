@@ -82,9 +82,7 @@ public partial class Notepad__Form : Form {
 	private Dictionary<string, Scintilla> fullpath_scintilla_map = new();
     private Dictionary<string, int> fullpath_lines_map = new();
 	private string unsave_marker = "!! ";
-	private float font_step = 0.5f; // TODO 
     private HashSet<string> autocomplete_hashset = new();
-    // private string search_token = "";
     private int char_added_debouncer = 0;
     private int char_added_debouncer_max = 20;
     private int current_split_percentage = 55;
@@ -136,17 +134,17 @@ public partial class Notepad__Form : Form {
 
 // Editor Commands || Defaults from Scintilla
 1. Ctrl+Arrows  // Scroll the Editor 
+2. Alt+Left     // Focus the Left View Selected Tab 
+3. Alt+Right    // Focus the Right View Selected Tab
 2. Ctrl+Tab     // Change and Focus on Tabs, 
                 // ... with tabs focused you can change tabs using arrow keys 
-                // ... and shift tab to change between panels.
-                // ... tab to return to Editors 
 
 // Editor Commands || Misc
 1. Alt+S            // Switch Select Tabs Between Views 
 2. Alt+A / Alt+D    // Change the splitter position 
-1. Ctrl+Q           // Comment out selected lines 
-2. Ctrl+F           // Go To Next Selection Match
-3. Ctrl+D           // Go To Previous Selection Match
+3. Ctrl+Q           // Comment out selected lines 
+4. Ctrl+F           // Go To Next Selection Match
+5. Ctrl+D           // Go To Previous Selection Match
 
 "Use comment-blocks like this on top of document to set search token explicitly using ctrl+f or ctrl+d."
 // -- search tokens 
@@ -203,6 +201,32 @@ public partial class Notepad__Form : Form {
 		this.Resize += (s,e) => {
             set_splitter_distance(this.main_panel, this.current_split_percentage);
         }; 
+        key_shortcut(this, "alt", Keys.Up, ()=>{});
+        key_shortcut(this, "alt", Keys.Down, ()=>{});
+        key_shortcut(this, "alt", Keys.Left, ()=>{
+            Scintilla? editor = get_first_nested<Scintilla>(this.left_tabs.SelectedTab);
+            if (editor!=null) {
+                editor.Select();
+                return;
+            }
+            DarkTreeView? treeview = get_first_nested<DarkTreeView>(this.left_tabs.SelectedTab);
+            if (treeview!=null) {
+                treeview.Select();
+                return;
+            }
+        });
+        key_shortcut(this, "alt", Keys.Right, ()=>{
+            Scintilla? editor = get_first_nested<Scintilla>(this.right_tabs.SelectedTab);
+            if (editor!=null) {
+                editor.Select();
+                return;
+            }
+            DarkTreeView? treeview = get_first_nested<DarkTreeView>(this.right_tabs.SelectedTab);
+            if (treeview!=null) {
+                treeview.Select();
+                return;
+            }
+        });
         key_shortcut(this, "ctrl","h", () => {
 			SBR_compact_toggle();
 		});

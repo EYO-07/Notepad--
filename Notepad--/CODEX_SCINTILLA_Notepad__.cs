@@ -67,10 +67,10 @@ public static class Incantation_SCINTILLA {
     private static Color margin_fore_color = Color.FromArgb(120,120,120); // gray
     private static Color margin_back_color = Color.FromArgb(30,30,30); // dark gray 
     // variables || language specific style
-    private static Color default_word_color = Color.Silver;
-    private static Color keyword1_color = Color.FromArgb(115, 187, 255); // orange 
+    private static Color default_word_color = Color.White;
+    private static Color keyword1_color = Color.Silver; //Color.FromArgb(115, 187, 255); // orange 
     private static Color keyword1_backcolor;
-    private static Color keyword2_color = Color.FromArgb(0, 255, 95); // green 
+    private static Color keyword2_color = Color.LightBlue; // Color.FromArgb(0, 255, 95); // green 
     private static Color keyword2_backcolor; 
     private static Color comment_fore_color = Color.FromArgb(0, 255, 153); // Green
     private static Color comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
@@ -90,9 +90,9 @@ public static class Incantation_SCINTILLA {
         margin_fore_color = Color.FromArgb(120,120,120); // gray
         margin_back_color = Color.FromArgb(30,30,30); // dark gray 
         // -- 
-        default_word_color = Color.Silver;
-        keyword1_color = Color.FromArgb(115, 187, 255); // orange 
-        keyword2_color = Color.FromArgb(0, 255, 95); // green 
+        default_word_color = Color.White;
+        keyword1_color = Color.Silver; //Color.FromArgb(115, 187, 255); // orange 
+        keyword2_color = Color.LightBlue; //Color.FromArgb(0, 255, 95); // green 
         comment_fore_color = Color.FromArgb(0, 255, 153); // Green
         comment_back_color = Color.FromArgb(0, 51, 0); // Dark Green
         number_fore_color = Color.Cyan;
@@ -480,6 +480,9 @@ public static class Incantation_SCINTILLA {
             case ".bb":
                 set_blitzbasic_style(scintilla);
                 break;
+            case ".css":
+                set_css_style(scintilla);
+                break;
 		}
 	}
     public static void refresh(Scintilla editor) {
@@ -684,6 +687,8 @@ public static class Incantation_SCINTILLA {
 		editor.Styles[Style.Cpp.Default].ForeColor = default_word_color;
 		editor.Styles[Style.Cpp.Comment].ForeColor = comment_fore_color;
 		editor.Styles[Style.Cpp.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Cpp.CommentDoc].ForeColor = comment_fore_color;
+		editor.Styles[Style.Cpp.CommentDoc].BackColor = comment_back_color;
 		editor.Styles[Style.Cpp.CommentLine].ForeColor = comment_fore_color;
 		editor.Styles[Style.Cpp.CommentLine].BackColor = comment_back_color;
 		editor.Styles[Style.Cpp.CommentLineDoc].ForeColor = comment_fore_color;
@@ -691,22 +696,30 @@ public static class Incantation_SCINTILLA {
 		editor.Styles[Style.Cpp.Number].ForeColor = number_fore_color;
 		editor.Styles[Style.Cpp.Number].BackColor = number_back_color;
         editor.Styles[Style.Cpp.Word].ForeColor = keyword1_color;
-        // editor.Styles[Style.Cpp.Word].BackColor = keyword1_backcolor; 
 		editor.Styles[Style.Cpp.Word2].ForeColor = keyword2_color;
-        editor.Styles[Style.Cpp.GlobalClass].ForeColor = Color.FromArgb(255, 77, 77); // Set 2
-//        editor.Styles[Style.Cpp.UserLiteral2].ForeColor = Color.Green;       // Set 4
-//        editor.Styles[Style.Cpp.UserLiteral3].ForeColor = Color.Brown;       // Set 5
-//        editor.Styles[Style.Cpp.UserLiteral4].ForeColor = Color.DarkRed;     // Set 6
-//        editor.Styles[Style.Cpp.UserLiteral5].ForeColor = Color.DarkMagenta; // Set 7
+        editor.Styles[Style.Cpp.GlobalClass].ForeColor = Color.FromArgb(255, 77, 77); 
+//        editor.Styles[Style.Cpp.Identifier].ForeColor = Color.Green;       
+//        editor.Styles[Style.Cpp.Uuid].ForeColor = Color.Brown; 
+//        editor.Styles[Style.Cpp.CommentDocKeyword].ForeColor = Color.DarkRed;     // Set 6
+//        editor.Styles[Style.Cpp.CommentDocKeywordError].ForeColor = Color.DarkMagenta; // Set 7
 		editor.Styles[Style.Cpp.String].ForeColor = string_fore_color;
 		editor.Styles[Style.Cpp.String].BackColor = string_back_color;
+//        editor.Styles[Style.Cpp.StringRaw].ForeColor = string_fore_color;
+//		editor.Styles[Style.Cpp.StringRaw].BackColor = string_back_color;
 		editor.Styles[Style.Cpp.Character].ForeColor = string_fore_color;
 		editor.Styles[Style.Cpp.Character].BackColor = string_back_color;
 		editor.Styles[Style.Cpp.Verbatim].ForeColor = string_fore_color; 
 		editor.Styles[Style.Cpp.Verbatim].BackColor = string_back_color; 
+//        editor.Styles[Style.Cpp.TripleVerbatim].ForeColor = string_fore_color; 
+//		editor.Styles[Style.Cpp.TripleVerbatim].BackColor = string_back_color; 
 		editor.Styles[Style.Cpp.StringEol].BackColor = Color.Pink;
 		editor.Styles[Style.Cpp.Operator].ForeColor = operator_color;
 		editor.Styles[Style.Cpp.Preprocessor].ForeColor = preprocessor_color;
+//        editor.Styles[Style.Cpp.PreprocessorComment].ForeColor = ;
+//        editor.Styles[Style.Cpp.PreprocessorCommentDoc].ForeColor = ;
+//        editor.Styles[Style.Cpp.UserLiteral].ForeColor = ;
+//		editor.Styles[Style.Cpp.TaskMarker].ForeColor = ;
+//        editor.Styles[Style.Cpp.EscapeSequence].ForeColor = ;
 	}
 	public static void set_cs_style(Scintilla editor) { 
 		set_c_family_style(editor);
@@ -871,25 +884,69 @@ public static class Incantation_SCINTILLA {
             ""
         );
     }
-    public static void set_clw_style(Scintilla editor) {
+    public static void set_clw_style(Scintilla editor) { // ISSUE - no clue what is this language ... 
+//        editor.Styles[Style.CLW.Attributes].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.BuiltInProceduresFunction].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.Comment].ForeColor = comment_fore_color;
+//        editor.Styles[Style.CLW.Comment].BackColor = comment_back_color;
+//        editor.Styles[Style.CLW.CompilerDirective].ForeColor = default_word_color;
 //        editor.Styles[Style.CLW.Default].ForeColor = default_word_color;
-//        editor.Styles[Style.CLW.CommentLine].ForeColor = comment_fore_color;
-//        editor.Styles[Style.CLW.CommentLine].BackColor = comment_back_color;
-//        editor.Styles[Style.CLW.Number].ForeColor = number_fore_color;
-//        editor.Styles[Style.CLW.Number].BackColor = number_back_color;
+//        editor.Styles[Style.CLW.Depreciated].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.Error].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.IntegerConstant].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.Keyword].ForeColor = keyword1_color;
+//        editor.Styles[Style.CLW.Label].ForeColor = string_fore_color;
+//        editor.Styles[Style.CLW.Label].BackColor = string_back_color;
 //        editor.Styles[Style.CLW.String].ForeColor = string_fore_color;
 //        editor.Styles[Style.CLW.String].BackColor = string_back_color;
-//        editor.Styles[Style.CLW.Character].ForeColor = string_fore_color;
-//        editor.Styles[Style.CLW.Character].BackColor = string_back_color;
-//        editor.Styles[Style.CLW.Triple].ForeColor = string_fore_color;
-//        editor.Styles[Style.CLW.Triple].BackColor = string_back_color;
-//        editor.Styles[Style.CLW.TripleDouble].ForeColor = string_fore_color;
-//        editor.Styles[Style.CLW.TripleDouble].BackColor = string_back_color;
-//        editor.Styles[Style.CLW.Word].ForeColor = keyword1_color;
-//        editor.Styles[Style.CLW.Word2].ForeColor = keyword2_color;
-//        editor.Styles[Style.CLW.Operator].ForeColor = operator_color;
+//        editor.Styles[Style.CLW.PictureString].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.RealConstant].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.RuntimeExpressions].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.StandardEquates].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.StructureDataTypes].ForeColor = default_word_color;
+//        editor.Styles[Style.CLW.UserIdentifier].ForeColor = default_word_color;
     }
-    public static void set_css_style(Scintilla editor) {}
+    public static void set_css_style(Scintilla editor) { // INCOMPLETE - keywords up 2
+        editor.Styles[Style.Css.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Css.Tag].ForeColor = keyword1_color;
+        editor.Styles[Style.Css.Attribute].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Class].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.PseudoClass].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.UnknownPseudoClass].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Css.Identifier].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.UnknownIdentifier].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Value].ForeColor = number_fore_color;
+        editor.Styles[Style.Css.Value].BackColor = number_back_color;
+        editor.Styles[Style.Css.DoubleString].ForeColor = string_fore_color;
+        editor.Styles[Style.Css.DoubleString].BackColor = string_back_color;
+        editor.Styles[Style.Css.SingleString].ForeColor = string_fore_color;
+        editor.Styles[Style.Css.SingleString].BackColor = string_back_color;
+        editor.Styles[Style.Css.Id].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Important].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Directive].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Identifier2].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Identifier3].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.PseudoElement].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.ExtendedIdentifier].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.ExtendedPseudoClass].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.ExtendedPseudoElement].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Media].ForeColor = string_fore_color;
+        editor.Styles[Style.Css.Media].BackColor = string_back_color;
+        editor.Styles[Style.Css.Variable].ForeColor = keyword2_color;
+//        editor.Styles[Style.Css.Number].ForeColor = number_fore_color;
+//        editor.Styles[Style.Css.Number].BackColor = number_back_color;
+//        editor.Styles[Style.Css.Other].ForeColor = string_fore_color;
+//        editor.Styles[Style.Css.Other].BackColor = string_back_color;
+        editor.Styles[Style.Css.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.Css.Comment].BackColor = comment_back_color;
+//        editor.Styles[Style.Css.Entity].ForeColor = Color.LightGreen;
+        update_keywords(editor,"css",
+            "-khtml-background-clip -khtml-background-origin -khtml-background-size -khtml-border-bottom-left-radius -khtml-border-bottom-right-radius -khtml-border-radius -khtml-border-top-left-radius -khtml-border-top-right-radius -khtml-opacity -moz-animation -moz-animation-delay -moz-animation-direction -moz-animation-duration -moz-animation-fill-mode -moz-animation-iteration-count -moz-animation-name -moz-animation-play-state -moz-animation-timing-function -moz-appearance -moz-background-clip -moz-background-inline-policy -moz-background-origin -moz-background-size -moz-binding -moz-border-bottom-colors -moz-border-end -moz-border-end-color -moz-border-end-style -moz-border-end-width -moz-border-image -moz-border-left-colors -moz-border-radius -moz-border-radius-bottomleft -moz-border-radius-bottomright -moz-border-radius-topleft -moz-border-radius-topright -moz-border-right-colors -moz-border-start -moz-border-start-color -moz-border-start-style -moz-border-start-width -moz-border-top-colors -moz-box-align -moz-box-direction -moz-box-flex -moz-box-flex-group -moz-box-flexgroup -moz-box-ordinal-group -moz-box-orient -moz-box-pack -moz-box-shadow -moz-box-sizing -moz-column-count -moz-column-gap -moz-column-rule -moz-column-rule-color -moz-column-rule-style -moz-column-rule-width -moz-column-width -moz-context-properties -moz-float-edge -moz-force-broken-image-icon -moz-image-region -moz-linear-gradient -moz-margin-end -moz-margin-start -moz-opacity -moz-outline -moz-outline-color -moz-outline-offset -moz-outline-radius -moz-outline-radius-bottomleft -moz-outline-radius-bottomright -moz-outline-radius-topleft -moz-outline-radius-topright -moz-outline-style -moz-outline-width -moz-padding-end -moz-padding-start -moz-radial-gradient -moz-stack-sizing -moz-text-decoration-color -moz-text-decoration-line -moz-text-decoration-style -moz-transform -moz-transform-origin -moz-transition -moz-transition-delay -moz-transition-duration -moz-transition-property -moz-transition-timing-function -moz-user-focus -moz-user-input -moz-user-modify -moz-user-select -moz-window-shadow -ms-filter -ms-transform -ms-transform-origin -o-transform -webkit-animation -webkit-animation-delay -webkit-animation-direction -webkit-animation-duration -webkit-animation-fill-mode -webkit-animation-iteration-count -webkit-animation-name -webkit-animation-play-state -webkit-animation-timing-function -webkit-appearance -webkit-backface-visibility -webkit-background-clip -webkit-background-composite -webkit-background-origin -webkit-background-size -webkit-border-bottom-left-radius -webkit-border-bottom-right-radius -webkit-border-horizontal-spacing -webkit-border-image -webkit-border-radius -webkit-border-top-left-radius -webkit-border-top-right-radius -webkit-border-vertical-spacing -webkit-box-align -webkit-box-direction -webkit-box-flex -webkit-box-flex-group -webkit-box-lines -webkit-box-ordinal-group -webkit-box-orient -webkit-box-pack -webkit-box-reflect -webkit-box-shadow -webkit-box-sizing -webkit-column-break-after -webkit-column-break-before -webkit-column-break-inside -webkit-column-count -webkit-column-gap -webkit-column-rule -webkit-column-rule-color -webkit-column-rule-style -webkit-column-rule-width -webkit-column-width -webkit-columns -webkit-dashboard-region -webkit-font-smoothing -webkit-gradient -webkit-line-break -webkit-linear-gradient -webkit-margin-bottom-collapse -webkit-margin-collapse -webkit-margin-start -webkit-margin-top-collapse -webkit-marquee -webkit-marquee-direction -webkit-marquee-increment -webkit-marquee-repetition -webkit-marquee-speed -webkit-marquee-style -webkit-mask -webkit-mask-attachment -webkit-mask-box-image -webkit-mask-clip -webkit-mask-composite -webkit-mask-image -webkit-mask-origin -webkit-mask-position -webkit-mask-position-x -webkit-mask-position-y -webkit-mask-repeat -webkit-mask-size -webkit-nbsp-mode -webkit-padding-start -webkit-perspective -webkit-perspective-origin -webkit-radial-gradient -webkit-rtl-ordering -webkit-tap-highlight-color -webkit-text-fill-color -webkit-text-security -webkit-text-size-adjust -webkit-text-stroke -webkit-text-stroke-color -webkit-text-stroke-width -webkit-touch-callout -webkit-transform -webkit-transform-origin -webkit-transform-origin-x -webkit-transform-origin-y -webkit-transform-origin-z -webkit-transform-style -webkit-transition -webkit-transition-delay -webkit-transition-duration -webkit-transition-property -webkit-transition-timing-function -webkit-user-drag -webkit-user-modify -webkit-user-select align-content align-items align-self alignment-adjust alignment-baseline all animation animation-delay animation-direction animation-duration animation-fill-mode animation-iteration-count animation-name animation-play-state animation-timing-function appearance azimuth backface-visibility background background-attachment background-blend-mode background-break background-clip background-color background-image background-origin background-position background-position-x background-position-y background-repeat background-size baseline-shift binding bleed block-size bookmark-label bookmark-level bookmark-state bookmark-target border border-block border-block-end border-block-start border-bottom border-bottom-color border-bottom-left-radius border-bottom-right-radius border-bottom-style border-bottom-width border-collapse border-color border-image border-image-outset border-image-repeat border-image-slice border-image-source border-image-width border-inline border-inline-end border-inline-end-width border-inline-start border-inline-start-color border-inline-start-style border-inline-start-width border-left border-left-color border-left-style border-left-width border-radius border-right border-right-color border-right-style border-right-width border-spacing border-style border-top border-top-color border-top-left-radius border-top-right-radius border-top-style border-top-width border-width bottom box-align box-decoration-break box-direction box-flex box-flex-group box-lines box-ordinal-group box-orient box-pack box-shadow box-sizing break-after break-before break-inside caption-side caret-color clear clip color color-profile color-scheme column-count column-fill column-gap column-rule column-rule-color column-rule-style column-rule-width column-span column-width columns content counter-increment counter-reset crop cue cue-after cue-before cursor direction display dominant-baseline drop-initial-after-adjust drop-initial-after-align drop-initial-before-adjust drop-initial-before-align drop-initial-size drop-initial-value elevation empty-cells field-sizing fill fill-opacity filter fit fit-position flex flex-basis flex-direction flex-flow flex-grow flex-shrink flex-wrap float float-offset font font-effect font-emphasize font-family font-size font-size-adjust font-stretch font-style font-variant font-variant-ligatures font-weight gap grid-area grid-auto-flow grid-auto-rows grid-column grid-column-end grid-column-gap grid-column-start grid-columns grid-gap grid-row grid-row-gap grid-rows grid-template-areas grid-template-columns grid-template-rows hanging-punctuation height hyphenate-after hyphenate-before hyphenate-character hyphenate-lines hyphenate-resource hyphens icon image-orientation image-rendering image-resolution inline-box-align inline-size inset inset-inline-end inset-inline-start justify-content justify-items justify-self left letter-spacing line-height line-stacking line-stacking-ruby line-stacking-shift line-stacking-strategy list-style list-style-image list-style-position list-style-type margin margin-block margin-block-end margin-block-start margin-bottom margin-inline margin-inline-end margin-inline-start margin-left margin-right margin-top mark mark-after mark-before marker-offset marks marquee-direction marquee-play-count marquee-speed marquee-style mask mask-clip mask-image mask-origin mask-position mask-position-x mask-repeat mask-size max-height max-width min-block-size min-height min-inline-size min-width mix-blend-mode move-to nav-down nav-index nav-left nav-right nav-up object-fit opacity order orphans outline outline-color outline-offset outline-style outline-width overflow overflow-anchor overflow-style overflow-wrap overflow-x overflow-y padding padding-block padding-block-end padding-block-start padding-bottom padding-inline padding-inline-end padding-inline-start padding-left padding-right padding-top page page-break-after page-break-before page-break-inside page-policy paint-order pause pause-after pause-before perspective perspective-origin phonemes pitch pitch-range play-during pointer-events position presentation-level punctuation-trim quotes rendering-intent resize rest rest-after rest-before richness right rotation rotation-point ruby-align ruby-overhang ruby-position ruby-span scrollbar-color size speak speak-header speak-numeral speak-punctuation speech-rate stress string-set stroke stroke-dasharray stroke-linejoin stroke-opacity stroke-width tab-size table-layout target target-name target-new target-position text-align text-align-last text-anchor text-decoration text-decoration-color text-decoration-line text-decoration-style text-emphasis text-height text-indent text-justify text-outline text-overflow text-rendering text-shadow text-transform text-wrap top transform transform-origin transform-style transition transition-delay transition-duration transition-property transition-timing-function unicode-bidi user-select vector-effect vertical-align visibility voice-balance voice-duration voice-family voice-pitch voice-pitch-range voice-rate voice-stress voice-volume volume white-space white-space-collapse widows width will-change word-break word-spacing word-wrap z-index",
+            "active any-link autofill checked default defined disabled empty enabled first first-child first-of-type focus focus-visible focus-within fullscreen has host hover in-range indeterminate invalid is lang last-child last-of-type left link modal not nth-child nth-last-child nth-last-of-type nth-of-type only-child only-of-type optional out-of-range placeholder-shown read-only read-write required right root scope target valid visited where"
+        );
+    
+    }
     public static void set_fortran_style(Scintilla editor) {}
     public static void set_freebasic_style(Scintilla editor) {}
     public static void set_json_style(Scintilla editor) {}
