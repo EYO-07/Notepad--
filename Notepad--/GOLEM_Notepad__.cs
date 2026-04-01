@@ -419,7 +419,7 @@ public partial class Notepad__Form : Form {
                     line_count = editor.Lines.Count;
                 }
             }
-            if (line_count > 3000) {
+            if (line_count > 5000) {
                 if (char_added_debouncer < (line_count/1000) ) {
                     char_added_debouncer++;
                     return;

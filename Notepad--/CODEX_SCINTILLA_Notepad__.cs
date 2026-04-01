@@ -302,6 +302,15 @@ public static class Incantation_SCINTILLA {
             case ".bb":
                 editor.LexerName = "blitzbasic";
                 return true;
+            case ".f03":
+            case ".f95":
+            case ".f90":
+                editor.LexerName = "fortran";
+                return true;
+            case ".bas":
+            case ".bi":
+                editor.LexerName = "freebasic";
+                return true;
         }
         // -- the lexer_name directly on GetLexerNames iterator
         foreach(string lexer_name in Lexilla.GetLexerNames()) {
@@ -483,6 +492,18 @@ public static class Incantation_SCINTILLA {
             case ".css":
                 set_css_style(scintilla);
                 break;
+            case ".f03":
+            case ".f95":
+            case ".f90":
+                set_fortran_style(scintilla);
+                break;
+            case ".bas":
+            case ".bi":
+                set_freebasic_style(scintilla);
+                break;
+            case ".json":
+                set_json_style(scintilla);
+                break; 
 		}
 	}
     public static void refresh(Scintilla editor) {
@@ -550,6 +571,29 @@ public static class Incantation_SCINTILLA {
         if ( !string.IsNullOrWhiteSpace(key1) ) editor.SetKeywords(0,key1);
         if ( !string.IsNullOrWhiteSpace(key2) ) editor.SetKeywords(1,key2);
     }
+    
+    // >>>
+    private static void update_keywords( // TODO INCOMPLETE 
+        Scintilla editor, 
+        string name, 
+        string keywords1, 
+        string keywords2, 
+        string keywords3
+    ) { 
+        update_keywords(editor, name, keywords1, keywords2); // fallback 
+    }
+    private static void update_keywords( // TODO INCOMPLETE 
+        Scintilla editor, 
+        string name, 
+        string keywords1, 
+        string keywords2, 
+        string keywords3,
+        string keywords4
+    ) { 
+        update_keywords(editor, name, keywords1, keywords2); // fallback 
+    }
+    // <<<
+    
     public static void set_py_style(Scintilla editor) { 
         editor.Styles[Style.Python.Default].ForeColor = default_word_color;
         editor.Styles[Style.Python.CommentLine].ForeColor = comment_fore_color;
@@ -808,8 +852,6 @@ public static class Incantation_SCINTILLA {
             ""
         );
     }
-    
-    // >>> 
     public static void set_asm_style(Scintilla editor) { // INCOMPLETE
         editor.Styles[Style.Asm.Default].ForeColor = default_word_color;
         editor.Styles[Style.Asm.Comment].ForeColor = comment_fore_color;
@@ -914,7 +956,7 @@ public static class Incantation_SCINTILLA {
         editor.Styles[Style.Css.PseudoClass].ForeColor = keyword2_color;
         editor.Styles[Style.Css.UnknownPseudoClass].ForeColor = keyword2_color;
         editor.Styles[Style.Css.Operator].ForeColor = operator_color;
-        editor.Styles[Style.Css.Identifier].ForeColor = keyword2_color;
+        editor.Styles[Style.Css.Identifier].ForeColor = default_word_color;
         editor.Styles[Style.Css.UnknownIdentifier].ForeColor = keyword2_color;
         editor.Styles[Style.Css.Value].ForeColor = number_fore_color;
         editor.Styles[Style.Css.Value].BackColor = number_back_color;
@@ -947,9 +989,104 @@ public static class Incantation_SCINTILLA {
         );
     
     }
-    public static void set_fortran_style(Scintilla editor) {}
-    public static void set_freebasic_style(Scintilla editor) {}
-    public static void set_json_style(Scintilla editor) {}
+    
+    // >>> 
+    public static void set_fortran_style(Scintilla editor) { 
+        editor.Styles[Style.Fortran.Default].ForeColor = default_word_color;
+		editor.Styles[Style.Fortran.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.Fortran.Comment].BackColor = comment_back_color;
+		editor.Styles[Style.Fortran.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.Fortran.Number].BackColor = number_back_color;
+        editor.Styles[Style.Fortran.Word].ForeColor = keyword1_color;
+		editor.Styles[Style.Fortran.Word2].ForeColor = keyword2_color;
+        editor.Styles[Style.Fortran.Word3].ForeColor = keyword2_color;
+		editor.Styles[Style.Fortran.String1].ForeColor = string_fore_color;
+		editor.Styles[Style.Fortran.String1].BackColor = string_back_color;
+        editor.Styles[Style.Fortran.String2].ForeColor = string_fore_color;
+		editor.Styles[Style.Fortran.String2].BackColor = string_back_color;
+        editor.Styles[Style.Fortran.Label].ForeColor = string_fore_color;
+		editor.Styles[Style.Fortran.Label].BackColor = string_back_color;
+//		editor.Styles[Style.Fortran.Character].ForeColor = string_fore_color;
+//		editor.Styles[Style.Fortran.Character].BackColor = string_back_color;
+//		editor.Styles[Style.Fortran.Verbatim].ForeColor = string_fore_color; 
+//		editor.Styles[Style.Fortran.Verbatim].BackColor = string_back_color; 
+		editor.Styles[Style.Fortran.StringEol].BackColor = Color.Pink;
+		editor.Styles[Style.Fortran.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Fortran.Operator2].ForeColor = operator_color;
+		editor.Styles[Style.Fortran.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.Fortran.Continuation].ForeColor = default_word_color;
+        update_keywords(editor,"fortran",
+            "access action advance allocatable allocate apostrophe assign assignment associate asynchronous backspace bind blank blockdata call case character class close common complex contains continue critical cycle data deallocate decimal delim default dimension direct do dowhile double doubleprecision else elseif elsewhere encoding end endassociate endblockdata endcritical enddo endenum endfile endforall endfunction endif endinterface endmodule endprocedure endprogram endselect endsubmodule endsubroutine endtype endwhere entry enum eor equivalence err errmsg exist exit external file flush fmt forall form format formatted function go goto id if implicit in include inout integer inquire intent interface intrinsic iomsg iolength iostat kind len logical module name named namelist nextrec nml none nullify number only open opened operator optional out pad parameter pass pause pending pointer pos position precision print private procedure program protected public quote read readwrite real rec recl recursive result return rewind save select selectcase selecttype sequential sign size stat status stop stream submodule subroutine target then to type unformatted unit use value volatile wait where while write",
+            "abs achar acos acosd adjustl adjustr aimag aimax0 aimin0 aint ajmax0 ajmin0 akmax0 akmin0 all allocated alog alog10 amax0 amax1 amin0 amin1 amod anint any asin asind associated atan atan2 atan2d atand bitest bitl bitlr bitrl bjtest bit_size bktest break btest cabs ccos cdabs cdcos cdexp cdlog cdsin cdsqrt ceiling cexp char clog cmplx conjg cos cosd cosh count cpu_time cshift csin csqrt dabs dacos dacosd dasin dasind datan datan2 datan2d datand date date_and_time dble dcmplx dconjg dcos dcosd dcosh dcotan ddim dexp dfloat dflotk dfloti dflotj digits dim dimag dint dlog dlog10 dmax1 dmin1 dmod dnint dot_product dprod dreal dsign dsin dsind dsinh dsqrt dtan dtand dtanh eoshift epsilon errsns exp exponent float floati floatj floatk floor fraction free huge iabs iachar iand ibclr ibits ibset ichar idate idim idint idnint ieor ifix iiabs iiand iibclr iibits iibset iidim iidint iidnnt iieor iifix iint iior iiqint iiqnnt iishft iishftc iisign ilen imax0 imax1 imin0 imin1 imod index inint inot int int1 int2 int4 int8 iqint iqnint ior ishft ishftc isign isnan izext jiand jibclr jibits jibset jidim jidint jidnnt jieor jifix jint jior jiqint jiqnnt jishft jishftc jisign jmax0 jmax1 jmin0 jmin1 jmod jnint jnot jzext kiabs kiand kibclr kibits kibset kidim kidint kidnnt kieor kifix kind kint kior kishft kishftc kisign kmax0 kmax1 kmin0 kmin1 kmod knint knot kzext lbound leadz len len_trim lenlge lge lgt lle llt log log10 logical lshift malloc matmul max max0 max1 maxexponent maxloc maxval merge min min0 min1 minexponent minloc minval mod modulo mvbits nearest nint not nworkers number_of_processors pack popcnt poppar precision present product radix random random_number random_seed range real repeat reshape rrspacing rshift scale scan secnds selected_int_kind selected_real_kind set_exponent shape sign sin sind sinh size sizeof sngl snglq spacing spread sqrt sum system_clock tan tand tanh tiny transfer transpose trim ubound unpack verify",
+            "cdabs cdcos cdexp cdlog cdsin cdsqrt cotan cotand dcmplx dconjg dcotan dcotand decode dimag dll_export dll_import doublecomplex dreal dvchk encode find flen flush getarg getcharqq getcl getdat getenv gettim hfix ibchng identifier imag int1 int2 int4 intc intrup invalop iostat_msg isha ishc ishl jfix lacfar locking locnear map nargs nbreak ndperr ndpexc offset ovefl peekcharqq precfill prompt qabs qacos qacosd qasin qasind qatan qatand qatan2 qcmplx qconjg qcos qcosd qcosh qdim qexp qext qextd qfloat qimag qlog qlog10 qmax1 qmin1 qmod qreal qsign qsin qsind qsinh qsqrt qtan qtand qtanh ran rand randu rewrite segment setdat settim system timer undfl unlock union val virtual volatile zabs zcos zexp zlog zsin zsqrt"
+        );
+    }
+    public static void set_freebasic_style(Scintilla editor) {
+        editor.Styles[Style.FreeBasic.Default].ForeColor = default_word_color;
+        editor.Styles[Style.FreeBasic.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.FreeBasic.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.FreeBasic.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.FreeBasic.Number].BackColor = number_back_color;
+        editor.Styles[Style.FreeBasic.Keyword].ForeColor = keyword1_color;
+        editor.Styles[Style.FreeBasic.String].ForeColor = string_fore_color;
+		editor.Styles[Style.FreeBasic.String].BackColor = string_back_color;
+        editor.Styles[Style.FreeBasic.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.FreeBasic.Operator].ForeColor = operator_color;
+//        editor.Styles[Style.BlitzBasic.Identifier].BackColor = ;
+//        editor.Styles[Style.BlitzBasic.Date].ForeColor = ;
+        editor.Styles[Style.FreeBasic.StringEol].BackColor = Color.Pink;
+        editor.Styles[Style.FreeBasic.Keyword2].ForeColor = keyword2_color;
+        editor.Styles[Style.FreeBasic.Keyword3].ForeColor = keyword2_color;
+        editor.Styles[Style.FreeBasic.Keyword4].ForeColor = keyword2_color;
+//        editor.Styles[Style.BlitzBasic.Constant].ForeColor = keyword2_color;
+//        editor.Styles[Style.BlitzBasic.Asm].ForeColor = keyword2_color;
+//        editor.Styles[Style.BlitzBasic.Label].ForeColor = keyword2_color;
+//        editor.Styles[Style.BlitzBasic.Error].ForeColor = keyword2_color;
+        editor.Styles[Style.FreeBasic.HexNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.FreeBasic.HexNumber].BackColor = number_back_color;
+        editor.Styles[Style.FreeBasic.BinNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.FreeBasic.BinNumber].BackColor = number_back_color;
+        editor.Styles[Style.FreeBasic.CommentBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.FreeBasic.CommentBlock].BackColor = comment_back_color;
+        editor.Styles[Style.FreeBasic.DocLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.FreeBasic.DocLine].BackColor = comment_back_color;
+        editor.Styles[Style.FreeBasic.DocBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.FreeBasic.DocBlock].BackColor = comment_back_color;
+        editor.Styles[Style.FreeBasic.DocKeyword].ForeColor = Color.White;
+//        editor.Styles[Style.BlitzBasic.CommentLine].ForeColor = comment_fore_color;
+//		editor.Styles[Style.BlitzBasic.CommentLine].BackColor = comment_back_color;
+//        editor.Styles[Style.BlitzBasic.Word].ForeColor = keyword1_color;
+        update_keywords(editor, "freebasic", 
+            "append as asc asin asm atan2 atn beep bin binary bit bitreset bitset bload bsave byref byte byval call callocate case cbyte cdbl cdecl chain chdir chr cint circle clear clng clngint close cls color command common cons const continue cos cshort csign csng csrlin cubyte cuint culngint cunsg curdir cushort custom cvd cvi cvl cvlongint cvs cvshort data date deallocate declare defbyte defdbl defined defint deflng deflngint defshort defsng defstr defubyte defuint defulngint defushort dim dir do double draw dylibload dylibsymbol else elseif end enum environ environ$ eof eqv erase err error exec exepath exit exp export extern field fix flip for fre freefile function get getjoystick getkey getmouse gosub goto hex hibyte hiword if iif imagecreate imagedestroy imp inkey inp input instr int integer is kill lbound lcase left len let lib line lobyte loc local locate lock lof log long longint loop loword lset ltrim mid mkd mkdir mki mkl mklongint mks mkshort mod multikey mutexcreate mutexdestroy mutexlock mutexunlock name next not oct on once open option or out output overload paint palette pascal pcopy peek peeki peeks pipe pmap point pointer poke pokei pokes pos preserve preset print private procptr pset ptr public put random randomize read reallocate redim rem reset restore resume resume next return rgb rgba right rmdir rnd rset rtrim run sadd screen screencopy screeninfo screenlock screenptr screenres screenset screensync screenunlock seek statement seek function selectcase setdate setenviron setmouse settime sgn shared shell shl short shr sin single sizeof sleep space spc sqr static stdcall step stop str string string strptr sub swap system tab tan then threadcreate threadwait time time timer to trans trim type ubound ubyte ucase uinteger ulongint union unlock unsigned until ushort using va_arg va_first va_next val val64 valint varptr view viewprint wait wend while width window windowtitle with write xor zstring",
+            "#define #dynamic #else #endif #error #if #ifdef #ifndef #inclib #include #print #static #undef"
+        );
+    }
+    public static void set_json_style(Scintilla editor) {
+        editor.Styles[Style.Json.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Json.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Json.Number].BackColor = number_back_color;
+        editor.Styles[Style.Json.String].ForeColor = string_fore_color;
+        editor.Styles[Style.Json.String].BackColor = string_back_color;
+        editor.Styles[Style.Json.StringEol].BackColor = Color.Pink;
+        editor.Styles[Style.Json.PropertyName].ForeColor = default_word_color;
+        editor.Styles[Style.Json.EscapeSequence].ForeColor = default_word_color;
+        editor.Styles[Style.Json.LineComment].ForeColor = comment_fore_color;
+        editor.Styles[Style.Json.LineComment].BackColor = comment_back_color;
+        editor.Styles[Style.Json.BlockComment].ForeColor = comment_fore_color;
+        editor.Styles[Style.Json.BlockComment].BackColor = comment_back_color;
+        editor.Styles[Style.Json.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Json.Uri].ForeColor = string_fore_color;
+        editor.Styles[Style.Json.Uri].BackColor = string_back_color;
+        editor.Styles[Style.Json.CompactIRI].ForeColor = string_fore_color;
+        editor.Styles[Style.Json.CompactIRI].BackColor = string_back_color;
+        editor.Styles[Style.Json.Keyword].ForeColor = keyword1_color;
+        editor.Styles[Style.Json.LdKeyword].ForeColor = keyword2_color;
+        editor.Styles[Style.Json.Error].ForeColor = preprocessor_color;
+        update_keywords(editor,"json",
+            "false null true",
+            "@id @context @type @value @language @container @list @set @reverse @index @base @vocab @graph"
+        );
+    }
     public static void set_lisp_style(Scintilla editor) {}
     public static void set_matlab_style(Scintilla editor) {}
     public static void set_pascal_style(Scintilla editor) {}
