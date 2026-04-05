@@ -6,8 +6,8 @@
 // {Notepad--H;1:silver;2:lightblue}
 
 // -- search 
-// {Notepad--T;red:;blue:}
-// {Notepad--S:}
+// {Notepad--T;red:DialogDir;blue:}
+// {Notepad--S:DialogDir}
 
 // -- BEGIN 
 // Notepad-- : Simpler version of Notepad++ 
@@ -43,6 +43,7 @@ public class Form_DATA {
 	public List<string> Directories { get; set; }
 	public List<string> LeftFiles { get; set; }
 	public List<string> RightFiles { get; set; }
+    public List<string> CodeFileList { get; set; }
 	public float FontSize { get; set; } 
 	public string DialogDir { get;set; }
     public Form_DATA() { // defaults 
@@ -51,11 +52,41 @@ public class Form_DATA {
         X = 20;
         Y = 20;
         split_percentage = 55;
+        FontSize = 8; 
+        DialogDir = get_exec_dir();
+        // -- 
 		Directories = new List<string>();
 		LeftFiles = new List<string>();
 		RightFiles = new List<string>();
-		DialogDir = get_exec_dir();
-		FontSize = 8; 
+        CodeFileList = new List<string>{
+            ".c",".cs",".css",".cpp",".user",".csproj",".h",".hpp",
+            ".js",".ts",
+            ".py",".pyw",
+            ".lua",
+            ".sql",
+            ".xml",".html",".htm",
+            ".json",
+            ".java",
+            ".txt",
+            ".ahk",
+            ".bat",
+            ".sh",
+            ".ps1",
+            ".ltx",
+            ".script",
+            ".md",
+            ".tex",
+            ".ada",".adb",
+            ".bb",
+            ".f90",".f95",".f03",
+            ".bas",".bi",
+            ".lsp",".lisp",
+            ".m",
+            ".pl",".pm",".plx",".t",
+            ".rs",
+            ".pas",".pp",".p",".inc",".lpr",
+            ".php",".php3",".php4",".php5",".phps",".phpt",".phtml"
+        };
     }
 }
 
@@ -92,9 +123,10 @@ public partial class Notepad__Form : Form {
 		this.left_tabs = new_dark_tabs();
 		this.right_tabs = new_dark_tabs();
         this.current_split_percentage = this.data.split_percentage;
-		this.explorer = new_file_explorer_dark_tree(this.data.Directories);
-//        add_context_menu_item(this.explorer, "Open File/Directory");
+		this.explorer = new_file_explorer_dark_tree(this.data.Directories, this.data.CodeFileList);
         add_context_menu_item(this.explorer, "Close File(s)");
+        add_context_menu_item(this.explorer, "Add File Extension");
+        add_context_menu_item(this.explorer, "Remove File Extension");
 		this.help_scintilla = new_scintilla();
 		this.help_scintilla.Text = """
 // [ Notepad-- ] : A lesser version of Notepad++, don't like it? Use Notepad++ instead.
@@ -314,6 +346,18 @@ public partial class Notepad__Form : Form {
             string path = get_selected_filename_from_explorer(this.explorer);
             close_tabs_by_path(path);
         });
+        set_action(this.explorer.ContextMenuStrip, "Add File Extension", (s,e)=>{
+            string ext = get_file_extension_from_explorer_node();
+            if( string.IsNullOrWhiteSpace(ext) ) return;
+            if( this.data.CodeFileList.Contains(ext) ) return;
+            this.data.CodeFileList.Add(ext);
+        });
+        set_action(this.explorer.ContextMenuStrip, "Remove File Extension", (s,e)=>{
+            string ext = get_file_extension_from_explorer_node();
+            if( string.IsNullOrWhiteSpace(ext) ) return;
+            if( !this.data.CodeFileList.Contains(ext) ) return;
+            this.data.CodeFileList.Remove(ext);
+        });
         // ... some logic features are on add_new_scintilla_tab, scintilla_tab_logic function !
         SBR_load_modules();
 	}
@@ -375,6 +419,7 @@ public partial class Notepad__Form : Form {
 				path = save_dialog("txt", this.data.DialogDir);
                 editor.ReadOnly = b_read_only_back;
 				if (path == null) return ;
+                this.data.DialogDir = get_dir(path); // TESTING
 				current_page.ToolTipText = path;
                 editor.Tag = path;
 			}
@@ -624,6 +669,40 @@ public partial class Notepad__Form : Form {
 		hidden_titlebar = !hidden_titlebar;
 	}
     // -- subroutines 
+    // Logic [ refresh ]
+    // L := apply_lexer_override_directive
+    // H := apply_custom_highlight_override_for_file_directives
+    // T := apply_textmarker_highlight_for_file_directives
+    // -> refresh() || L() | set_lexer() | set_folding() | H() | set_language_style() | T() 
+    // -> refresh() || L() | set_lexer() | set_folding() || { set_indent_folding, GetIndentLevel }
+    public void refresh(Scintilla editor) {
+        string path = (string) editor.Tag;
+        if (string.IsNullOrWhiteSpace(path)) return;
+        if ( !is_code_file(path) ) return; 
+        path = apply_lexer_override_directive(editor, path);
+        set_lexer(editor, path);
+        set_folding(editor, path);
+        apply_custom_highlight_override_for_file_directives(editor);
+        set_language_style(editor, path);
+        apply_textmarker_highlight_for_file_directives(editor);
+    }
+    public bool is_code_file(string filename) {
+        if ( string.IsNullOrWhiteSpace(filename) ) return false;
+		string ext = filename;
+		if (filename.Contains(".")) ext = Path.GetExtension(filename);
+		ext = ext.ToLower();
+		return this.data.CodeFileList.Contains(ext);
+    }
+    private string? get_file_extension_from_explorer_node() {
+        string path = get_selected_filename_from_explorer(this.explorer);
+        if ( string.IsNullOrWhiteSpace(path) ) return null;
+        if ( !is_file(path) ) return null;
+		string ext = path;
+		if (path.Contains(".")) ext = Path.GetExtension(path);
+        if ( string.IsNullOrWhiteSpace(ext) ) return null;
+		ext = ext.ToLower();
+        return ext;
+    }
     private void close_tabs_by_path(string path) {
         if ( string.IsNullOrWhiteSpace(path) ) return;
         TabPage? page = null;

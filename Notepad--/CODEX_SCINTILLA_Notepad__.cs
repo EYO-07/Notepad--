@@ -6,7 +6,7 @@
 // {Notepad--H;1:silver;2:lightblue}
 
 // -- search tokens 
-// {Notepad--T;red:}
+// {Notepad--T;blue:set_lexer,set_language_style}
 // {Notepad--S:}
 
 // -- BEGIN 
@@ -153,12 +153,6 @@ public static class Incantation_SCINTILLA {
     }
     // Logic [ new_scintilla ] 
     // -> new_scintilla() || ... | init_dark_theme_scintilla() | set_keyshortcuts() || clear_cmd_keys() | key_shortcut()
-    // Logic [ refresh ]
-    // L := apply_lexer_override_directive
-    // H := apply_custom_highlight_override_for_file_directives
-    // T := apply_textmarker_highlight_for_file_directives
-    // -> refresh() || L() | set_lexer() | set_folding() | H() | set_language_style() | T() 
-    // -> refresh() || L() | set_lexer() | set_folding() || { set_indent_folding, GetIndentLevel }
     // methods -- factory
 	public static Scintilla new_scintilla() {
 		var editor = new Scintilla();
@@ -310,6 +304,31 @@ public static class Incantation_SCINTILLA {
             case ".bas":
             case ".bi":
                 editor.LexerName = "freebasic";
+                return true;
+            case ".lsp":
+                editor.LexerName = "lisp";
+                return true;
+            case ".m":
+                editor.LexerName = "matlab";
+                return true;
+            case ".rs":
+                editor.LexerName = "rust";
+                return true;
+            case ".pas":
+            case ".pp":
+            case ".p":
+            case ".inc":
+            case ".lpr":
+                editor.LexerName = "pascal";
+                return true;
+            case ".php":
+            case ".php3":
+            case ".php4":
+            case ".php5":
+            case ".phps":
+            case ".phpt":
+            case ".phtml":
+                editor.LexerName = "phpscript";
                 return true;
         }
         // -- the lexer_name directly on GetLexerNames iterator
@@ -504,19 +523,34 @@ public static class Incantation_SCINTILLA {
             case ".json":
                 set_json_style(scintilla);
                 break; 
+            case ".lisp":
+            case ".lsp":
+                set_lisp_style(scintilla);
+                break;
+            case ".m":
+                set_matlab_style(scintilla);
+                break;
+            case ".rs":
+                set_rust_style(scintilla);
+                break;
+            case ".pas":
+            case ".pp":
+            case ".p":
+            case ".inc":
+            case ".lpr":
+                set_pascal_style(scintilla);
+                break;
+            case ".php":
+            case ".php3":
+            case ".php4":
+            case ".php5":
+            case ".phps":
+            case ".phpt":
+            case ".phtml":
+                set_php_style(scintilla);
+                break;
 		}
 	}
-    public static void refresh(Scintilla editor) {
-        string path = (string) editor.Tag;
-        if (string.IsNullOrWhiteSpace(path)) return;
-        if ( !is_code_file(path) ) return; 
-        path = apply_lexer_override_directive(editor, path);
-        set_lexer(editor, path);
-        set_folding(editor, path);
-        apply_custom_highlight_override_for_file_directives(editor);
-        set_language_style(editor, path);
-        apply_textmarker_highlight_for_file_directives(editor);
-    }
     // Logic [ update_keywords_str_from_lst ] 
     // U := update_keywords_str_from_lst
     // N := need update
@@ -670,33 +704,33 @@ public static class Incantation_SCINTILLA {
             ""
         );
     }
-    public static void set_html_style(Scintilla editor) { // ISSUE - autofolding don't work
-        // Default
+    public static void set_html_style(Scintilla editor) { // ISSUE TODO INCOMPLETE - autofolding don't work
         editor.Styles[Style.Html.Default].ForeColor = default_word_color;
-        // Tags
         editor.Styles[Style.Html.Tag].ForeColor = keyword1_color;
-        // Unknown tags
-//        editor.Styles[Style.Html.UnknownTag].ForeColor = Color.Red;
-        // Attributes
+        editor.Styles[Style.Html.TagUnknown].ForeColor = default_word_color;
         editor.Styles[Style.Html.Attribute].ForeColor = keyword2_color;
-        // Unknown attributes
-//        editor.Styles[Style.Html.UnknownAttribute].ForeColor = Color.Red;
-        // Numbers
+        editor.Styles[Style.Html.AttributeUnknown].ForeColor = default_word_color;
         editor.Styles[Style.Html.Number].ForeColor = number_fore_color;
         editor.Styles[Style.Html.Number].BackColor = number_back_color;
-        // Strings
-//        editor.Styles[Style.Html.String].ForeColor = string_fore_color;
-//        editor.Styles[Style.Html.String].BackColor = string_back_color;
-        editor.Styles[Style.Html.Other].ForeColor = string_fore_color;
-        editor.Styles[Style.Html.Other].BackColor = string_back_color;
-        // Comments
+        editor.Styles[Style.Html.DoubleString].ForeColor = string_fore_color;
+        editor.Styles[Style.Html.DoubleString].BackColor = string_back_color;
+        editor.Styles[Style.Html.SingleString].ForeColor = string_fore_color;
+        editor.Styles[Style.Html.SingleString].BackColor = string_back_color;
+        editor.Styles[Style.Html.Other].ForeColor = operator_color;
+//        editor.Styles[Style.Html.Other].BackColor = string_back_color;
         editor.Styles[Style.Html.Comment].ForeColor = comment_fore_color;
         editor.Styles[Style.Html.Comment].BackColor = comment_back_color;
-        // Entities
         editor.Styles[Style.Html.Entity].ForeColor = Color.LightGreen;
-        // Operators
-//        editor.Styles[Style.Html.Operator].ForeColor = Color.Yellow;
-        // Keywords (HTML elements)
+        editor.Styles[Style.Html.TagEnd].ForeColor = default_word_color;
+        editor.Styles[Style.Html.XmlStart].ForeColor = default_word_color;
+        editor.Styles[Style.Html.XmlEnd].ForeColor = default_word_color;
+        editor.Styles[Style.Html.Script].ForeColor = default_word_color;
+        editor.Styles[Style.Html.Asp].ForeColor = default_word_color;
+        editor.Styles[Style.Html.AspAt].ForeColor = default_word_color;
+        editor.Styles[Style.Html.CData].ForeColor = default_word_color;
+        editor.Styles[Style.Html.Question].ForeColor = default_word_color;
+        editor.Styles[Style.Html.Value].ForeColor = default_word_color;
+        editor.Styles[Style.Html.XcComment].ForeColor = default_word_color;
         update_keywords(
             editor,
             "html",
@@ -987,10 +1021,7 @@ public static class Incantation_SCINTILLA {
             "-khtml-background-clip -khtml-background-origin -khtml-background-size -khtml-border-bottom-left-radius -khtml-border-bottom-right-radius -khtml-border-radius -khtml-border-top-left-radius -khtml-border-top-right-radius -khtml-opacity -moz-animation -moz-animation-delay -moz-animation-direction -moz-animation-duration -moz-animation-fill-mode -moz-animation-iteration-count -moz-animation-name -moz-animation-play-state -moz-animation-timing-function -moz-appearance -moz-background-clip -moz-background-inline-policy -moz-background-origin -moz-background-size -moz-binding -moz-border-bottom-colors -moz-border-end -moz-border-end-color -moz-border-end-style -moz-border-end-width -moz-border-image -moz-border-left-colors -moz-border-radius -moz-border-radius-bottomleft -moz-border-radius-bottomright -moz-border-radius-topleft -moz-border-radius-topright -moz-border-right-colors -moz-border-start -moz-border-start-color -moz-border-start-style -moz-border-start-width -moz-border-top-colors -moz-box-align -moz-box-direction -moz-box-flex -moz-box-flex-group -moz-box-flexgroup -moz-box-ordinal-group -moz-box-orient -moz-box-pack -moz-box-shadow -moz-box-sizing -moz-column-count -moz-column-gap -moz-column-rule -moz-column-rule-color -moz-column-rule-style -moz-column-rule-width -moz-column-width -moz-context-properties -moz-float-edge -moz-force-broken-image-icon -moz-image-region -moz-linear-gradient -moz-margin-end -moz-margin-start -moz-opacity -moz-outline -moz-outline-color -moz-outline-offset -moz-outline-radius -moz-outline-radius-bottomleft -moz-outline-radius-bottomright -moz-outline-radius-topleft -moz-outline-radius-topright -moz-outline-style -moz-outline-width -moz-padding-end -moz-padding-start -moz-radial-gradient -moz-stack-sizing -moz-text-decoration-color -moz-text-decoration-line -moz-text-decoration-style -moz-transform -moz-transform-origin -moz-transition -moz-transition-delay -moz-transition-duration -moz-transition-property -moz-transition-timing-function -moz-user-focus -moz-user-input -moz-user-modify -moz-user-select -moz-window-shadow -ms-filter -ms-transform -ms-transform-origin -o-transform -webkit-animation -webkit-animation-delay -webkit-animation-direction -webkit-animation-duration -webkit-animation-fill-mode -webkit-animation-iteration-count -webkit-animation-name -webkit-animation-play-state -webkit-animation-timing-function -webkit-appearance -webkit-backface-visibility -webkit-background-clip -webkit-background-composite -webkit-background-origin -webkit-background-size -webkit-border-bottom-left-radius -webkit-border-bottom-right-radius -webkit-border-horizontal-spacing -webkit-border-image -webkit-border-radius -webkit-border-top-left-radius -webkit-border-top-right-radius -webkit-border-vertical-spacing -webkit-box-align -webkit-box-direction -webkit-box-flex -webkit-box-flex-group -webkit-box-lines -webkit-box-ordinal-group -webkit-box-orient -webkit-box-pack -webkit-box-reflect -webkit-box-shadow -webkit-box-sizing -webkit-column-break-after -webkit-column-break-before -webkit-column-break-inside -webkit-column-count -webkit-column-gap -webkit-column-rule -webkit-column-rule-color -webkit-column-rule-style -webkit-column-rule-width -webkit-column-width -webkit-columns -webkit-dashboard-region -webkit-font-smoothing -webkit-gradient -webkit-line-break -webkit-linear-gradient -webkit-margin-bottom-collapse -webkit-margin-collapse -webkit-margin-start -webkit-margin-top-collapse -webkit-marquee -webkit-marquee-direction -webkit-marquee-increment -webkit-marquee-repetition -webkit-marquee-speed -webkit-marquee-style -webkit-mask -webkit-mask-attachment -webkit-mask-box-image -webkit-mask-clip -webkit-mask-composite -webkit-mask-image -webkit-mask-origin -webkit-mask-position -webkit-mask-position-x -webkit-mask-position-y -webkit-mask-repeat -webkit-mask-size -webkit-nbsp-mode -webkit-padding-start -webkit-perspective -webkit-perspective-origin -webkit-radial-gradient -webkit-rtl-ordering -webkit-tap-highlight-color -webkit-text-fill-color -webkit-text-security -webkit-text-size-adjust -webkit-text-stroke -webkit-text-stroke-color -webkit-text-stroke-width -webkit-touch-callout -webkit-transform -webkit-transform-origin -webkit-transform-origin-x -webkit-transform-origin-y -webkit-transform-origin-z -webkit-transform-style -webkit-transition -webkit-transition-delay -webkit-transition-duration -webkit-transition-property -webkit-transition-timing-function -webkit-user-drag -webkit-user-modify -webkit-user-select align-content align-items align-self alignment-adjust alignment-baseline all animation animation-delay animation-direction animation-duration animation-fill-mode animation-iteration-count animation-name animation-play-state animation-timing-function appearance azimuth backface-visibility background background-attachment background-blend-mode background-break background-clip background-color background-image background-origin background-position background-position-x background-position-y background-repeat background-size baseline-shift binding bleed block-size bookmark-label bookmark-level bookmark-state bookmark-target border border-block border-block-end border-block-start border-bottom border-bottom-color border-bottom-left-radius border-bottom-right-radius border-bottom-style border-bottom-width border-collapse border-color border-image border-image-outset border-image-repeat border-image-slice border-image-source border-image-width border-inline border-inline-end border-inline-end-width border-inline-start border-inline-start-color border-inline-start-style border-inline-start-width border-left border-left-color border-left-style border-left-width border-radius border-right border-right-color border-right-style border-right-width border-spacing border-style border-top border-top-color border-top-left-radius border-top-right-radius border-top-style border-top-width border-width bottom box-align box-decoration-break box-direction box-flex box-flex-group box-lines box-ordinal-group box-orient box-pack box-shadow box-sizing break-after break-before break-inside caption-side caret-color clear clip color color-profile color-scheme column-count column-fill column-gap column-rule column-rule-color column-rule-style column-rule-width column-span column-width columns content counter-increment counter-reset crop cue cue-after cue-before cursor direction display dominant-baseline drop-initial-after-adjust drop-initial-after-align drop-initial-before-adjust drop-initial-before-align drop-initial-size drop-initial-value elevation empty-cells field-sizing fill fill-opacity filter fit fit-position flex flex-basis flex-direction flex-flow flex-grow flex-shrink flex-wrap float float-offset font font-effect font-emphasize font-family font-size font-size-adjust font-stretch font-style font-variant font-variant-ligatures font-weight gap grid-area grid-auto-flow grid-auto-rows grid-column grid-column-end grid-column-gap grid-column-start grid-columns grid-gap grid-row grid-row-gap grid-rows grid-template-areas grid-template-columns grid-template-rows hanging-punctuation height hyphenate-after hyphenate-before hyphenate-character hyphenate-lines hyphenate-resource hyphens icon image-orientation image-rendering image-resolution inline-box-align inline-size inset inset-inline-end inset-inline-start justify-content justify-items justify-self left letter-spacing line-height line-stacking line-stacking-ruby line-stacking-shift line-stacking-strategy list-style list-style-image list-style-position list-style-type margin margin-block margin-block-end margin-block-start margin-bottom margin-inline margin-inline-end margin-inline-start margin-left margin-right margin-top mark mark-after mark-before marker-offset marks marquee-direction marquee-play-count marquee-speed marquee-style mask mask-clip mask-image mask-origin mask-position mask-position-x mask-repeat mask-size max-height max-width min-block-size min-height min-inline-size min-width mix-blend-mode move-to nav-down nav-index nav-left nav-right nav-up object-fit opacity order orphans outline outline-color outline-offset outline-style outline-width overflow overflow-anchor overflow-style overflow-wrap overflow-x overflow-y padding padding-block padding-block-end padding-block-start padding-bottom padding-inline padding-inline-end padding-inline-start padding-left padding-right padding-top page page-break-after page-break-before page-break-inside page-policy paint-order pause pause-after pause-before perspective perspective-origin phonemes pitch pitch-range play-during pointer-events position presentation-level punctuation-trim quotes rendering-intent resize rest rest-after rest-before richness right rotation rotation-point ruby-align ruby-overhang ruby-position ruby-span scrollbar-color size speak speak-header speak-numeral speak-punctuation speech-rate stress string-set stroke stroke-dasharray stroke-linejoin stroke-opacity stroke-width tab-size table-layout target target-name target-new target-position text-align text-align-last text-anchor text-decoration text-decoration-color text-decoration-line text-decoration-style text-emphasis text-height text-indent text-justify text-outline text-overflow text-rendering text-shadow text-transform text-wrap top transform transform-origin transform-style transition transition-delay transition-duration transition-property transition-timing-function unicode-bidi user-select vector-effect vertical-align visibility voice-balance voice-duration voice-family voice-pitch voice-pitch-range voice-rate voice-stress voice-volume volume white-space white-space-collapse widows width will-change word-break word-spacing word-wrap z-index",
             "active any-link autofill checked default defined disabled empty enabled first first-child first-of-type focus focus-visible focus-within fullscreen has host hover in-range indeterminate invalid is lang last-child last-of-type left link modal not nth-child nth-last-child nth-last-of-type nth-of-type only-child only-of-type optional out-of-range placeholder-shown read-only read-write required right root scope target valid visited where"
         );
-    
     }
-    
-    // >>> 
     public static void set_fortran_style(Scintilla editor) { 
         editor.Styles[Style.Fortran.Default].ForeColor = default_word_color;
 		editor.Styles[Style.Fortran.Comment].ForeColor = comment_fore_color;
@@ -1087,21 +1118,198 @@ public static class Incantation_SCINTILLA {
             "@id @context @type @value @language @container @list @set @reverse @index @base @vocab @graph"
         );
     }
-    public static void set_lisp_style(Scintilla editor) {}
-    public static void set_matlab_style(Scintilla editor) {}
-    public static void set_pascal_style(Scintilla editor) {}
-    public static void set_perl_style(Scintilla editor) {}
-    public static void set_php_style(Scintilla editor) {}
+    public static void set_lisp_style(Scintilla editor) {
+        editor.Styles[Style.Lisp.Default].ForeColor = default_word_color;
+		editor.Styles[Style.Lisp.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.Lisp.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Lisp.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.Lisp.Number].BackColor = number_back_color;
+        editor.Styles[Style.Lisp.Keyword].ForeColor = keyword1_color;
+        editor.Styles[Style.Lisp.KeywordKw].ForeColor = keyword2_color;
+        editor.Styles[Style.Lisp.Symbol].ForeColor = operator_color;
+        editor.Styles[Style.Lisp.String].ForeColor = string_fore_color;
+		editor.Styles[Style.Lisp.String].BackColor = string_back_color;
+        editor.Styles[Style.Lisp.StringEol].BackColor = Color.Pink;
+        editor.Styles[Style.Lisp.Identifier].ForeColor = default_word_color;
+        editor.Styles[Style.Lisp.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Lisp.Special].ForeColor = keyword2_color;
+        editor.Styles[Style.Lisp.MultiComment].ForeColor = comment_fore_color;
+		editor.Styles[Style.Lisp.MultiComment].BackColor = comment_back_color;
+        update_keywords(editor,"lisp",
+            "not defun + - * / = &lt; &gt; &lt;= &gt;= princ eval apply funcall quote identity function complement backquote lambda set setq setf defmacro gensym make symbol intern name value plist get getf putprop remprop hash array aref car cdr caar cadr cdar cddr caaar caadr cadar caddr cdaar cdadr cddar cdddr caaaar caaadr caadar caaddr cadaar cadadr caddar cadddr cdaaar cdaadr cdadar cdaddr cddaar cddadr cdddar cddddr cons list append reverse last nth nthcdr member assoc subst sublis nsubst nsublis remove length mapc mapcar mapl maplist mapcan mapcon rplaca rplacd nconc delete atom symbolp numberp boundp null listp consp minusp zerop plusp evenp oddp eq eql equal cond case and or let l if prog prog1 prog2 progn go return do dolist dotimes catch throw error cerror break continue errset baktrace evalhook truncate float rem min max abs sin cos tan expt exp sqrt random logand logior logxor lognot bignums logeqv lognand lognor logorc2 logtest logbitp logcount integer nil",
+            ""
+        );
+    }
+    public static void set_matlab_style(Scintilla editor) {
+        editor.Styles[Style.Matlab.Default].ForeColor = default_word_color;
+		editor.Styles[Style.Matlab.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.Matlab.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Matlab.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.Matlab.Number].BackColor = number_back_color;
+        editor.Styles[Style.Matlab.String].ForeColor = string_fore_color;
+		editor.Styles[Style.Matlab.String].BackColor = string_back_color;
+        editor.Styles[Style.Matlab.Command].ForeColor = operator_color;
+        editor.Styles[Style.Matlab.Keyword].ForeColor = keyword1_color;
+        editor.Styles[Style.Matlab.DoubleQuoteString].ForeColor = string_fore_color;
+		editor.Styles[Style.Matlab.DoubleQuoteString].BackColor = string_back_color;        
+        editor.Styles[Style.Matlab.Identifier].ForeColor = default_word_color;
+        editor.Styles[Style.Matlab.Operator].ForeColor = operator_color;
+        update_keywords(editor,"matlab",
+            "break case catch classdef continue else elseif end for function global if otherwise parfor persistent return switch try while",
+            ""
+        );
+    }
+    public static void set_rust_style(Scintilla editor) { // ISSUE - c family mess all the styling
+        set_c_family_style(editor);
+        update_keywords(editor,"rust",
+            "abstract as async await become box break const continue crate do dyn else enum extern false final fn for gen if impl in let loop macro macro_rules match mod move mut override priv pub raw ref return safe self static struct super trait true try type typeof union unsafe unsized use virtual where while yield",
+            "bool char f32 f64 i128 i16 i32 i64 i8 isize str u128 u16 u32 u64 u8 usize"
+        );
+    }
+    public static void set_perl_style(Scintilla editor) {
+        editor.Styles[Style.Perl.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.Error].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.CommentLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.Perl.CommentLine].BackColor = comment_back_color;
+        editor.Styles[Style.Perl.Pod].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Perl.Number].BackColor = number_back_color;
+        editor.Styles[Style.Perl.Word].ForeColor = keyword1_color;
+        editor.Styles[Style.Perl.String].ForeColor = string_fore_color;
+        editor.Styles[Style.Perl.String].BackColor = string_back_color;
+        editor.Styles[Style.Perl.Character].ForeColor = string_fore_color;
+        editor.Styles[Style.Perl.Character].BackColor = string_back_color;
+        editor.Styles[Style.Perl.Punctuation].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.Perl.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Perl.Identifier].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.Scalar].ForeColor = number_fore_color;
+        editor.Styles[Style.Perl.Scalar].BackColor = number_back_color;
+        editor.Styles[Style.Perl.Array].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.Hash].ForeColor = number_fore_color;
+        editor.Styles[Style.Perl.Hash].BackColor = number_back_color;
+        editor.Styles[Style.Perl.SymbolTable].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.VariableIndexer].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.Regex].ForeColor = string_fore_color;
+        editor.Styles[Style.Perl.Regex].BackColor = string_back_color;
+        editor.Styles[Style.Perl.RegSubst].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.BackTicks].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.DataSection].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.HereDelim].ForeColor = default_word_color;        
+        editor.Styles[Style.Perl.HereQ].ForeColor = default_word_color;        
+        editor.Styles[Style.Perl.HereQq].ForeColor = default_word_color;        
+        editor.Styles[Style.Perl.HereQx].ForeColor = default_word_color;                
+        editor.Styles[Style.Perl.StringQ].ForeColor = string_fore_color;        
+        editor.Styles[Style.Perl.StringQq].ForeColor = string_fore_color;        
+        editor.Styles[Style.Perl.StringQx].ForeColor = string_fore_color;        
+        editor.Styles[Style.Perl.StringQr].ForeColor = string_fore_color;                
+        editor.Styles[Style.Perl.StringQw].ForeColor = string_fore_color;
+        editor.Styles[Style.Perl.PodVerb].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.SubPrototype].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.FormatIdent].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.Format].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.StringVar].ForeColor = string_fore_color;
+        editor.Styles[Style.Perl.XLat].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.RegexVar].ForeColor = string_fore_color;
+        editor.Styles[Style.Perl.RegSubstVar].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.BackticksVar].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.HereQqVar].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.HereQxVar].ForeColor = default_word_color;
+        editor.Styles[Style.Perl.StringQqVar].ForeColor = string_fore_color;
+        editor.Styles[Style.Perl.StringQxVar].ForeColor = string_fore_color;
+        editor.Styles[Style.Perl.StringQrVar].ForeColor = string_fore_color;
+        update_keywords(editor,"perl",
+            "ADJUST AUTOLOAD BEGIN CHECK DESTROY END INIT UNITCHECK __CLASS__ __DATA__ __END__ __FILE__ __LINE__ __PACKAGE__ __SUB__ abs accept alarm all and any atan2 attributes autodie autouse base bigfloat bigint bignum bigrat bind binmode bless blib break builtin bytes caller catch charnames chdir chmod chomp chop chown chr chroot class close closedir cmp connect constant continue cos crypt dbmclose dbmopen default defer defined delete deprecate diagnostics die do dump each else elseif elsif encoding endgrent endhostent endnetent endprotoent endpwent endservent eof eq eval evalbytes exec exists exit exp experimental fc fcntl feature field fields fileno filetest finally flock for foreach fork format formline ge getc getgrent getgrgid getgrnam gethostbyaddr gethostbyname gethostent getlogin getnetbyaddr getnetbyname getnetent getpeername getpgrp getppid getpriority getprotobyname getprotobynumber getprotoent getpwent getpwnam getpwuid getservbyname getservbyport getservent getsockname getsockopt given glob gmtime goto grep gt hex if import index int integer ioctl isa join keys kill last lc lcfirst le length less lib link listen local locale localtime lock log lstat lt m map meta_notation method mkdir mro msgctl msgget msgrcv msgsnd my ne next no not oct ok open opendir ops or ord our overload overloading pack package parent perlfaq pipe pop pos print printf prototype push q qq qr quotemeta qw qx rand re read readdir readline readlink readpipe recv redo ref rename require reset return reverse rewinddir rindex rmdir s say scalar seek seekdir select semctl semget semop send setgrent sethostent setnetent setpgrp setpriority setprotoent setpwent setservent setsockopt shift shmctl shmget shmread shmwrite shutdown sigtrap sin size sleep socket socketpair sort splice split sprintf sqrt srand stable stat state strict study sub subs substr symlink syscall sysopen sysread sysseek system syswrite tell telldir threads tie tied time times tr truncate try uc ucfirst umask undef unless unlink unpack unshift untie until use utf8 utime values vars vec version vmsish wait waitpid wantarray warn warnings when while write x xor y",
+            ""
+        );
+    }
+    public static void set_pascal_style(Scintilla editor) {
+        editor.Styles[Style.Pascal.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Pascal.Identifier].ForeColor = default_word_color;
+        editor.Styles[Style.Pascal.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.Pascal.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Pascal.Comment2].ForeColor = comment_fore_color;
+        editor.Styles[Style.Pascal.Comment2].BackColor = comment_back_color;
+        editor.Styles[Style.Pascal.CommentLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.Pascal.CommentLine].BackColor = comment_back_color;    
+        editor.Styles[Style.Pascal.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.Pascal.Preprocessor2].ForeColor = preprocessor_color;
+        editor.Styles[Style.Pascal.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Pascal.Number].BackColor = number_back_color;
+        editor.Styles[Style.Pascal.HexNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.Pascal.HexNumber].BackColor = number_back_color;
+        editor.Styles[Style.Pascal.Word].ForeColor = keyword1_color;
+        editor.Styles[Style.Pascal.String].ForeColor = string_fore_color;
+        editor.Styles[Style.Pascal.String].BackColor = string_back_color;
+        editor.Styles[Style.Pascal.StringEol].BackColor = Color.Pink;
+        editor.Styles[Style.Pascal.Character].ForeColor = string_fore_color;
+        editor.Styles[Style.Pascal.Character].BackColor = string_back_color;
+        editor.Styles[Style.Pascal.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Pascal.Asm].ForeColor = default_word_color;
+        update_keywords(editor,"pascal",
+            "and array asm begin case cdecl class const constructor default destructor div do downto else end end. except exit exports external far file finalization finally for function goto if implementation in index inherited initialization inline interface label library message mod near nil not object of on or out overload override packed pascal private procedure program property protected public published raise read record register repeat resourcestring safecall set shl shr stdcall stored string then threadvar to try type unit until uses var virtual while with write xor",
+            ""
+        );
+    }
+    // >>>
+    public static void set_php_style(Scintilla editor) {
+        editor.Styles[Style.PhpScript.ComplexVariable].ForeColor = number_fore_color;
+        editor.Styles[Style.PhpScript.ComplexVariable].BackColor = number_back_color;
+        editor.Styles[Style.PhpScript.Default].ForeColor = default_word_color;
+        editor.Styles[Style.PhpScript.HString].ForeColor = string_fore_color;
+        editor.Styles[Style.PhpScript.HString].BackColor = string_back_color;
+        editor.Styles[Style.PhpScript.SimpleString].ForeColor = string_fore_color;
+        editor.Styles[Style.PhpScript.SimpleString].BackColor = string_back_color;
+        editor.Styles[Style.PhpScript.Word].ForeColor = keyword1_color;
+        editor.Styles[Style.PhpScript.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.PhpScript.Number].BackColor = number_back_color;
+        editor.Styles[Style.PhpScript.Variable].ForeColor = number_fore_color;
+        editor.Styles[Style.PhpScript.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.PhpScript.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.PhpScript.CommentLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.PhpScript.CommentLine].BackColor = comment_back_color;
+        editor.Styles[Style.PhpScript.HStringVariable].ForeColor = string_fore_color;
+        editor.Styles[Style.PhpScript.HStringVariable].BackColor = string_back_color;
+        editor.Styles[Style.PhpScript.Operator].ForeColor = operator_color;
+        update_keywords(editor,"php",
+            "__halt_compiler abstract and array as bool break callable case catch class clone const continue declare default die do echo else elseif empty enddeclare endfor endforeach endif endswitch endwhile enum eval exit extends false final finally float fn for foreach from function global goto if implements include include_once instanceof insteadof int interface isset iterable list match mixed namespace never new null numeric object or print private protected public readonly require require_once resource return static string switch throw trait true try unset use var void while xor yield",
+            ""
+        );
+    }
     public static void set_properties_style(Scintilla editor) {}
-    public static void set_ruby_style(Scintilla editor) {}
+    public static void set_ruby_style(Scintilla editor) { // INCOMPLETE
+        editor.Styles[Style.Ruby.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.Error].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.CommentLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.Ruby.CommentLine].BackColor = comment_back_color;
+        editor.Styles[Style.Ruby.Pod].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Ruby.Number].BackColor = number_back_color;
+        editor.Styles[Style.Ruby.Word].ForeColor = keyword1_color;
+        editor.Styles[Style.Ruby.String].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.String].BackColor = string_back_color;
+        editor.Styles[Style.Ruby.Character].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.Character].BackColor = string_back_color;
+
+        editor.Styles[Style.Ruby.Character].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.Character].ForeColor = string_fore_color;
+
+//        editor.Styles[Style.Ruby.Punctuation].ForeColor = default_word_color;
+//        editor.Styles[Style.Ruby.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.Ruby.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Ruby.Identifier].ForeColor = default_word_color;
+
+        editor.Styles[Style.Ruby.Regex].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.Regex].BackColor = string_back_color;
+
+    }
     public static void set_smalltalk_style(Scintilla editor) {}
     public static void set_sql_style(Scintilla editor) {}
-    public static void set_markdown_style(Scintilla editor) {}
     public static void set_r_style(Scintilla editor) {}
     public static void set_vb_style(Scintilla editor) {}
     public static void set_vbscript_style(Scintilla editor) {}
     public static void set_verilog_style(Scintilla editor) {}
-    public static void set_xml_style(Scintilla editor) {}
+    public static void set_markdown_style(Scintilla editor) {}
     // <<< 
 
     public static void post_styling_comment_line(Scintilla editor, string marker) { // TESTING

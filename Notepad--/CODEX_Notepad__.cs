@@ -191,52 +191,52 @@ public static class Transmutation {
 //    public static IEnumerable<string> comma_separated_iterator(ref string content) {}
     
     // variables
-	private static List<string> CODE_EXTS = new List<string>{
-		".cs",
-        ".css",
-        ".csproj",
-        ".user",
-		".cpp",
-		".c",
-		".h",
-		".hpp",
-		".js",
-		".ts",
-		".py",
-        ".pyw",
-		".lua",
-		".sql",
-		".xml",
-		".html",
-		".htm",
-		".json",
-		".java",
-        ".txt",
-        ".ahk",
-        ".bat",
-        ".sh",
-        ".ps1",
-        ".ltx",
-        ".script",
-        ".md",
-        ".tex",
-        ".ada",
-        ".adb",
-        ".bb",
-        ".f90",
-        ".f95",
-        ".f03",
-        ".bas",
-        ".bi"
-	};
+//	private static List<string> CODE_EXTS = new List<string>{
+//		".cs",
+//        ".css",
+//        ".csproj",
+//        ".user",
+//		".cpp",
+//		".c",
+//		".h",
+//		".hpp",
+//		".js",
+//		".ts",
+//		".py",
+//        ".pyw",
+//		".lua",
+//		".sql",
+//		".xml",
+//		".html",
+//		".htm",
+//		".json",
+//		".java",
+//        ".txt",
+//        ".ahk",
+//        ".bat",
+//        ".sh",
+//        ".ps1",
+//        ".ltx",
+//        ".script",
+//        ".md",
+//        ".tex",
+//        ".ada",
+//        ".adb",
+//        ".bb",
+//        ".f90",
+//        ".f95",
+//        ".f03",
+//        ".bas",
+//        ".bi"
+//	};
 	// variables | methods 
-    public static bool is_code_file(string filename_or_ext) {
-		if ( string.IsNullOrWhiteSpace(filename_or_ext) ) return false;
-		string ext = filename_or_ext;
-		if (filename_or_ext.Contains(".")) ext = Path.GetExtension(filename_or_ext);
-		ext = ext.ToLower();
-		return CODE_EXTS.Contains(ext);
-	}
+//    public static bool is_code_file(string filename_or_ext) {
+//		if ( string.IsNullOrWhiteSpace(filename_or_ext) ) return false;
+//		string ext = filename_or_ext;
+//		if (filename_or_ext.Contains(".")) ext = Path.GetExtension(filename_or_ext);
+//		ext = ext.ToLower();
+//		return CODE_EXTS.Contains(ext);
+//	}
 }
 
 // ===================================== incantation 
@@ -1513,6 +1513,14 @@ public static class Incantation_TREEVIEW {
         };
         return explorer;
 	}
+    public static DarkTreeView new_file_explorer_dark_tree(
+        List<string> directories,
+        List<string> extension_list
+    ) {
+        DarkTreeView result = new_file_explorer_dark_tree(directories);
+        result.code_file_extension_list = extension_list;
+        return result;
+    }
 }
 
 public static class Incantation_DIALOG {
@@ -1985,7 +1993,10 @@ public class DarkTabControl : TabControl {
 }
 
 // modified for notepad-- 
-public class DarkTreeView : MultiSelectTreeView {
+public class DarkTreeView : MultiSelectTreeView { // TODO -- You should create a new class for Notepad-- instead of changing this one
+    // == attributes
+    public List<string> code_file_extension_list = new List<string>();
+    // == methods 
 	public DarkTreeView() {
 		// Use owner-drawn mode for full custom rendering
 		this.DrawMode = TreeViewDrawMode.OwnerDrawText;
@@ -2084,6 +2095,14 @@ public class DarkTreeView : MultiSelectTreeView {
 			pevent.Graphics.FillRectangle(bg, this.ClientRectangle);
 		}
 	}
+
+    public bool is_code_file(string filename) {
+        if ( string.IsNullOrWhiteSpace(filename) ) return false;
+		string ext = filename;
+		if (filename.Contains(".")) ext = Path.GetExtension(filename);
+		ext = ext.ToLower();
+		return this.code_file_extension_list.Contains(ext);
+    }
 }
 
 public class MultiSelectTreeView : TreeView {
