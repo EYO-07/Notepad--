@@ -269,6 +269,11 @@ public static class Incantation_SCINTILLA {
             case ".java":
             case ".ts":
             case ".js":
+            case ".hh":
+            case ".cc":
+            case ".hxx":
+            case ".cxx":
+            case ".ino":
                 editor.LexerName = "cpp";
                 return true;
             case ".bat":
@@ -288,6 +293,7 @@ public static class Incantation_SCINTILLA {
                 editor.LexerName = "python";
                 return true;
             case ".rb":
+            case ".rbw":
                 editor.LexerName = "ruby";
                 return true;
             case ".adb":
@@ -329,6 +335,16 @@ public static class Incantation_SCINTILLA {
             case ".phpt":
             case ".phtml":
                 editor.LexerName = "phpscript";
+                return true;
+            case ".vba":
+            case ".vbs":
+                editor.LexerName = "vb";
+                return true;
+            case ".st":
+                editor.LexerName = "smalltalk";
+                return true;
+            case ".pb":
+                editor.LexerName = "purebasic";
                 return true;
         }
         // -- the lexer_name directly on GetLexerNames iterator
@@ -462,12 +478,17 @@ public static class Incantation_SCINTILLA {
             case ".ahk":
                 set_ahk_style(scintilla);
                 break;
+            case ".h":
             case ".c":
                 set_c_style(scintilla);
                 break;
-            case ".h":
+            case ".hh":
+            case ".cc":
             case ".hpp":
 			case ".cpp":
+            case ".hxx":
+            case ".cxx":
+            case ".ino":
 				set_cpp_style(scintilla);
 				break;
 			case ".cs":
@@ -548,6 +569,24 @@ public static class Incantation_SCINTILLA {
             case ".phpt":
             case ".phtml":
                 set_php_style(scintilla);
+                break;
+            case ".rb":
+            case ".rbw":
+                set_ruby_style(scintilla);
+                break;
+            case ".md":
+                set_markdown_style(scintilla);
+                break;
+            case ".vb":
+            case ".vba":
+            case ".vbs":
+                set_vb_style(scintilla);
+                break;
+            case ".st":
+                set_smalltalk_style(scintilla); 
+                break;
+            case ".pb":
+                set_purebasic_style(scintilla);
                 break;
 		}
 	}
@@ -1063,16 +1102,10 @@ public static class Incantation_SCINTILLA {
 		editor.Styles[Style.FreeBasic.String].BackColor = string_back_color;
         editor.Styles[Style.FreeBasic.Preprocessor].ForeColor = preprocessor_color;
         editor.Styles[Style.FreeBasic.Operator].ForeColor = operator_color;
-//        editor.Styles[Style.BlitzBasic.Identifier].BackColor = ;
-//        editor.Styles[Style.BlitzBasic.Date].ForeColor = ;
         editor.Styles[Style.FreeBasic.StringEol].BackColor = Color.Pink;
         editor.Styles[Style.FreeBasic.Keyword2].ForeColor = keyword2_color;
         editor.Styles[Style.FreeBasic.Keyword3].ForeColor = keyword2_color;
         editor.Styles[Style.FreeBasic.Keyword4].ForeColor = keyword2_color;
-//        editor.Styles[Style.BlitzBasic.Constant].ForeColor = keyword2_color;
-//        editor.Styles[Style.BlitzBasic.Asm].ForeColor = keyword2_color;
-//        editor.Styles[Style.BlitzBasic.Label].ForeColor = keyword2_color;
-//        editor.Styles[Style.BlitzBasic.Error].ForeColor = keyword2_color;
         editor.Styles[Style.FreeBasic.HexNumber].ForeColor = number_fore_color;
         editor.Styles[Style.FreeBasic.HexNumber].BackColor = number_back_color;
         editor.Styles[Style.FreeBasic.BinNumber].ForeColor = number_fore_color;
@@ -1084,9 +1117,6 @@ public static class Incantation_SCINTILLA {
         editor.Styles[Style.FreeBasic.DocBlock].ForeColor = comment_fore_color;
         editor.Styles[Style.FreeBasic.DocBlock].BackColor = comment_back_color;
         editor.Styles[Style.FreeBasic.DocKeyword].ForeColor = Color.White;
-//        editor.Styles[Style.BlitzBasic.CommentLine].ForeColor = comment_fore_color;
-//		editor.Styles[Style.BlitzBasic.CommentLine].BackColor = comment_back_color;
-//        editor.Styles[Style.BlitzBasic.Word].ForeColor = keyword1_color;
         update_keywords(editor, "freebasic", 
             "append as asc asin asm atan2 atn beep bin binary bit bitreset bitset bload bsave byref byte byval call callocate case cbyte cdbl cdecl chain chdir chr cint circle clear clng clngint close cls color command common cons const continue cos cshort csign csng csrlin cubyte cuint culngint cunsg curdir cushort custom cvd cvi cvl cvlongint cvs cvshort data date deallocate declare defbyte defdbl defined defint deflng deflngint defshort defsng defstr defubyte defuint defulngint defushort dim dir do double draw dylibload dylibsymbol else elseif end enum environ environ$ eof eqv erase err error exec exepath exit exp export extern field fix flip for fre freefile function get getjoystick getkey getmouse gosub goto hex hibyte hiword if iif imagecreate imagedestroy imp inkey inp input instr int integer is kill lbound lcase left len let lib line lobyte loc local locate lock lof log long longint loop loword lset ltrim mid mkd mkdir mki mkl mklongint mks mkshort mod multikey mutexcreate mutexdestroy mutexlock mutexunlock name next not oct on once open option or out output overload paint palette pascal pcopy peek peeki peeks pipe pmap point pointer poke pokei pokes pos preserve preset print private procptr pset ptr public put random randomize read reallocate redim rem reset restore resume resume next return rgb rgba right rmdir rnd rset rtrim run sadd screen screencopy screeninfo screenlock screenptr screenres screenset screensync screenunlock seek statement seek function selectcase setdate setenviron setmouse settime sgn shared shell shl short shr sin single sizeof sleep space spc sqr static stdcall step stop str string string strptr sub swap system tab tan then threadcreate threadwait time time timer to trans trim type ubound ubyte ucase uinteger ulongint union unlock unsigned until ushort using va_arg va_first va_next val val64 valint varptr view viewprint wait wend while width window windowtitle with write xor zstring",
             "#define #dynamic #else #endif #error #if #ifdef #ifndef #inclib #include #print #static #undef"
@@ -1251,8 +1281,7 @@ public static class Incantation_SCINTILLA {
             ""
         );
     }
-    // >>>
-    public static void set_php_style(Scintilla editor) {
+    public static void set_php_style(Scintilla editor) { 
         editor.Styles[Style.PhpScript.ComplexVariable].ForeColor = number_fore_color;
         editor.Styles[Style.PhpScript.ComplexVariable].BackColor = number_back_color;
         editor.Styles[Style.PhpScript.Default].ForeColor = default_word_color;
@@ -1276,8 +1305,7 @@ public static class Incantation_SCINTILLA {
             ""
         );
     }
-    public static void set_properties_style(Scintilla editor) {}
-    public static void set_ruby_style(Scintilla editor) { // INCOMPLETE
+    public static void set_ruby_style(Scintilla editor) { 
         editor.Styles[Style.Ruby.Default].ForeColor = default_word_color;
         editor.Styles[Style.Ruby.Error].ForeColor = default_word_color;
         editor.Styles[Style.Ruby.CommentLine].ForeColor = comment_fore_color;
@@ -1290,28 +1318,286 @@ public static class Incantation_SCINTILLA {
         editor.Styles[Style.Ruby.String].BackColor = string_back_color;
         editor.Styles[Style.Ruby.Character].ForeColor = string_fore_color;
         editor.Styles[Style.Ruby.Character].BackColor = string_back_color;
-
         editor.Styles[Style.Ruby.Character].ForeColor = string_fore_color;
         editor.Styles[Style.Ruby.Character].ForeColor = string_fore_color;
-
-//        editor.Styles[Style.Ruby.Punctuation].ForeColor = default_word_color;
-//        editor.Styles[Style.Ruby.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.Ruby.ClassName].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.DefName].ForeColor = default_word_color;
         editor.Styles[Style.Ruby.Operator].ForeColor = operator_color;
         editor.Styles[Style.Ruby.Identifier].ForeColor = default_word_color;
-
         editor.Styles[Style.Ruby.Regex].ForeColor = string_fore_color;
         editor.Styles[Style.Ruby.Regex].BackColor = string_back_color;
-
+        editor.Styles[Style.Ruby.Global].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.Symbol].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.ModuleName].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.InstanceVar].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.ClassVar].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.BackTicks].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.DataSection].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.HereDelim].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.HereQ].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.HereQq].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.HereQx].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.StringQ].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.StringQ].BackColor = string_back_color;
+        editor.Styles[Style.Ruby.StringQq].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.StringQq].BackColor = string_back_color;
+        editor.Styles[Style.Ruby.StringQx].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.StringQx].BackColor = string_back_color;
+        editor.Styles[Style.Ruby.StringQr].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.StringQr].BackColor = string_back_color;
+        editor.Styles[Style.Ruby.StringQw].ForeColor = string_fore_color;
+        editor.Styles[Style.Ruby.StringQw].BackColor = string_back_color;
+        editor.Styles[Style.Ruby.WordDemoted].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.StdIn].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.StdOut].ForeColor = default_word_color;
+        editor.Styles[Style.Ruby.StdErr].ForeColor = default_word_color;
+        update_keywords(editor,"ruby",
+            "ARGF ARGV BEGIN END ENV FALSE DATA NIL RUBY_PATCHLEVEL RUBY_PLATFORM RUBY_RELEASE_DATE RUBY_VERSION PLATFORM RELEASE_DATE STDERR STDIN STDOUT TOPLEVEL_BINDING TRUE __ENCODING__ __END__ __FILE__ __LINE__ alias and begin break case class def defined? do else elsif end ensure false for if in module next nil not or raise redo rescue retry return self super then true undef unless until when while yield",
+            ""
+        );
     }
-    public static void set_smalltalk_style(Scintilla editor) {}
-    public static void set_sql_style(Scintilla editor) {}
-    public static void set_r_style(Scintilla editor) {}
-    public static void set_vb_style(Scintilla editor) {}
-    public static void set_vbscript_style(Scintilla editor) {}
+    public static void set_markdown_style(Scintilla editor) {
+        // Base text
+        editor.Styles[Style.Markdown.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Markdown.LineBegin].ForeColor = default_word_color;
+        // Emphasis
+        editor.Styles[Style.Markdown.Strong1].ForeColor = Color.OrangeRed;
+        editor.Styles[Style.Markdown.Strong2].ForeColor = Color.OrangeRed;
+        editor.Styles[Style.Markdown.Em1].ForeColor = Color.Khaki;
+        editor.Styles[Style.Markdown.Em2].ForeColor = Color.Khaki;
+        editor.Styles[Style.Markdown.Strikeout].ForeColor = Color.DarkGray;
+        // Headers
+        editor.Styles[Style.Markdown.Header1].ForeColor = Color.DeepSkyBlue;
+        editor.Styles[Style.Markdown.Header2].ForeColor = Color.DodgerBlue;
+        editor.Styles[Style.Markdown.Header3].ForeColor = Color.MediumSlateBlue;
+        editor.Styles[Style.Markdown.Header4].ForeColor = Color.SlateBlue;
+        editor.Styles[Style.Markdown.Header5].ForeColor = Color.MediumPurple;
+        editor.Styles[Style.Markdown.Header6].ForeColor = Color.DarkOrchid;
+        // Lists
+        editor.Styles[Style.Markdown.UListItem].ForeColor = Color.LightGreen;
+        editor.Styles[Style.Markdown.OListItem].ForeColor = Color.LightGreen;
+        // Blockquotes
+        editor.Styles[Style.Markdown.BlockQuote].ForeColor = Color.LightSteelBlue;
+        // Horizontal rule
+        editor.Styles[Style.Markdown.HRule].ForeColor = Color.Gray;
+        // Links
+        editor.Styles[Style.Markdown.Link].ForeColor = Color.CornflowerBlue;
+        // Code
+        editor.Styles[Style.Markdown.Code].ForeColor = number_fore_color;
+        editor.Styles[Style.Markdown.Code2].ForeColor = number_fore_color;
+        editor.Styles[Style.Markdown.CodeBk].BackColor = number_back_color; // subtle dark background
+        // Preformatted character
+        editor.Styles[Style.Markdown.PreChar].ForeColor = Color.LightSalmon;
+    }
+    public static void set_sql_style(Scintilla editor) {
+        editor.Styles[Style.Sql.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Sql.SqlPlus].ForeColor = default_word_color;
+        editor.Styles[Style.Sql.SqlPlusPrompt].ForeColor = default_word_color;
+        editor.Styles[Style.Sql.SqlPlusComment].ForeColor = default_word_color;
+        editor.Styles[Style.Sql.Identifier].ForeColor = default_word_color;
+        editor.Styles[Style.Sql.QuotedIdentifier].ForeColor = default_word_color;
+		editor.Styles[Style.Sql.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.Sql.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Sql.CommentLine].ForeColor = comment_fore_color;
+		editor.Styles[Style.Sql.CommentLine].BackColor = comment_back_color;
+        editor.Styles[Style.Sql.CommentDoc].ForeColor = comment_fore_color;
+		editor.Styles[Style.Sql.CommentDoc].BackColor = comment_back_color;
+        editor.Styles[Style.Sql.CommentLineDoc].ForeColor = comment_fore_color;
+		editor.Styles[Style.Sql.CommentLineDoc].BackColor = comment_back_color;
+        editor.Styles[Style.Sql.CommentDocKeyword].ForeColor = comment_fore_color;
+		editor.Styles[Style.Sql.CommentDocKeyword].BackColor = comment_back_color;
+        editor.Styles[Style.Sql.CommentDocKeywordError].ForeColor = default_word_color;
+		editor.Styles[Style.Sql.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.Sql.Number].BackColor = number_back_color;
+        editor.Styles[Style.Sql.Word].ForeColor = keyword1_color;
+        editor.Styles[Style.Sql.Word2].ForeColor = keyword2_color;
+		editor.Styles[Style.Sql.String].ForeColor = string_fore_color;
+		editor.Styles[Style.Sql.String].BackColor = string_back_color;
+        editor.Styles[Style.Sql.Character].ForeColor = string_fore_color;
+		editor.Styles[Style.Sql.Character].BackColor = string_back_color;
+		editor.Styles[Style.Sql.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Sql.QOperator].ForeColor = operator_color;
+        editor.Styles[Style.Sql.User1].ForeColor = keyword2_color;
+        editor.Styles[Style.Sql.User2].ForeColor = keyword2_color;
+        editor.Styles[Style.Sql.User3].ForeColor = keyword2_color;
+        editor.Styles[Style.Sql.User4].ForeColor = keyword2_color;
+		update_keywords(editor,"sql",
+            "abs absolute access acos action add add_months adddate admin after aggregate all allocate alter and any app_name applock_mode applock_test are array as asc ascii asin assemblyproperty assertion asymkey_id at atan atn2 audit authid authorization autonomous_transaction avg backup before begin benchmark between bfilename bin binary_checksum bit_and bit_count bit_or body both breadth break browse bulk by call cascade cascaded case cast catalog catch ceil ceiling cert_id certproperty character charindex chartorowid check checkpoint checksum checksum_agg chr class clause close cluster clustered coalesce col_length col_name collate collation collect column columnproperty columns_updated comment commit completion compress compute concat concat_ws connect connection connectionproperty constant constraint constraints constructorcreate contains containsable containstable context_info continue conv convert corr corresponding cos cot count count_big covar_pop covar_samp create cross cube cume_dist current current_date current_path current_request_id current_role current_time current_timestamp current_user currval cursor_status cycle data database database_principal_id databasepropertyex datalength date_add date_format date_sub dateadd datediff datefirst dateformat datename datepart db_id db_name dbcc deallocate declare decode decryptbyasmkey decryptbycert decryptbykey decryptbykeyautocert decryptbypassphrase default deferrable deferred degrees delete dense_rank deny depth deref desc describe descriptor destroy destructor deterministic diagnostics dictionary difference disconnect disk distinct distributed do domain drop dump dynamic each else elsif empth encode encrypt encryptbyasmkey encryptbycert encryptbykey encryptbypassphrase end end-exec equals errlvl error_line error_message error_number error_procedure error_severity error_state escape eventdata every except exception exclusive exec execute exists exit exp export_set extends external extract false fetch file file_id file_idex file_name filegroup_id filegroup_name filegroupproperty fileproperty fillfactor first first_value floor fn_virtualfilestats for forall foreign format formatmessage found freetext freetexttable from from_days full fulltextcatalog fulltextcatalogproperty fulltextservice fulltextserviceproperty function general get get_filestream_transaction_context get_lock getansinull getdate getutcdate global go goto grant greatest group grouping grouping_id has_perms_by_name hashbytes having heap hex hextoraw holdlock host host_id host_name hour ident_current ident_incr ident_seed identified identity identity_insert identitycol if ifnull ignore immediate in include increment index index_col indexkey_property indexproperty indicator initcap initial initialize initially inner inout input insert instr instrb interface intersect into is is_member is_null is_numeric is_srvrolemember isdate isnull isnumeric isolation iterate java join key key_guid key_id kill lag language large last last_day last_value lateral lcase lead leading least left len length lengthb less level like limit limited lineno ln load local localtime localtimestamp locator lock log log10 loop lower lpad ltrim make_ref map match max maxextents merge mid min min_active_rowversion minus minute mlslabel mod mode modifies modify module month months_between names national natural naturaln new new_time newid newsequentialid next next_day nextval no noaudit nocheck nocompress nocopy nonclustered none not nowait ntile null nullif number_base nvl nvl2 object object_definition object_id object_name object_property object_schema_name objectproperty objectpropertyex ocirowid oct of off offline offsets old on online only opaque open opendatasource openquery openrowset openxml operation operator option or ord order ordinalityorganization original_db_name original_login others out outer output over package pad parameter parameters parsename partial partition path pathname patindex pctfree percent percent_rank permissions pi pivot plan pls_integer positive positiven postfix pow power pragma prefix preorder prepare preserve primary print prior private privileges proc procedure public publishingservername pwdcompare pwdencrypt quotename radians raise raiserror rand range rank ratio_to_export rawtohex read reads readtext reconfigure record recursive ref references referencing reftohex relative release release_lock rename repeat replace replicate replication resource restore restrict result return returning returns reverse revert revoke right rollback rollup round routine row row_number rowcount rowcount_big rowguidcol rowidtochar rowlabel rownum rows rowtype rpad rtrim rule save savepoint schema schema_id schema_name scope scope_identity scroll search second section securityaudit seddev_samp select separate sequence serverproperty session session_user set sets setuser share shutdown sign signbyasymkey signbycert sin sinh size some soundex sp_helplanguage space specific specifictype sql sql_variant_property sqlcode sqlerrm sqlexception sqlstate sqlwarning sqrt square start state statement static statistics stats_date std stddev stdev stdev_pop stdevp str strcmp structure stuff subdate substr substrb substring substring_index subtype successful sum suser_id suser_name suser_sid suser_sname switchoffset synonym sys_context sys_guid sysdate sysdatetime sysdatetimeoffset system_user sysutcdatetime table tablesample tan tanh temporary terminate textptr textsize textvalid than then timezone_abbr timezone_hour timezone_minute timezone_region to to_char to_date to_days to_number to_single_byte todatetimeoffset top trailing tran transaction translate translation treat trigger trigger_nestlevel trim true trunc truncate try tsequal type type_id type_name typeproperty ucase uid under unicode union unique unknown unnest unpivot update updatetext upper usage use user user_id user_name userenv using validate value values var var_pop var_samp variable variance varp varying verifysignedbyasmkey verifysignedbycert view vsize waitfor when whenever where while with without work write writetext xact_state zone",
+            "bfile bigint binary binary_integer bit blob bool boolean char char_base clob cursor date datetime datetime2 datetimeoffset day dec decimal double enum float hierarchyid image int integer interval long longblob longtext mediumblob mediumint mediumtext money nchar nclob ntext number numeric nvarchar precision raw real rowid smalldatetime smallint smallmoney sql_variant text time timestamp tinyblob tinyint tinytext uniqueidentifier urowid varbinary varchar varchar2 xml year"
+        );
+    }
+    public static void set_vb_style(Scintilla editor) {
+        editor.Styles[Style.Vb.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Vb.Constant].ForeColor = default_word_color;
+        editor.Styles[Style.Vb.Asm].ForeColor = default_word_color;
+        editor.Styles[Style.Vb.Error].ForeColor = default_word_color;
+        editor.Styles[Style.Vb.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.Vb.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Vb.CommentBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.Vb.CommentBlock].BackColor = comment_back_color;
+        editor.Styles[Style.Vb.DocLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.Vb.DocLine].BackColor = comment_back_color;
+        editor.Styles[Style.Vb.DocBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.Vb.DocBlock].BackColor = comment_back_color;
+        editor.Styles[Style.Vb.DocKeyword].ForeColor = comment_fore_color;
+        editor.Styles[Style.Vb.DocKeyword].BackColor = comment_back_color;
+        editor.Styles[Style.Vb.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Vb.Number].BackColor = number_back_color;
+        editor.Styles[Style.Vb.HexNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.Vb.HexNumber].BackColor = number_back_color;
+        editor.Styles[Style.Vb.BinNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.Vb.BinNumber].BackColor = number_back_color;
+        editor.Styles[Style.Vb.Keyword].ForeColor = keyword1_color;
+        editor.Styles[Style.Vb.Keyword2].ForeColor = keyword2_color;
+        editor.Styles[Style.Vb.Keyword3].ForeColor = keyword2_color;
+        editor.Styles[Style.Vb.Keyword4].ForeColor = keyword2_color;
+        editor.Styles[Style.Vb.String].ForeColor = string_fore_color;
+        editor.Styles[Style.Vb.String].BackColor = string_back_color;
+        editor.Styles[Style.Vb.Label].ForeColor = string_fore_color;
+        editor.Styles[Style.Vb.Label].BackColor = string_back_color;
+        editor.Styles[Style.Vb.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.Vb.Operator].ForeColor = operator_color;
+        editor.Styles[Style.Vb.Identifier].ForeColor = default_word_color;
+        update_keywords(editor,"vb",
+            "addhandler addressof aggregate alias and andalso ansi as assembly async attribute auto await begin binary boolean by byref byte byval call case catch cbool cbyte cchar ccur cdate cdbl cdec char cint class clng clnglng clngptr cobj compare const continue csbyte cshort csng cstr ctype cuint culng currency cushort custom cvar date decimal declare default defbool defbyte defcur defdate defdbl defdec defint deflng deflnglng deflngptr defobj defsng defstr defvar delegate dim directcast distinct do double each else elseif end endif enum equals erase error event exit explicit false finally for friend from function get gettype global gosub goto group handles if implement implements imports in inherits integer interface into is isfalse isnot istrue iterator join key let lib like load long longlong longptr loop lset me mid mod module mustinherit mustoverride mybase myclass namespace narrowing new next not nothing notinheritable notoverridable object of off on operator option optional or order orelse out overloads overridable overrides paramarray partial preserve private property protected ptrsafe public raiseevent readonly redim rem removehandler resume return rset sbyte select set shadows shared short single skip static step stop strict string structure sub synclock take text then throw to true try trycast type typeof uinteger ulong unicode unload until ushort using variant vbarray vbboolean vbbyte vbcurrency vbdataobject vbdate vbdecimal vbdouble vbempty vberror vbinteger vblong vblonglong vbnull vbobject vbsingle vbuserdefinedtype vbvariant wend when where while widening with withevents writeonly xor yield",
+            ""
+        );
+    }
+    public static void set_vbscript_style(Scintilla editor) { // INCOMPLETE 
+        editor.Styles[Style.VbScript.Default].ForeColor = default_word_color;
+        editor.Styles[Style.VbScript.Constant].ForeColor = default_word_color;
+        editor.Styles[Style.VbScript.Asm].ForeColor = default_word_color;
+        editor.Styles[Style.VbScript.Error].ForeColor = default_word_color;
+        editor.Styles[Style.VbScript.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.VbScript.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.VbScript.CommentBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.VbScript.CommentBlock].BackColor = comment_back_color;
+        editor.Styles[Style.VbScript.DocLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.VbScript.DocLine].BackColor = comment_back_color;
+        editor.Styles[Style.VbScript.DocBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.VbScript.DocBlock].BackColor = comment_back_color;
+        editor.Styles[Style.VbScript.DocKeyword].ForeColor = comment_fore_color;
+        editor.Styles[Style.VbScript.DocKeyword].BackColor = comment_back_color;
+        editor.Styles[Style.VbScript.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.VbScript.Number].BackColor = number_back_color;
+        editor.Styles[Style.VbScript.Date].ForeColor = number_fore_color;
+        editor.Styles[Style.VbScript.Date].BackColor = number_back_color;
+        editor.Styles[Style.VbScript.HexNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.VbScript.HexNumber].BackColor = number_back_color;
+        editor.Styles[Style.VbScript.BinNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.VbScript.BinNumber].BackColor = number_back_color;
+        editor.Styles[Style.VbScript.Keyword].ForeColor = keyword1_color;
+        editor.Styles[Style.VbScript.Keyword2].ForeColor = keyword2_color;
+        editor.Styles[Style.VbScript.Keyword3].ForeColor = keyword2_color;
+        editor.Styles[Style.VbScript.Keyword4].ForeColor = keyword2_color;
+        editor.Styles[Style.VbScript.String].ForeColor = string_fore_color;
+        editor.Styles[Style.VbScript.String].BackColor = string_back_color;
+        editor.Styles[Style.VbScript.Label].ForeColor = string_fore_color;
+        editor.Styles[Style.VbScript.Label].BackColor = string_back_color;
+        editor.Styles[Style.VbScript.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.VbScript.Operator].ForeColor = operator_color;
+        editor.Styles[Style.VbScript.Identifier].ForeColor = default_word_color;
+        editor.Styles[Style.VbScript.StringEol].ForeColor = default_word_color;
+        update_keywords(editor,"vbscript",
+            "",
+            ""
+        );
+    }
+    public static void set_r_style(Scintilla editor) {
+        editor.Styles[Style.R.Default].ForeColor = default_word_color;
+        editor.Styles[Style.R.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.R.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.R.KWord].ForeColor = keyword1_color;
+        editor.Styles[Style.R.BaseKWord].ForeColor = keyword2_color;
+        editor.Styles[Style.R.OtherKWord].ForeColor = keyword2_color;
+        editor.Styles[Style.R.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.R.Number].BackColor = number_back_color;
+        editor.Styles[Style.R.String].ForeColor = string_fore_color;
+        editor.Styles[Style.R.String].BackColor = string_back_color;
+        editor.Styles[Style.R.String2].ForeColor = string_fore_color;
+        editor.Styles[Style.R.String2].BackColor = string_back_color;
+        editor.Styles[Style.R.Operator].ForeColor = operator_color;
+        editor.Styles[Style.R.Identifier].ForeColor = default_word_color;
+        editor.Styles[Style.R.Infix].ForeColor = default_word_color;
+        editor.Styles[Style.R.InfixEol].ForeColor = default_word_color;
+        update_keywords(editor,"r",
+            "if else repeat while function for in next break TRUE FALSE NULL NA Inf NaN",
+            "abbreviate abline abs acf acos acosh addmargins aggregate agrep alarm alias alist all anova any aov aperm append apply approx approxfun apropos ar args arima array arrows asin asinh assign assocplot atan atanh attach attr attributes autoload autoloader ave axis backsolve barplot basename beta bindtextdomain binomial biplot bitmap bmp body box boxplot bquote break browser builtins bxp by bzfile c call cancor capabilities casefold cat category cbind ccf ceiling character charmatch chartr chol choose chull citation class close cm cmdscale codes coef coefficients col colnames colors colorspaces colours comment complex confint conflicts contour contrasts contributors convolve cophenetic coplot cor cos cosh cov covratio cpgram crossprod cummax cummin cumprod cumsum curve cut cutree cycle data dataentry date dbeta dbinom dcauchy dchisq de debug debugger decompose delay deltat demo dendrapply density deparse deriv det detach determinant deviance dexp df dfbeta dfbetas dffits dgamma dgeom dget dhyper diag diff diffinv difftime digamma dim dimnames dir dirname dist dlnorm dlogis dmultinom dnbinom dnorm dotchart double dpois dput drop dsignrank dt dump dunif duplicated dweibull dwilcox eapply ecdf edit effects eigen emacs embed end environment eval evalq example exists exp expression factanal factor factorial family fft fifo file filter find fitted fivenum fix floor flush for force formals format formula forwardsolve fourfoldplot frame frequency ftable function gamma gaussian gc gcinfo gctorture get getenv geterrmessage gettext gettextf getwd gl glm globalenv gray grep grey grid gsub gzcon gzfile hat hatvalues hcl hclust head heatmap help hist history hsv httpclient iconv iconvlist identical identify if ifelse image influence inherits integer integrate interaction interactive intersect invisible isoreg jitter jpeg julian kappa kernapply kernel kmeans knots kronecker ksmooth labels lag lapply layout lbeta lchoose lcm legend length letters levels lfactorial lgamma library licence license line lines list lm load loadhistory loadings local locator loess log logb logical loglin lowess ls lsfit machine mad mahalanobis makepredictcall manova mapply match matlines matplot matpoints matrix max mean median medpolish menu merge message methods mget min missing mode monthplot months mosaicplot mtext mvfft names napredict naprint naresid nargs nchar ncol next nextn ngettext nlevels nlm nls noquote nrow numeric objects offset open optim optimise optimize options order ordered outer pacf page pairlist pairs palette par parse paste pbeta pbinom pbirthday pcauchy pchisq pdf pentagamma person persp pexp pf pgamma pgeom phyper pi pico pictex pie piechart pipe plclust plnorm plogis plot pmatch pmax pmin pnbinom png pnorm points poisson poly polygon polym polyroot postscript power ppoints ppois ppr prcomp predict preplot pretty princomp print prmatrix prod profile profiler proj promax prompt provide psigamma psignrank pt ptukey punif pweibull pwilcox q qbeta qbinom qbirthday qcauchy qchisq qexp qf qgamma qgeom qhyper qlnorm qlogis qnbinom qnorm qpois qqline qqnorm qqplot qr qsignrank qt qtukey quantile quarters quasi quasibinomial quasipoisson quit qunif quote qweibull qwilcox rainbow range rank raw rbeta rbind rbinom rcauchy rchisq readline real recover rect reformulate regexpr relevel remove reorder rep repeat replace replicate replications require reshape resid residuals restart return rev rexp rf rgamma rgb rgeom rhyper rle rlnorm rlogis rm rmultinom rnbinom rnorm round row rownames rowsum rpois rsignrank rstandard rstudent rt rug runif runmed rweibull rwilcox sample sapply save savehistory scale scan screen screeplot sd search searchpaths seek segments seq sequence serialize setdiff setequal setwd shell sign signif sin single sinh sink smooth solve sort source spectrum spline splinefun split sprintf sqrt stack stars start stderr stdin stdout stem step stepfun stl stop stopifnot str strftime strheight stripchart strptime strsplit strtrim structure strwidth strwrap sub subset substitute substr substring sum summary sunflowerplot supsmu svd sweep switch symbols symnum system t table tabulate tail tan tanh tapply tempdir tempfile termplot terms tetragamma text time title toeplitz tolower topenv toupper trace traceback transform trigamma trunc truncate try ts tsdiag tsp typeof unclass undebug union unique uniroot unix unlink unlist unname unserialize unsplit unstack untrace unz update upgrade url var varimax vcov vector version vi vignette warning warnings weekdays weights which while window windows with write wsbrowser xedit xemacs xfig xinch xor xtabs xyinch yinch zapsmall",
+            "acme aids aircondit amis aml banking barchart barley beaver bigcity boot brambles breslow bs bwplot calcium cane capability cav censboot channing city claridge cloth cloud coal condense contourplot control corr darwin densityplot dogs dotplot ducks empinf envelope environmental ethanol fir frets gpar grav gravity grob hirose histogram islay knn larrows levelplot llines logit lpoints lsegments lset ltext lvqinit lvqtest manaus melanoma motor multiedit neuro nitrofen nodal ns nuclear oneway parallel paulsen poisons polar qq qqmath remission rfs saddle salinity shingle simplex singer somgrid splom stripplot survival tau tmd tsboot tuna unit urine viewport wireframe wool xyplot"
+        );
+    }
+    public static void set_smalltalk_style(Scintilla editor) {
+        editor.Styles[Style.Smalltalk.Default].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.String].ForeColor = string_fore_color;
+        editor.Styles[Style.Smalltalk.String].BackColor = string_back_color;
+        editor.Styles[Style.Smalltalk.Character].ForeColor = string_fore_color;
+        editor.Styles[Style.Smalltalk.Character].BackColor = string_back_color;
+        editor.Styles[Style.Smalltalk.Number].ForeColor = number_fore_color;
+        editor.Styles[Style.Smalltalk.Number].BackColor = number_back_color;
+        editor.Styles[Style.Smalltalk.Comment].ForeColor = comment_fore_color;
+        editor.Styles[Style.Smalltalk.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.Smalltalk.Symbol].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.Binary].ForeColor = number_fore_color;
+        editor.Styles[Style.Smalltalk.Binary].BackColor = number_back_color;
+        editor.Styles[Style.Smalltalk.Bool].ForeColor = number_fore_color;
+        editor.Styles[Style.Smalltalk.Bool].BackColor = number_back_color;
+        editor.Styles[Style.Smalltalk.Self].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.Super].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.Nil].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.Global].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.Return].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.Special].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.KwsEnd].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.Assign].ForeColor = default_word_color;
+        editor.Styles[Style.Smalltalk.SpecSel].ForeColor = default_word_color;
+        update_keywords(editor,"smalltalk",
+            "ifTrue: ifFalse: whileTrue: whileFalse: ifNil: ifNotNil: whileTrue whileFalse repeat isNil notNil",
+            ""
+        );
+    }
+    // >>> 
+    public static void set_purebasic_style(Scintilla editor) {
+        editor.Styles[Style.PureBasic.Default].ForeColor = default_word_color;
+        editor.Styles[Style.PureBasic.Identifier].ForeColor = default_word_color;
+        editor.Styles[Style.PureBasic.Comment].ForeColor = comment_fore_color;
+		editor.Styles[Style.PureBasic.Comment].BackColor = comment_back_color;
+        editor.Styles[Style.PureBasic.Number].ForeColor = number_fore_color;
+		editor.Styles[Style.PureBasic.Number].BackColor = number_back_color;
+        editor.Styles[Style.PureBasic.Keyword].ForeColor = keyword1_color;
+        editor.Styles[Style.PureBasic.String].ForeColor = string_fore_color;
+		editor.Styles[Style.PureBasic.String].BackColor = string_back_color;
+        editor.Styles[Style.PureBasic.Label].ForeColor = string_fore_color;
+		editor.Styles[Style.PureBasic.Label].BackColor = string_back_color;
+        editor.Styles[Style.PureBasic.Preprocessor].ForeColor = preprocessor_color;
+        editor.Styles[Style.PureBasic.Operator].ForeColor = operator_color;
+        editor.Styles[Style.PureBasic.Constant].ForeColor = default_word_color;
+        editor.Styles[Style.PureBasic.Asm].ForeColor = default_word_color;
+        editor.Styles[Style.PureBasic.Error].ForeColor = default_word_color;
+        editor.Styles[Style.PureBasic.Date].ForeColor = number_fore_color;
+        editor.Styles[Style.PureBasic.Date].BackColor = number_back_color;
+        editor.Styles[Style.PureBasic.StringEol].BackColor = Color.Pink;
+        editor.Styles[Style.PureBasic.Keyword2].ForeColor = keyword2_color;
+        editor.Styles[Style.PureBasic.Keyword3].ForeColor = keyword2_color;
+        editor.Styles[Style.PureBasic.Keyword4].ForeColor = keyword2_color;
+        editor.Styles[Style.PureBasic.HexNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.PureBasic.HexNumber].BackColor = number_back_color;
+        editor.Styles[Style.PureBasic.BinNumber].ForeColor = number_fore_color;
+        editor.Styles[Style.PureBasic.BinNumber].BackColor = number_back_color;
+        editor.Styles[Style.PureBasic.CommentBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.PureBasic.CommentBlock].BackColor = comment_back_color;
+        editor.Styles[Style.PureBasic.DocLine].ForeColor = comment_fore_color;
+        editor.Styles[Style.PureBasic.DocLine].BackColor = comment_back_color;
+        editor.Styles[Style.PureBasic.DocBlock].ForeColor = comment_fore_color;
+        editor.Styles[Style.PureBasic.DocBlock].BackColor = comment_back_color;
+        editor.Styles[Style.PureBasic.DocKeyword].ForeColor = Color.White;
+        update_keywords(editor,"purebasic",
+            "and break case continue data datasection declare declarecdll declaredll default deftype dim else elseif end enddatasection endenumeration endif endinterface endprocedure endselect endstructure endstructureunion enumeration extends fakereturn for foreach forever global gosub goto if includebinary includefile includepath interface newlist next or procedure procedurecdll proceduredll procedurereturn protected read repeat restore return select shared static step structure structureunion to until wend while xincludefile",
+            "compilercase compilerdefault compilerelse compilerendif compilerendselect compilerif compilerselect"
+        );
+    } 
     public static void set_verilog_style(Scintilla editor) {}
-    public static void set_markdown_style(Scintilla editor) {}
+    public static void set_properties_style(Scintilla editor) {}
     // <<< 
-
     public static void post_styling_comment_line(Scintilla editor, string marker) { // TESTING
         const int INDICATOR_ID = 15; // pick a free one
 

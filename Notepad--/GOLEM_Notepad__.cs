@@ -6,8 +6,8 @@
 // {Notepad--H;1:silver;2:lightblue}
 
 // -- search 
-// {Notepad--T;red:DialogDir;blue:}
-// {Notepad--S:DialogDir}
+// {Notepad--T;red:;blue:}
+// {Notepad--S:}
 
 // -- BEGIN 
 // Notepad-- : Simpler version of Notepad++ 
@@ -59,7 +59,7 @@ public class Form_DATA {
 		LeftFiles = new List<string>();
 		RightFiles = new List<string>();
         CodeFileList = new List<string>{
-            ".c",".cs",".css",".cpp",".user",".csproj",".h",".hpp",
+            ".c",".cs",".css",".cpp",".user",".csproj",".h",".hpp",".hxx",".cxx",".cc",".hh",".ino",
             ".js",".ts",
             ".py",".pyw",
             ".lua",
@@ -85,7 +85,8 @@ public class Form_DATA {
             ".pl",".pm",".plx",".t",
             ".rs",
             ".pas",".pp",".p",".inc",".lpr",
-            ".php",".php3",".php4",".php5",".phps",".phpt",".phtml"
+            ".php",".php3",".php4",".php5",".phps",".phpt",".phtml",
+            ".sql"
         };
     }
 }
