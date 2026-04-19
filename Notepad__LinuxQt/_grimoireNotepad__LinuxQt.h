@@ -332,6 +332,7 @@ Codex % Divination, Library
  * signal &currentChanged(int); // Emitted when the active tab changes.
  * signal &tabCloseRequested(int); // Emitted when a tab's close button is clicked.
  * tabWidget->tabBar() // get tabbar object 
+ * tabWidget->setTabToolTip(0, "C# Source Files"); // ... 
  * */
 /* Inventory [ QTabBar ] { C++, Qt6 } 
  * addTab(QString); // Appends a new tab and returns its index.

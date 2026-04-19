@@ -730,12 +730,12 @@ void CodexIncantation::setAutocompletion(QsciScintilla* editor) {
     QsciAPIs* apis = new QsciAPIs(editor->lexer());
     // Configure Scintilla behavior
     editor->setAutoCompletionSource(QsciScintilla::AcsAPIs);
-    editor->setAutoCompletionThreshold(3);
+    editor->setAutoCompletionThreshold(2);
     editor->setAutoCompletionCaseSensitivity(false);
-    editor->setAutoCompletionReplaceWord(false);
+    editor->setAutoCompletionReplaceWord(true);
 }
 void CodexIncantation::updateAutocompletion_Range(QsciScintilla* editor) {
-    int range = 50;
+    int range = 1;
     QsciLexer* lexer = editor->lexer();
     if (!lexer || !editor) return;      
     QsciAPIs* apis = dynamic_cast<QsciAPIs*>(lexer->apis());
@@ -884,6 +884,7 @@ QsciScintilla* TabbedSplitView::dialogScintillaTabLoad(QTabWidget* tabs) {
     if (tabIndex == -1) return nullptr;    
     tabs->setTabText(tabIndex, QString("[ ")+new_tab_text+QString(" ]"));
     tabs->tabBar()->setTabData(tabIndex, QVariant(fileName));
+    tabs->setTabToolTip(tabIndex, fileName); // ISSUE
     QString content = loadFile(fileName);
     editor->blockSignals(true);
     editor->setText(content);
@@ -911,6 +912,7 @@ QsciScintilla* TabbedSplitView::loadScintillaFromFilename(QTabWidget* tabs, QStr
     int tabIndex = tabs->addTab(editor, QString("[ ")+new_tab_text+QString(" ]"));
     if (tabIndex == -1) return nullptr;    
     tabs->tabBar()->setTabData(tabIndex, QVariant(fileName));
+    tabs->setTabToolTip(tabIndex, fileName); // ISSUE
     QString content = loadFile(fileName);
     editor->blockSignals(true);
     editor->setText(content);
