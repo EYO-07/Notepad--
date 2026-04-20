@@ -12,6 +12,7 @@ using namespace CodexIncantation;
 
 // variables
 QColor bgColor(0, 0, 0, 120); 
+QColor bgScriptColor(20,20,40,120);
 QColor fgColor("white"); 
 QColor caretColor("#528bff");
 QColor selectionColor("#3e4451");
@@ -156,174 +157,266 @@ void applyCPPStyle(QsciLexerCPP* lexer) {
     lexer->setColor(stringColor, QsciLexerCPP::TripleQuotedVerbatimString);
     lexer->setPaper(stringPaperColor, QsciLexerCPP::TripleQuotedVerbatimString);
 }
+//
+QList<int> HTML_B = {
+    QsciLexerHTML::Default,
+    QsciLexerHTML::Tag,
+    QsciLexerHTML::UnknownTag,
+    QsciLexerHTML::OtherInTag,
+    QsciLexerHTML::Entity,
+    QsciLexerHTML::XMLTagEnd,
+    QsciLexerHTML::XMLStart,
+    QsciLexerHTML::XMLEnd,
+    QsciLexerHTML::Script,
+    QsciLexerHTML::ASPAtStart,
+    QsciLexerHTML::CDATA,
+    QsciLexerHTML::PHPStart
+};
+QList<int> SGML_B = {
+    QsciLexerHTML::SGMLDefault, 
+    QsciLexerHTML::SGMLParameter,
+    QsciLexerHTML::SGMLError,
+    QsciLexerHTML::SGMLSpecial,
+    QsciLexerHTML::SGMLEntity,
+    QsciLexerHTML::SGMLBlockDefault
+};
+QList<int> JavaScript_B = {
+    QsciLexerHTML::JavaScriptStart,
+    QsciLexerHTML::JavaScriptDefault,
+    QsciLexerHTML::JavaScriptWord,
+    QsciLexerHTML::JavaScriptKeyword,
+    QsciLexerHTML::JavaScriptSymbol
+};
+QList<int> ASPJavaScript_B = {
+    QsciLexerHTML::ASPJavaScriptStart,
+    QsciLexerHTML::ASPJavaScriptDefault,
+    QsciLexerHTML::ASPJavaScriptWord,
+    QsciLexerHTML::ASPJavaScriptKeyword,
+    QsciLexerHTML::ASPJavaScriptSymbol
+    
+};
+QList<int> VBScript_B = {
+    QsciLexerHTML::VBScriptStart,
+    QsciLexerHTML::VBScriptDefault,
+    QsciLexerHTML::VBScriptKeyword,
+    QsciLexerHTML::VBScriptIdentifier
+};
+QList<int> ASPVBScript_B = {
+    QsciLexerHTML::ASPVBScriptStart,
+    QsciLexerHTML::ASPVBScriptDefault,
+    QsciLexerHTML::ASPVBScriptKeyword,
+    QsciLexerHTML::ASPVBScriptIdentifier
+};
+QList<int> PythonScript_B = {
+    QsciLexerHTML::PythonStart,
+    QsciLexerHTML::PythonDefault,
+    QsciLexerHTML::PythonClassName,
+    QsciLexerHTML::PythonFunctionMethodName,
+    QsciLexerHTML::PythonOperator,
+    QsciLexerHTML::PythonIdentifier
+};
+QList<int> ASPPythonScript_B = {
+    QsciLexerHTML::ASPPythonStart,
+    QsciLexerHTML::ASPPythonDefault,
+    QsciLexerHTML::ASPPythonClassName,
+    QsciLexerHTML::ASPPythonFunctionMethodName,
+    QsciLexerHTML::ASPPythonOperator,
+    QsciLexerHTML::ASPPythonIdentifier
+};
+QList<int> PHP_B = {
+    QsciLexerHTML::PHPDefault,
+    QsciLexerHTML::PHPKeyword,
+    QsciLexerHTML::PHPVariable,
+    QsciLexerHTML::PHPDoubleQuotedVariable,
+    QsciLexerHTML::PHPOperator
+};
 void applyHTMLStyle(QsciLexerHTML* lexer) {
-    lexer->setColor(fgColor, QsciLexerHTML::Default);
-    lexer->setPaper(bgColor, QsciLexerHTML::Default);
-    lexer->setColor(keyword1, QsciLexerHTML::Tag); 
-    lexer->setColor(fgColor, QsciLexerHTML::UnknownTag); 
-    lexer->setColor(numberColor, QsciLexerHTML::HTMLNumber); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::HTMLNumber);
-    lexer->setColor(stringColor, QsciLexerHTML::HTMLDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::HTMLDoubleQuotedString); 
-    lexer->setColor(operatorColor, QsciLexerHTML::OtherInTag); 
-    lexer->setColor(commentColor, QsciLexerHTML::HTMLComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::HTMLComment);
-    lexer->setColor(fgColor, QsciLexerHTML::Entity);
-    lexer->setColor(fgColor, QsciLexerHTML::XMLTagEnd); 
-    lexer->setColor(fgColor, QsciLexerHTML::XMLStart); 
-    lexer->setColor(fgColor, QsciLexerHTML::XMLEnd); 
-    lexer->setColor(fgColor, QsciLexerHTML::Script); 
-    lexer->setColor(fgColor, QsciLexerHTML::ASPAtStart); 
-    //lexer->setColor(fgColor, QsciLexerHTML::ASPAtEnd); 
-    lexer->setColor(fgColor, QsciLexerHTML::CDATA); 
-    lexer->setColor(fgColor, QsciLexerHTML::PHPStart); 
-    lexer->setColor(numberColor, QsciLexerHTML::HTMLValue); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::HTMLValue);
-    lexer->setColor(commentColor, QsciLexerHTML::ASPXCComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPXCComment);
-    //
-    lexer->setColor(fgColor, QsciLexerHTML::SGMLDefault);
-    lexer->setPaper(bgColor, QsciLexerHTML::SGMLDefault);
-    lexer->setColor(fgColor, QsciLexerHTML::SGMLParameter);
-    lexer->setColor(stringColor, QsciLexerHTML::SGMLDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::SGMLDoubleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::SGMLSingleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::SGMLSingleQuotedString); 
-    lexer->setColor(fgColor, QsciLexerHTML::SGMLError);
-    lexer->setPaper(bgColor, QsciLexerHTML::SGMLError);
-    lexer->setColor(fgColor, QsciLexerHTML::SGMLSpecial);
-    lexer->setColor(fgColor, QsciLexerHTML::SGMLEntity);
-    lexer->setColor(commentColor, QsciLexerHTML::SGMLComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::SGMLComment);
-    lexer->setColor(commentColor, QsciLexerHTML::SGMLParameterComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::SGMLParameterComment);
-    lexer->setColor(fgColor, QsciLexerHTML::SGMLBlockDefault);
-    //
-    lexer->setColor(fgColor, QsciLexerHTML::JavaScriptStart);
-    lexer->setColor(fgColor, QsciLexerHTML::JavaScriptDefault);
-    lexer->setColor(commentColor, QsciLexerHTML::JavaScriptComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::JavaScriptComment);
-    lexer->setColor(commentColor, QsciLexerHTML::JavaScriptCommentLine); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::JavaScriptCommentLine);
-    lexer->setColor(commentColor, QsciLexerHTML::JavaScriptCommentDoc); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::JavaScriptCommentDoc);
-    lexer->setColor(numberColor, QsciLexerHTML::JavaScriptNumber); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::JavaScriptNumber);
-    lexer->setColor(keyword1, QsciLexerHTML::JavaScriptWord); 
-    lexer->setColor(keyword2, QsciLexerHTML::JavaScriptKeyword); 
-    lexer->setColor(stringColor, QsciLexerHTML::JavaScriptDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::JavaScriptDoubleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::JavaScriptSingleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::JavaScriptSingleQuotedString); 
-    lexer->setColor(numberColor, QsciLexerHTML::JavaScriptSymbol); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::JavaScriptSymbol);
-    lexer->setColor(stringColor, QsciLexerHTML::JavaScriptUnclosedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::JavaScriptUnclosedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::JavaScriptRegex); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::JavaScriptRegex); 
-    //
-    lexer->setColor(fgColor, QsciLexerHTML::ASPJavaScriptStart);
-    lexer->setColor(fgColor, QsciLexerHTML::ASPJavaScriptDefault);
-    lexer->setColor(commentColor, QsciLexerHTML::ASPJavaScriptComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPJavaScriptComment);
-    lexer->setColor(commentColor, QsciLexerHTML::ASPJavaScriptCommentLine); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPJavaScriptCommentLine);
-    lexer->setColor(commentColor, QsciLexerHTML::ASPJavaScriptCommentDoc); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPJavaScriptCommentDoc);
-    lexer->setColor(numberColor, QsciLexerHTML::ASPJavaScriptNumber); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::ASPJavaScriptNumber);
-    lexer->setColor(keyword1, QsciLexerHTML::ASPJavaScriptWord); 
-    lexer->setColor(keyword2, QsciLexerHTML::ASPJavaScriptKeyword); 
-    lexer->setColor(stringColor, QsciLexerHTML::ASPJavaScriptDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPJavaScriptDoubleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::ASPJavaScriptSingleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPJavaScriptSingleQuotedString); 
-    lexer->setColor(numberColor, QsciLexerHTML::ASPJavaScriptSymbol); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::ASPJavaScriptSymbol);
-    lexer->setColor(stringColor, QsciLexerHTML::ASPJavaScriptUnclosedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPJavaScriptUnclosedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::ASPJavaScriptRegex); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPJavaScriptRegex); 
-    // 
-    lexer->setColor(fgColor, QsciLexerHTML::VBScriptStart);
-    lexer->setColor(fgColor, QsciLexerHTML::VBScriptDefault);
-    lexer->setColor(commentColor, QsciLexerHTML::VBScriptComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::VBScriptComment);
-    lexer->setColor(numberColor, QsciLexerHTML::VBScriptNumber); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::VBScriptNumber);
-    lexer->setColor(keyword2, QsciLexerHTML::VBScriptKeyword); 
-    lexer->setColor(stringColor, QsciLexerHTML::VBScriptString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::VBScriptString); 
-    lexer->setColor(fgColor, QsciLexerHTML::VBScriptIdentifier);
-    lexer->setColor(stringColor, QsciLexerHTML::VBScriptUnclosedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::VBScriptUnclosedString); 
-    //
-    lexer->setColor(fgColor, QsciLexerHTML::ASPVBScriptStart);
-    lexer->setColor(fgColor, QsciLexerHTML::ASPVBScriptDefault);
-    lexer->setColor(commentColor, QsciLexerHTML::ASPVBScriptComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPVBScriptComment);
-    lexer->setColor(numberColor, QsciLexerHTML::ASPVBScriptNumber); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::ASPVBScriptNumber);
-    lexer->setColor(keyword2, QsciLexerHTML::ASPVBScriptKeyword); 
-    lexer->setColor(stringColor, QsciLexerHTML::ASPVBScriptString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPVBScriptString); 
-    lexer->setColor(fgColor, QsciLexerHTML::ASPVBScriptIdentifier);
-    lexer->setColor(stringColor, QsciLexerHTML::ASPVBScriptUnclosedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPVBScriptUnclosedString); 
-    //
-    lexer->setColor(fgColor, QsciLexerHTML::PythonStart);
-    lexer->setColor(fgColor, QsciLexerHTML::PythonDefault);
-    lexer->setColor(commentColor, QsciLexerHTML::PythonComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::PythonComment);
-    lexer->setColor(numberColor, QsciLexerHTML::PythonNumber); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::PythonNumber);
-    lexer->setColor(stringColor, QsciLexerHTML::PythonDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::PythonDoubleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::PythonSingleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::PythonSingleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::PythonTripleSingleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::PythonTripleSingleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::PythonTripleDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::PythonTripleDoubleQuotedString); 
-    lexer->setColor(classColor, QsciLexerHTML::PythonClassName); 
-    lexer->setColor(functionColor, QsciLexerHTML::PythonFunctionMethodName); 
-    lexer->setColor(operatorColor, QsciLexerHTML::PythonOperator); 
-    lexer->setColor(fgColor, QsciLexerHTML::PythonIdentifier);
-    //
-    lexer->setColor(fgColor, QsciLexerHTML::ASPPythonStart);
-    lexer->setColor(fgColor, QsciLexerHTML::ASPPythonDefault);
-    lexer->setColor(commentColor, QsciLexerHTML::ASPPythonComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPPythonComment);
-    lexer->setColor(numberColor, QsciLexerHTML::ASPPythonNumber); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::ASPPythonNumber);
-    lexer->setColor(stringColor, QsciLexerHTML::ASPPythonDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPPythonDoubleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::ASPPythonSingleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPPythonSingleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::ASPPythonTripleSingleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPPythonTripleSingleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::ASPPythonTripleDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPPythonTripleDoubleQuotedString); 
-    lexer->setColor(classColor, QsciLexerHTML::ASPPythonClassName); 
-    lexer->setColor(functionColor, QsciLexerHTML::ASPPythonFunctionMethodName); 
-    lexer->setColor(operatorColor, QsciLexerHTML::ASPPythonOperator); 
-    lexer->setColor(fgColor, QsciLexerHTML::ASPPythonIdentifier);
-    //
-    lexer->setColor(fgColor, QsciLexerHTML::PHPDefault);
-    lexer->setColor(stringColor, QsciLexerHTML::PHPDoubleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::PHPDoubleQuotedString); 
-    lexer->setColor(stringColor, QsciLexerHTML::PHPSingleQuotedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerHTML::PHPSingleQuotedString); 
-    lexer->setColor(keyword2, QsciLexerHTML::PHPKeyword); 
-    lexer->setColor(numberColor, QsciLexerHTML::PHPNumber); 
-    lexer->setPaper(numberPaperColor, QsciLexerHTML::PHPNumber);
-    lexer->setColor(fgColor, QsciLexerHTML::PHPVariable);
-    lexer->setColor(commentColor, QsciLexerHTML::PHPComment); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::PHPComment);
-    lexer->setColor(commentColor, QsciLexerHTML::PHPCommentLine); 
-    lexer->setPaper(commentPaperColor, QsciLexerHTML::PHPCommentLine);
-    lexer->setColor(fgColor, QsciLexerHTML::PHPDoubleQuotedVariable);
-    lexer->setColor(operatorColor, QsciLexerHTML::PHPOperator); 
+    auto applyPaper = [lexer](QColor color, QList<int>& list)->void {
+        for (const int& item: list) {
+            lexer->setPaper(color, item);
+        }
+    };
+    { // HTML 
+        lexer->setColor(fgColor, QsciLexerHTML::Default);
+        lexer->setColor(keyword1, QsciLexerHTML::Tag); 
+        lexer->setColor(fgColor, QsciLexerHTML::UnknownTag); 
+        lexer->setColor(numberColor, QsciLexerHTML::HTMLNumber); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::HTMLNumber);
+        lexer->setColor(stringColor, QsciLexerHTML::HTMLDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::HTMLDoubleQuotedString); 
+        lexer->setColor(operatorColor, QsciLexerHTML::OtherInTag); 
+        lexer->setColor(commentColor, QsciLexerHTML::HTMLComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::HTMLComment);
+        lexer->setColor(fgColor, QsciLexerHTML::Entity);
+        lexer->setColor(fgColor, QsciLexerHTML::XMLTagEnd); 
+        lexer->setColor(fgColor, QsciLexerHTML::XMLStart); 
+        lexer->setColor(fgColor, QsciLexerHTML::XMLEnd); 
+        lexer->setColor(fgColor, QsciLexerHTML::Script); 
+        lexer->setColor(fgColor, QsciLexerHTML::ASPAtStart); 
+        lexer->setColor(fgColor, QsciLexerHTML::CDATA); 
+        lexer->setColor(fgColor, QsciLexerHTML::PHPStart); 
+        lexer->setColor(numberColor, QsciLexerHTML::HTMLValue); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::HTMLValue);
+        lexer->setColor(commentColor, QsciLexerHTML::ASPXCComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPXCComment);
+        applyPaper(bgColor,HTML_B);
+    }
+    { // SGML 
+        lexer->setColor(fgColor, QsciLexerHTML::SGMLDefault);
+        lexer->setColor(fgColor, QsciLexerHTML::SGMLParameter);
+        lexer->setColor(stringColor, QsciLexerHTML::SGMLDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::SGMLDoubleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::SGMLSingleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::SGMLSingleQuotedString); 
+        lexer->setColor(fgColor, QsciLexerHTML::SGMLError);
+        lexer->setColor(fgColor, QsciLexerHTML::SGMLSpecial);
+        lexer->setColor(fgColor, QsciLexerHTML::SGMLEntity);
+        lexer->setColor(commentColor, QsciLexerHTML::SGMLComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::SGMLComment);
+        lexer->setColor(commentColor, QsciLexerHTML::SGMLParameterComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::SGMLParameterComment);
+        lexer->setColor(fgColor, QsciLexerHTML::SGMLBlockDefault);
+        applyPaper(bgScriptColor,SGML_B);
+    }    
+    { // JavaScript 
+        lexer->setColor(fgColor, QsciLexerHTML::JavaScriptStart);
+        lexer->setColor(fgColor, QsciLexerHTML::JavaScriptDefault);
+        lexer->setColor(commentColor, QsciLexerHTML::JavaScriptComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::JavaScriptComment);
+        lexer->setColor(commentColor, QsciLexerHTML::JavaScriptCommentLine); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::JavaScriptCommentLine);
+        lexer->setColor(commentColor, QsciLexerHTML::JavaScriptCommentDoc); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::JavaScriptCommentDoc);
+        lexer->setColor(numberColor, QsciLexerHTML::JavaScriptNumber); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::JavaScriptNumber);
+        lexer->setColor(fgColor, QsciLexerHTML::JavaScriptWord); 
+        lexer->setColor(keyword1, QsciLexerHTML::JavaScriptKeyword); 
+        lexer->setColor(stringColor, QsciLexerHTML::JavaScriptDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::JavaScriptDoubleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::JavaScriptSingleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::JavaScriptSingleQuotedString); 
+        lexer->setColor(operatorColor, QsciLexerHTML::JavaScriptSymbol); 
+        lexer->setColor(stringColor, QsciLexerHTML::JavaScriptUnclosedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::JavaScriptUnclosedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::JavaScriptRegex); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::JavaScriptRegex); 
+        applyPaper(bgScriptColor,JavaScript_B);
+    }
+    { // ASPJavaScript
+        lexer->setColor(fgColor, QsciLexerHTML::ASPJavaScriptStart);
+        lexer->setColor(fgColor, QsciLexerHTML::ASPJavaScriptDefault);
+        lexer->setColor(commentColor, QsciLexerHTML::ASPJavaScriptComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPJavaScriptComment);
+        lexer->setColor(commentColor, QsciLexerHTML::ASPJavaScriptCommentLine); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPJavaScriptCommentLine);
+        lexer->setColor(commentColor, QsciLexerHTML::ASPJavaScriptCommentDoc); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPJavaScriptCommentDoc);
+        lexer->setColor(numberColor, QsciLexerHTML::ASPJavaScriptNumber); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::ASPJavaScriptNumber);
+        lexer->setColor(keyword1, QsciLexerHTML::ASPJavaScriptWord); 
+        lexer->setColor(keyword2, QsciLexerHTML::ASPJavaScriptKeyword); 
+        lexer->setColor(stringColor, QsciLexerHTML::ASPJavaScriptDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPJavaScriptDoubleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::ASPJavaScriptSingleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPJavaScriptSingleQuotedString); 
+        lexer->setColor(numberColor, QsciLexerHTML::ASPJavaScriptSymbol); 
+        lexer->setColor(stringColor, QsciLexerHTML::ASPJavaScriptUnclosedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPJavaScriptUnclosedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::ASPJavaScriptRegex); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPJavaScriptRegex); 
+        applyPaper(bgScriptColor, ASPJavaScript_B);
+    }
+    { // VBScript
+        lexer->setColor(fgColor, QsciLexerHTML::VBScriptStart);
+        lexer->setColor(fgColor, QsciLexerHTML::VBScriptDefault);
+        lexer->setColor(commentColor, QsciLexerHTML::VBScriptComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::VBScriptComment);
+        lexer->setColor(numberColor, QsciLexerHTML::VBScriptNumber); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::VBScriptNumber);
+        lexer->setColor(keyword2, QsciLexerHTML::VBScriptKeyword); 
+        lexer->setColor(stringColor, QsciLexerHTML::VBScriptString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::VBScriptString); 
+        lexer->setColor(fgColor, QsciLexerHTML::VBScriptIdentifier);
+        lexer->setColor(stringColor, QsciLexerHTML::VBScriptUnclosedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::VBScriptUnclosedString); 
+        applyPaper(bgScriptColor, VBScript_B);
+    }
+    { // ASPVBScript
+        lexer->setColor(fgColor, QsciLexerHTML::ASPVBScriptStart);
+        lexer->setColor(fgColor, QsciLexerHTML::ASPVBScriptDefault);
+        lexer->setColor(commentColor, QsciLexerHTML::ASPVBScriptComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPVBScriptComment);
+        lexer->setColor(numberColor, QsciLexerHTML::ASPVBScriptNumber); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::ASPVBScriptNumber);
+        lexer->setColor(keyword2, QsciLexerHTML::ASPVBScriptKeyword); 
+        lexer->setColor(stringColor, QsciLexerHTML::ASPVBScriptString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPVBScriptString); 
+        lexer->setColor(fgColor, QsciLexerHTML::ASPVBScriptIdentifier);
+        lexer->setColor(stringColor, QsciLexerHTML::ASPVBScriptUnclosedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPVBScriptUnclosedString); 
+        applyPaper(bgScriptColor, ASPVBScript_B);
+    }
+    { // PythonScript
+        lexer->setColor(fgColor, QsciLexerHTML::PythonStart);
+        lexer->setColor(fgColor, QsciLexerHTML::PythonDefault);
+        lexer->setColor(commentColor, QsciLexerHTML::PythonComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::PythonComment);
+        lexer->setColor(numberColor, QsciLexerHTML::PythonNumber); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::PythonNumber);
+        lexer->setColor(stringColor, QsciLexerHTML::PythonDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::PythonDoubleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::PythonSingleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::PythonSingleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::PythonTripleSingleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::PythonTripleSingleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::PythonTripleDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::PythonTripleDoubleQuotedString); 
+        lexer->setColor(classColor, QsciLexerHTML::PythonClassName); 
+        lexer->setColor(functionColor, QsciLexerHTML::PythonFunctionMethodName); 
+        lexer->setColor(operatorColor, QsciLexerHTML::PythonOperator); 
+        lexer->setColor(fgColor, QsciLexerHTML::PythonIdentifier);
+        applyPaper(bgScriptColor, PythonScript_B);
+    }
+    { // ASPPythonScript
+        lexer->setColor(fgColor, QsciLexerHTML::ASPPythonStart);
+        lexer->setColor(fgColor, QsciLexerHTML::ASPPythonDefault);
+        lexer->setPaper(bgColor, QsciLexerHTML::ASPPythonDefault);
+        lexer->setColor(commentColor, QsciLexerHTML::ASPPythonComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::ASPPythonComment);
+        lexer->setColor(numberColor, QsciLexerHTML::ASPPythonNumber); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::ASPPythonNumber);
+        lexer->setColor(stringColor, QsciLexerHTML::ASPPythonDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPPythonDoubleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::ASPPythonSingleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPPythonSingleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::ASPPythonTripleSingleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPPythonTripleSingleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::ASPPythonTripleDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::ASPPythonTripleDoubleQuotedString); 
+        lexer->setColor(classColor, QsciLexerHTML::ASPPythonClassName); 
+        lexer->setColor(functionColor, QsciLexerHTML::ASPPythonFunctionMethodName); 
+        lexer->setColor(operatorColor, QsciLexerHTML::ASPPythonOperator); 
+        lexer->setColor(fgColor, QsciLexerHTML::ASPPythonIdentifier);
+        applyPaper(bgScriptColor, ASPPythonScript_B);
+    }
+    { // PHP 
+        lexer->setColor(fgColor, QsciLexerHTML::PHPDefault);
+        lexer->setColor(stringColor, QsciLexerHTML::PHPDoubleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::PHPDoubleQuotedString); 
+        lexer->setColor(stringColor, QsciLexerHTML::PHPSingleQuotedString); 
+        lexer->setPaper(stringPaperColor, QsciLexerHTML::PHPSingleQuotedString); 
+        lexer->setColor(keyword2, QsciLexerHTML::PHPKeyword); 
+        lexer->setColor(numberColor, QsciLexerHTML::PHPNumber); 
+        lexer->setPaper(numberPaperColor, QsciLexerHTML::PHPNumber);
+        lexer->setColor(fgColor, QsciLexerHTML::PHPVariable);
+        lexer->setColor(commentColor, QsciLexerHTML::PHPComment); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::PHPComment);
+        lexer->setColor(commentColor, QsciLexerHTML::PHPCommentLine); 
+        lexer->setPaper(commentPaperColor, QsciLexerHTML::PHPCommentLine);
+        lexer->setColor(fgColor, QsciLexerHTML::PHPDoubleQuotedVariable);
+        lexer->setColor(operatorColor, QsciLexerHTML::PHPOperator); 
+        applyPaper(bgScriptColor, PHP_B);
+    }
 }
 
 // -- implementations

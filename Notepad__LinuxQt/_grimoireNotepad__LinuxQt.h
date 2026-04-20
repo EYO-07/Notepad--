@@ -226,6 +226,45 @@ Codex % Divination, Library
 11. for (auto it = map.begin(); it != map.end(); ++it); // Standard iterator
 12. for (auto [key, val] : map.asKeyValueRange()); // C++17 structured bindings (Qt 6.x)
 */
+/* Inventory [ QList Construction ] { Qt6, C++ } 
+1. QList<T> list; // Default constructor (empty list).
+2. QList<T> list(size); // Pre-allocates space for 'size' items.
+3. QList<T> list(size, value); // Pre-allocates 'size' items initialized to 'value'.
+4. QList<T> list = {val1, val2}; // Initializer list (C++11 and later).
+5. QList<T> list2(list1); // Copy constructor.
+6. QList<T> list2 = std::move(list1); // Move constructor.
+7. QList<T> list(first, last); // Range-based constructor (iterators).
+*/
+/* Inventory [ QList ] { Qt6, C++ } 
+1. append(const T &value) // Adds item to the end.
+2. at(qsizetype i) // Returns item at index (read-only).
+3. clear() // Removes all items.
+4. contains(const T &value) // Checks if item exists.
+5. count() // Returns number of items.
+6. first() // Returns the first item.
+7. indexOf(const T &value) // Returns index of first occurrence.
+8. insert(qsizetype i, const T &value) // Inserts item at index.
+9. isEmpty() // Checks if list has no items.
+10. last() // Returns the last item.
+11. move(qsizetype from, qsizetype to) // Moves item between positions.
+12. prepend(const T &value) // Adds item to the beginning.
+13. removeAt(qsizetype i) // Removes item at index.
+14. removeIf(Predicate pred) // Removes items matching condition.
+15. replace(qsizetype i, const T &value) // Replaces item at index.
+16. size() // Returns number of items.
+17. takeAt(qsizetype i) // Removes and returns item at index.
+18. value(qsizetype i) // Returns item or default if out of bounds.
+*/
+/* Inventory [ QList Iteration ] { Qt6, C++ } 
+1. for (const T &item : list) // Range-based for loop (preferred, readable).
+2. for (int i = 0; i < list.size(); ++i) // Index-based loop (standard).
+3. QListIterator<T> i(list); while(i.hasNext()) // Java-style read-only iterator.
+4. QMutableListIterator<T> i(list); while(i.hasNext()) // Java-style read-write iterator.
+5. for (auto i = list.begin(); i != list.end(); ++i) // STL-style iterator (standard).
+6. for (auto i = list.cbegin(); i != list.cend(); ++i) // STL-style constant iterator.
+7. std::for_each(list.begin(), list.end(), lambda) // STL algorithm iteration.
+8. for (T &item : list) // Range-based for loop (mutable).
+*/
 
 // -- layout and frame containers
 /* Inventory [ qApp->setStyleSheet ] { C++, Linux, Qt Framework } 
