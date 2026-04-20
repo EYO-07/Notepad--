@@ -1,4 +1,4 @@
-// {TextMarker|cyan:>>>,<<<,TODO|red:ISSUE|yellow:INCOMPLETE,DEPRECATED}
+// {TextMarker|cyan:>>>,<<<,TODO|red:ISSUE|yellow:INCOMPLETE,DEPRECATED,TESTING}
 // -- BEGIN 
 // CODEX_DarkQtScintilla.cpp
 #include "CODEX_DarkQtScintilla.h"
@@ -359,11 +359,41 @@ void CodexIncantation::toggleCurrentFold(QsciScintilla *editor) {
 }
 bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // INCOMPLETE
     if (!editor) return false;
-    // Logic [ setLexer ] -> setLexer() || $ext | %% choose lexer 
-    // setLexer() || $ext
-    QString ext = getExtension(fileName);
-    // setLexer() || $ext | %% choose lexer 
+    if ( fileName.endsWith("CMakeLists.txt") ) {
+        QsciLexerCMake* lexer = new QsciLexerCMake(editor);
+        lexer->setDefaultPaper(bgColor);
+        lexer->setDefaultColor(fgColor);
+        //lexer->setFoldComments(true);
+        //lexer->setFoldPreprocessor(true);
+        lexer->setFoldAtElse(true);
+        //lexer->setFoldCompact(false);
+        // -- cmake style 
+        lexer->setColor(fgColor, QsciLexerCMake::Default);
+        lexer->setColor(commentColor, QsciLexerCMake::Comment);
+        lexer->setPaper(commentPaperColor, QsciLexerCMake::Comment);
+        lexer->setColor(stringColor, QsciLexerCMake::String);
+        lexer->setPaper(stringPaperColor, QsciLexerCMake::String);
+        lexer->setColor(stringColor, QsciLexerCMake::StringLeftQuote);
+        lexer->setPaper(stringPaperColor, QsciLexerCMake::StringRightQuote);
+        lexer->setColor(classColor, QsciLexerCMake::Function);
+        lexer->setColor(functionColor,QsciLexerCMake::Variable);
+        lexer->setColor(stringColor, QsciLexerCMake::Label);
+        lexer->setPaper(stringPaperColor, QsciLexerCMake::Label);
+        lexer->setColor(keyword2, QsciLexerCMake::KeywordSet3);
+        lexer->setColor(keyword1, QsciLexerCMake::BlockWhile);
+        lexer->setColor(keyword1, QsciLexerCMake::BlockForeach);
+        lexer->setColor(keyword1, QsciLexerCMake::BlockIf);
+        lexer->setColor(keyword1, QsciLexerCMake::BlockMacro);
+        lexer->setColor(stringColor, QsciLexerCMake::StringVariable);
+        lexer->setPaper(stringPaperColor, QsciLexerCMake::StringVariable);
+        lexer->setColor(numberColor, QsciLexerCMake::Number);
+        lexer->setPaper(numberPaperColor, QsciLexerCMake::Number);
+        //
+        editor->setLexer(lexer);
+        return true;
+    }
     // } else if ( .contains(ext) ) {
+    QString ext = getExtension(fileName);
     if ( FILE_EXT_LEXER_CPP.contains(ext) ) {
         QsciLexerCPP* lexer = new QsciLexerCPP(editor);
         lexer->setDefaultPaper(bgColor);
@@ -606,6 +636,9 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         //lexer->setFoldPreprocessor(true);
         lexer->setFoldAtElse(true);
         lexer->setFoldCompact(false);
+        // -- sql style 
+        
+        // 
         editor->setLexer(lexer);
         return true;
     } else if ( FILE_EXT_LEXER_PHP.contains(ext) ) {
@@ -646,6 +679,9 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         //lexer->setFoldPreprocessor(true);
         //lexer->setFoldAtElse(true);
         lexer->setFoldCompact(false);
+        // lua style 
+        
+        //
         editor->setLexer(lexer);
         return true;
     } else if ( FILE_EXT_LEXER_MARKDOWN.contains(ext) ) {
@@ -735,7 +771,7 @@ void CodexIncantation::setAutocompletion(QsciScintilla* editor) {
     editor->setAutoCompletionReplaceWord(true);
 }
 void CodexIncantation::updateAutocompletion_Range(QsciScintilla* editor) {
-    int range = 1;
+    int range = 5;
     QsciLexer* lexer = editor->lexer();
     if (!lexer || !editor) return;      
     QsciAPIs* apis = dynamic_cast<QsciAPIs*>(lexer->apis());
@@ -853,6 +889,67 @@ void CodexIncantation::applyIndicatorsFromTextDirectives(QsciScintilla* editor) 
             }
         }
     }
+}
+void CodexIncantation::findNext(QsciScintilla* editor, QString text) {
+    if (!editor || text.isEmpty()) return;
+    // findFirst(expr, re, cs, wo, wrap, forward, line, index)
+    // We use forward = true
+    bool found = editor->findFirst(text, false, false, false, true, true);
+    if (found) {
+        // Get the line where the selection is now located
+        int line, index;
+        editor->getCursorPosition(&line, &index);
+        // Constraint 1: Unfold the code to expose the found text
+        editor->ensureLineVisible(line);
+    } else {
+        // Constraint 2: Warning if nothing is found
+        QMessageBox::warning(editor, "Search", QString("Finished searching: '%1' not found.").arg(text));
+    }
+}
+void CodexIncantation::findPrevious(QsciScintilla* editor, QString text) {
+    if (!editor || text.isEmpty()) return;
+    // Get current selection/caret info
+    int lineFrom, indexFrom, lineTo, indexTo;
+    editor->getSelection(&lineFrom, &indexFrom, &lineTo, &indexTo);
+    // If nothing is selected, just use the cursor position
+    if (lineFrom == -1) editor->getCursorPosition(&lineFrom, &indexFrom);
+    // Start searching from the START of the current word/selection 
+    // moving backwards (forward = false)
+    bool found = editor->findFirst(
+        text, 
+        false, // re
+        false, // cs
+        false, // wo
+        true,  // wrap
+        false, // forward (BACKWARDS)
+        lineFrom, 
+        indexFrom
+    );
+    if (found) {
+        int line, index;
+        editor->getCursorPosition(&line, &index);
+        editor->ensureLineVisible(line);
+    } else {
+        QMessageBox::warning(editor, "Search", QString("Finished searching: '%1' not found.").arg(text));
+    }
+}
+QString CodexIncantation::getSearchStringFromDocDirective(QsciScintilla* editor) {
+    if (!editor) return "";
+    // Constraint: Limit search to the first 100 lines or actual line count
+    int maxLine = std::min(100, editor->lines());
+    // Fix 1: Escape the curly braces so regex treats them as literal characters
+    // \{ and \} are necessary because { } are regex quantifiers.
+    QRegularExpression directive(R"(\{Search:([^}]+)\})");
+    for (int i = 0; i < maxLine; ++i) {
+        // Fix 2: use lineContents(i) to get just that specific line
+        QString lineText = editor->text(i); 
+        QRegularExpressionMatch match = directive.match(lineText);
+        if (match.hasMatch()) {
+            // .trimmed() handles accidental spaces like {Search: MyVar }
+            return match.captured(1).trimmed(); 
+        }
+    }
+    return "";
 }
 
 // Incantation || namespace TabbedSplitView 

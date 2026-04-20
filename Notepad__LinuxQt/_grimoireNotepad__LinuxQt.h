@@ -1,4 +1,6 @@
-// {TextMarker|cyan:Inventory}
+// {TextMarker|cyan:Inventory|silver:Dialetic}
+// -- BEGIN 
+
 // Grimoire [ C++ ] { Qt6, Linux, QsciScintilla }
 // ... This project uses Magic Oriented Programming Paradigm 
 /* MOPP : Magic Oriented Programming Paradigm 
@@ -40,7 +42,15 @@ Codex % Divination, Library
 
 */
 
-// -- BEGIN 
+/* Dialetic
+* How to manage multi-instance application in Qt6 ? 
+** How to communicate between instances ? 
+* How to use QSettings ?
+** How to load settings ?
+** How to save settings ?
+** How to use to store/load user settings ?
+** How to use to store/load window states ? 
+*/
 
 // Template
 /* Inventory [ ] { C++ } */
@@ -60,15 +70,25 @@ Codex % Divination, Library
  * */
 
 /* Inventory [ CMake ] { C++, Linux } 
- * cmake_minimum_required();    // Sets the lowest CMake version allowed
- * project(Name);               // Defines project name and programming language
- * find_package(Qt6 REQUIRED);  // Locates and loads Qt6 library configuration
- * set(CMAKE_AUTOMOC ON);       // Automatically generates Qt Meta-Object code
- * add_executable(bin main.cpp);// Compiles source files into a runnable binary
- * target_link_libraries();     // Connects external libraries (like Qt) to binary
  * cmake -B build               // Configures the project into a 'build' directory
  * cmake --build build          // Executes the compilation process
- * */
+1. cmake_minimum_required(VERSION 3.10) // Sets the lowest compatible CMake version
+2. project(MyProject VERSION 1.0)       // Defines project name and versioning
+3. add_executable(app main.cpp)         // Creates an executable from source files
+4. add_library(lib STATIC src.cpp)      // Compiles a static or shared library
+5. target_link_libraries(app PRIVATE lib) // Links a library to a specific target
+6. target_include_directories(app PRIVATE dir) // Adds include paths to a target
+7. set(CMAKE_CXX_STANDARD 17)           // Specifies the C++ standard (11, 14, 17, 20)
+8. find_package(Threads REQUIRED)       // Locates external packages/libraries
+9. add_subdirectory(src)                // Adds another directory with its own CMakeLists.txt
+10. install(TARGETS app DESTINATION bin) // Defines installation paths for binaries
+11. target_compile_options(app PRIVATE -Wall) // Adds compiler flags to a target
+12. configure_file(in out)               // Copies a file and replaces @VAR@ values
+13. message(STATUS "Text")              // Prints information to the terminal during config
+14. option(USE_FEATURE "Desc" ON)       // Provides a boolean variable for user config
+15. list(APPEND VAR value)               // Manages list variables (semicolon-separated)
+16. set(CMAKE_AUTOMOC ON);       // Automatically generates Qt Meta-Object code
+*/
 /* Inventory [ CMake Dependency Analysis ] { Shell } 
  * COMMAND // SHORTDESCRIPTION 
  * // -- Built-in Graphing --

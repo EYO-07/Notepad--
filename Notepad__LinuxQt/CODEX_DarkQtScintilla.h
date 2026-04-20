@@ -25,6 +25,7 @@
 #include <Qsci/qscilexeryaml.h>
 #include <Qsci/qscilexerproperties.h>
 #include <Qsci/qscilexerperl.h>
+#include <Qsci/qscilexercmake.h>
 // --
 #include <QColor>
 #include <QObject>
@@ -45,6 +46,9 @@ namespace CodexIncantation {
     void updateAutocompletion_Full(QsciScintilla* editor);
     QString getCurrentTypingWord(QsciScintilla* editor);
     void applyIndicatorsFromTextDirectives(QsciScintilla* editor);
+    void findNext(QsciScintilla* editor, QString text);
+    void findPrevious(QsciScintilla* editor, QString text);
+    QString getSearchStringFromDocDirective(QsciScintilla* editor);
     // functions || events
     void onTextChange(QsciScintilla* editor, std::function<void(QsciScintilla*)> logic);
     // -- 

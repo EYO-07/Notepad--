@@ -1,4 +1,5 @@
 // {TextMarker|cyan:>>>,<<<,TODO|red:ISSUE|yellow:INCOMPLETE,DEPRECATED|silver:SCULPT}
+// {Search:}
 // -- BEGIN 
 // GOLEM main.cpp 
 
@@ -17,6 +18,8 @@ using namespace CodexIncantation;
 
 // global variables
 int index_new_tab = 1;
+QString currentSearchString("");
+QString lastSearchString("");
 // functions forward declaration
 void darkTabScintillaLogic(QsciScintilla* view);
 QsciScintilla* addLeftTab_Scintilla(QSplitter* view, QString name);
@@ -39,7 +42,8 @@ int main(int argc, char *argv[]) {
         "// ... it's bit different from Notepad-- too ... \n"
         "// ... don't like it? use Notepadqq instead (or Nano, or Geany, or Vim ...) \n"
         "\n"
-        "// Text Marker Syntax {TextMarker|yellow:editor}\n"
+        "// Text Marker Document Directive Syntax {TextMarker|yellow:editor}\n"
+        "// Search Document Directive Syntax {Search:}"
         "\n"
         "1. [ TabTitle ] // ReadOnly tab, use Ctrl+R to change ReadOnly flag, by default the file opens on readonly mode \n"
         "2. * TabTitle // Is the editor text modified flag \n"
@@ -56,6 +60,8 @@ int main(int argc, char *argv[]) {
         "2. Alt+Left, Alt+Right // Focus the Left or Right current tab \n"
         "3. Alt+S // Change the split orientation\n"
         "4. Alt+A, Alt+B // Move the splitter separator\n"
+        "\n"
+        "1. Ctrl+F, Ctrl+D // Find Next, Find Previous Text\n"
     );
     clipboardPage->setText(
         "// Draft | Clipboard | Log\n"
@@ -217,7 +223,7 @@ void darkTabScintillaLogic(QsciScintilla* view) {
         if (currentTab == -1) return true;
         QString prev_tab_text = tabs->tabText(currentTab);
         // -- key processing 
-        if (e->modifiers() == Qt::AltModifier) {
+        if (e->modifiers() == Qt::AltModifier) { // Alt
             if (e->key() == Qt::Key_O) {
                 int line, col;
                 view->getCursorPosition(&line, &col);
@@ -290,7 +296,7 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 TabbedSplitView::switchTabs(currentTab,source,dest);
                 return true;
             }
-        } else if (e->modifiers() == Qt::ControlModifier) {
+        } else if (e->modifiers() == Qt::ControlModifier) { // Control 
             if (e->key() == Qt::Key_L) {
                 QsciScintilla* newEditor = TabbedSplitView::dialogScintillaTabLoad(tabs);
                 if (!newEditor) return true;
@@ -365,6 +371,58 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 if (!wdg) return true;
                 wdg->setFocus();
                 return true;
+            }
+            if (e->key() == Qt::Key_F) {
+                // -> Ctrl+F || $currentSearchString | findNext()
+                // -> Ctrl+F || $currentSearchString || getSearchStringFromDocDirective() | % didn find || input dialog 
+                currentSearchString = CodexIncantation::getSearchStringFromDocDirective(view);
+                if (currentSearchString.isNull() || currentSearchString.isEmpty()) {
+                    bool ok;
+                    lastSearchString = QInputDialog::getText(
+                        view, 
+                        "Find Next",
+                        "Search Text :", 
+                        QLineEdit::Normal,
+                        lastSearchString, 
+                        &ok
+                    );
+                    if (ok && !lastSearchString.isEmpty()) {
+                        currentSearchString = lastSearchString;
+                    } else {
+                        return true;
+                    }
+                    CodexIncantation::findNext(view,currentSearchString);
+                    return true;
+                } else {
+                    CodexIncantation::findNext(view,currentSearchString);
+                    return true;
+                }
+            }
+            if (e->key() == Qt::Key_D) {
+                // -> Ctrl+D || $currentSearchString | findPrevious()
+                // -> Ctrl+D || $currentSearchString || getSearchStringFromDocDirective() | % didn find || input dialog 
+                currentSearchString = CodexIncantation::getSearchStringFromDocDirective(view);
+                if (currentSearchString.isNull() || currentSearchString.isEmpty()) {
+                    bool ok;
+                    lastSearchString = QInputDialog::getText(
+                        view, 
+                        "Find Previous",
+                        "Search Text :", 
+                        QLineEdit::Normal,
+                        lastSearchString, 
+                        &ok
+                    );
+                    if (ok && !lastSearchString.isEmpty()) {
+                        currentSearchString = lastSearchString;
+                    } else {
+                        return true;
+                    }
+                    CodexIncantation::findPrevious(view,currentSearchString);
+                    return true;
+                } else {
+                    CodexIncantation::findPrevious(view,currentSearchString);
+                    return true;
+                }
             }
         } 
         return false; // Let all other keys (letters, arrows, etc.) pass to Scintilla

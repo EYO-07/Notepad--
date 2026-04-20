@@ -30,6 +30,7 @@ namespace CodexIncantation {
     void interceptKeyboardEvents(QObject* obj, std::function<bool(QKeyEvent*)> logic);
     // dialogs
     bool createEmptyFileDialog();
+    QString textInputDialog();
     // widgets
     void toggleOrientation(QSplitter *splitter);
     template<typename T> T* findClosestParent(QWidget* child);
