@@ -27,6 +27,8 @@
 #include <Qsci/qscilexerperl.h>
 #include <Qsci/qscilexercmake.h>
 // --
+#include <QDebug>
+#include <QSharedMemory>
 #include <QColor>
 #include <QObject>
 #include <QMessageBox>
@@ -61,7 +63,62 @@ namespace CodexIncantation {
         QsciScintilla* loadScintillaFromFilename(QTabWidget* tabs, QString fileName);
         bool isFileAlreadyOpened(QSplitter* splitter, QString absFilepath);
         bool isFileAlreadyOpened(QTabWidget* currentTabs, QString absFilepath);
+        QString getScintillaFullFileName(QTabWidget* tabs, int tabIndex);
     }
+    // classes 
+    class FileRegistry {
+    private:
+        QSharedMemory shm;
+        int memory_size = 20 * 1024; // 20 KB
+    public:
+        FileRegistry(const QString &key) : shm(key) {
+            if (!shm.attach()) {
+                if (!shm.create(memory_size)) {
+                    qWarning() << "Unable to create or attach shared memory segment";
+                }
+            }
+        }
+        bool isFileOpen(const QString &path) {
+            if (!shm.isAttached()) return false;
+            shm.lock();
+            QString content = QString::fromUtf8(static_cast<char*>(shm.data()));
+            shm.unlock();
+            return content.split("\n", Qt::SkipEmptyParts).contains(path);
+        }
+        bool registerFile(const QString &path) {
+            if (!shm.isAttached()) return false;
+            shm.lock();
+            QString content = QString::fromUtf8(static_cast<char*>(shm.data()));
+            QStringList files = content.split("\n", Qt::SkipEmptyParts);
+            if (files.contains(path)) {
+                shm.unlock();
+                return false; // already open
+            }
+            files.append(path);
+            QByteArray newData = files.join("\n").toUtf8();
+            if (newData.size() > shm.size()) { // Safety check
+                qWarning() << "Shared memory full, cannot register more files";
+                shm.unlock();
+                return false;
+            }
+            memset(shm.data(), 0, shm.size());
+            memcpy(shm.data(), newData.constData(), newData.size());
+            shm.unlock();
+            return true;
+        }
+        void unregisterFile(const QString &path) {
+            if (!shm.isAttached()) return;
+            shm.lock();
+            QString content = QString::fromUtf8(static_cast<char*>(shm.data()));
+            QStringList files = content.split("\n", Qt::SkipEmptyParts);
+            files.removeAll(path);
+            QByteArray newData = files.join("\n").toUtf8();
+            memset(shm.data(), 0, shm.size());
+            memcpy(shm.data(), newData.constData(), newData.size());
+            shm.unlock();
+        }
+    };
+
 }
 
 #endif // CODEX_DarkQtScintilla_H

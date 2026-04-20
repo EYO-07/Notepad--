@@ -53,6 +53,8 @@ QSet<QString> FILE_EXT_LEXER_YAML = {"yaml", "yml"};
 QSet<QString> FILE_EXT_LEXER_INI = {"ini", "cfg", "conf"};
 QHash<QsciScintilla*, QHash<QString, QVariant>> SCINTILLA_DATA;
 QRegularExpression directiveRegex(R"(\{TextMarker\|([^}]+)\})");
+// external variables 
+extern CodexIncantation::FileRegistry FILE_REGISTRY; // declare in main.cpp for multi-instance 
 
 // ===================================================================================
 
@@ -951,6 +953,14 @@ QString CodexIncantation::getSearchStringFromDocDirective(QsciScintilla* editor)
     }
     return "";
 }
+QString TabbedSplitView::getScintillaFullFileName(QTabWidget* tabs, int tabIndex) {
+    if (!tabs) return "";
+    QVariant data = tabs->tabBar()->tabData(tabIndex);
+    if(data.isNull() || !data.isValid()) return "";
+    QString absPath = data.value<QString>();
+    if (absPath.isNull()) return "";
+    return absPath;
+}
 
 // Incantation || namespace TabbedSplitView 
 QsciScintilla* TabbedSplitView::addLeftTab_Scintilla(QSplitter* view, QString name) {
@@ -975,10 +985,24 @@ QsciScintilla* TabbedSplitView::dialogScintillaTabLoad(QTabWidget* tabs) {
     }
     QString new_tab_text = getShortFileName(fileName);
     if (new_tab_text.isNull() || new_tab_text.isEmpty()) return nullptr;
+    if ( !FILE_REGISTRY.registerFile(fileName) ) { 
+        QMessageBox::warning(
+            splitter, 
+            "File in Use",
+            "This file is already open in another instance."
+        );
+        return nullptr; 
+    }
     QsciScintilla* editor = CodexIncantation::newDarkScintilla(splitter, fileName); // work-around
-    if (!editor) return nullptr;
+    if (!editor) { 
+        //FILE_REGISTRY.unregisterFile(fileName);
+        return nullptr;
+    }
     int tabIndex = tabs->addTab(editor, QString("[ ")+new_tab_text+QString(" ]"));
-    if (tabIndex == -1) return nullptr;    
+    if (tabIndex == -1) {
+        //FILE_REGISTRY.unregisterFile(fileName);
+        return nullptr;    
+    }
     tabs->setTabText(tabIndex, QString("[ ")+new_tab_text+QString(" ]"));
     tabs->tabBar()->setTabData(tabIndex, QVariant(fileName));
     tabs->setTabToolTip(tabIndex, fileName); // ISSUE
@@ -1004,10 +1028,17 @@ QsciScintilla* TabbedSplitView::loadScintillaFromFilename(QTabWidget* tabs, QStr
     }
     QString new_tab_text = getShortFileName(fileName);
     if (new_tab_text.isNull() || new_tab_text.isEmpty()) return nullptr;
+    if ( !FILE_REGISTRY.registerFile(fileName) ) return nullptr;
     QsciScintilla* editor = CodexIncantation::newDarkScintilla(splitter, fileName); // work-around
-    if (!editor) return nullptr;
+    if (!editor) {
+        //FILE_REGISTRY.unregisterFile(fileName);
+        return nullptr;
+    }
     int tabIndex = tabs->addTab(editor, QString("[ ")+new_tab_text+QString(" ]"));
-    if (tabIndex == -1) return nullptr;    
+    if (tabIndex == -1) {
+        //FILE_REGISTRY.unregisterFile(fileName);
+        return nullptr;    
+    }
     tabs->tabBar()->setTabData(tabIndex, QVariant(fileName));
     tabs->setTabToolTip(tabIndex, fileName); // ISSUE
     QString content = loadFile(fileName);

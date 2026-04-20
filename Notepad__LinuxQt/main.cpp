@@ -20,16 +20,18 @@ using namespace CodexIncantation;
 int index_new_tab = 1;
 QString currentSearchString("");
 QString lastSearchString("");
+CodexIncantation::FileRegistry FILE_REGISTRY("Notepad__LinuxQtSharedFiles");
 // functions forward declaration
 void darkTabScintillaLogic(QsciScintilla* view);
 QsciScintilla* addLeftTab_Scintilla(QSplitter* view, QString name);
 QsciScintilla* addRightTab_Scintilla(QSplitter* view, QString name);
 bool newEmptyScintillaTab(QsciScintilla* view);
+// local classes 
 
 // -- 
 int main(int argc, char *argv[]) {
     // Components    
-    QApplication app(argc, argv);
+    QApplication app(argc, argv);    
     QMainWindow* window = new QMainWindow();
     QSplitter* splitter = TabbedSplitView::tabbedSplitView(window);
     QTabWidget* ltabs = TabbedSplitView::getTabsByName(splitter, "leftTabs");
@@ -97,12 +99,7 @@ int main(int argc, char *argv[]) {
                 if (!editor) continue;
                 darkTabScintillaLogic(editor);
             }
-        } else {
-            //addLeftTab_Scintilla(splitter, QString("(%1)").arg(index_new_tab) );
-            //index_new_tab++;
-            //addRightTab_Scintilla(splitter, QString("(%1)").arg(index_new_tab) );
-            //index_new_tab++;
-        }
+        } 
     }
     { // Theme
         CodexIncantation::applyDarkTheme(window);
@@ -110,12 +107,6 @@ int main(int argc, char *argv[]) {
     { // Logic 
         CodexIncantation::interceptKeyboardEvents(window, [splitter,ltabs,rtabs](QKeyEvent* e) -> bool {
             if (e->modifiers() == Qt::ControlModifier) {
-                if (e->key() == Qt::Key_N) {
-                    return true; // DEPRECATED
-                    addLeftTab_Scintilla(splitter, QString("(%1) ...").arg(index_new_tab));
-                    index_new_tab++;
-                    return true;
-                }
                 if (e->key() == Qt::Key_L) {
                     QsciScintilla* newEditor = TabbedSplitView::dialogScintillaTabLoad(ltabs);
                     if (!newEditor) return true;
@@ -208,9 +199,25 @@ int main(int argc, char *argv[]) {
     }
     // -- 
     window->setCentralWidget(splitter);
-    window->resize(800, 600);
+    window->resize(1200, 800);
     window->show();
     auto result = app.exec();
+    { // Clean-Up 
+        TabbedSplitView::foreachTab(rtabs, [](int idx,QWidget* wdg, QTabWidget* tabs) -> int {
+            QString absFileName = TabbedSplitView::getScintillaFullFileName(tabs, idx);
+            if (absFileName.isEmpty()) return 0;
+            if (absFileName.isNull()) return 0;
+            FILE_REGISTRY.unregisterFile(absFileName);
+            return 0; 
+        } );
+        TabbedSplitView::foreachTab(ltabs, [](int idx,QWidget* wdg, QTabWidget* tabs) -> int {
+            QString absFileName = TabbedSplitView::getScintillaFullFileName(tabs, idx);
+            if (absFileName.isEmpty()) return 0;
+            if (absFileName.isNull()) return 0;
+            FILE_REGISTRY.unregisterFile(absFileName);
+            return 0; 
+        } );
+    }
     return result;
 }
 
@@ -359,6 +366,8 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 return true;
             }
             if (e->key() == Qt::Key_W) {
+                QString absFileName = TabbedSplitView::getScintillaFullFileName(tabs, currentTab);
+                FILE_REGISTRY.unregisterFile(absFileName);
                 TabbedSplitView::removeAndDestroyTab(tabs, currentTab);
                 if (tabs->count()==0) return true;
                 int tabIndex = tabs->currentIndex();
