@@ -1,8 +1,10 @@
-// {TextMarker|cyan:>>>,<<<,TODO|red:ISSUE|yellow:INCOMPLETE,DEPRECATED|silver:SCULPT}
+// {TextMarker|cyan:>>>,<<<,TODO|red:ISSUE|yellow:TESTING,INCOMPLETE,DEPRECATED|silver:SCULPT}
+// {TextMarker|blue:}
 // {Search:}
 // -- BEGIN 
 // GOLEM main.cpp 
 
+#include <QCoreApplication>
 #include <QApplication>
 #include <QPushButton>
 #include <QWidget>
@@ -67,6 +69,8 @@ int main(int argc, char *argv[]) {
         "4. Alt+A, Alt+D // Move the splitter separator\n"
         "\n"
         "1. Ctrl+F, Ctrl+D // Find Next, Find Previous Text\n"
+        "\n"
+        "1. F2 // Take Screenshot of the Current Editor\n"
     );
     clipboardPage->setText(
         "// Draft | Clipboard | Log\n"
@@ -436,7 +440,51 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                     return true;
                 }
             }
-        } 
+        } else if (e->key() == Qt::Key_F1) {
+            return true;
+        } else if (e->key() == Qt::Key_F2) { // TESTING 
+            if ( 
+                QMessageBox::No == QMessageBox::question(
+                    view, 
+                    "Editor Screenshot", 
+                    "Are you sure to take screenshot from the current editor?", 
+                    QMessageBox::Yes|QMessageBox::No
+                )
+            ) { return true; }
+            QString fnm = TabbedSplitView::getScintillaFullFileName(tabs,currentTab);
+            if ( fnm.isEmpty() || fnm.isNull() ) {
+                bool ok = false;
+                QString input = QInputDialog::getText(
+                    view, 
+                    "Editor Screenshot",
+                    "Image Filename :", 
+                    QLineEdit::Normal,
+                    "", 
+                    &ok
+                );
+                if (ok && !input.isEmpty() && !input.isNull()) {
+                    fnm = input;
+                } else {
+                    return true;
+                }
+            }
+            QString screenshotPath; {
+                QString tkn = CodexTransmutation::getShortFileName(fnm);
+                if (tkn.isNull() || tkn.isEmpty()) return true;
+                tkn = tkn.replace('.','_');
+                tkn = tkn.trimmed();
+                tkn = tkn.replace(' ','_');
+                using CodexTransmutation::joinPaths;
+                QString exeDir = QCoreApplication::applicationDirPath();
+                screenshotPath = joinPaths(exeDir,joinPaths("EditorScreenshots",tkn));
+            }
+            if (screenshotPath.isNull() || screenshotPath.isEmpty()) { 
+                QMessageBox::critical(view, "Error", "Empty Path");
+                return true; 
+            }
+            CodexIncantation::takeWidgetScreenshot(view,screenshotPath);
+            return true;
+        }
         return false; // Let all other keys (letters, arrows, etc.) pass to Scintilla
     });
     CodexIncantation::onTextChange(view, [](QsciScintilla* view) -> void {

@@ -11,6 +11,7 @@
 #include <QObject>
 #include <QKeyEvent>
 #include <QTabWidget>
+#include <QDir>
 
 namespace CodexTransmutation {
     QString loadFile(QString pathFilename);
@@ -21,6 +22,9 @@ namespace CodexTransmutation {
     QString getShortFileName(QString absolutePath);
     bool isEnclosedBy(QString target, QString begin, QString end);
     QString getExtension(QString fileName);
+    QString joinPaths(const QString &path1, const QString &path2);
+    //
+    
 }
 namespace CodexIncantation {
     // theme 
@@ -35,6 +39,7 @@ namespace CodexIncantation {
     void toggleOrientation(QSplitter *splitter);
     template<typename T> T* findClosestParent(QWidget* child);
     void moveSeparator(QSplitter* splitter, int value);
+    void takeWidgetScreenshot(QWidget* wdg, QString fileName);
     // -- 
     namespace TabbedSplitView {
         QSplitter* tabbedSplitView();

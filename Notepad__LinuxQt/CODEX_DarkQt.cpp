@@ -72,6 +72,9 @@ QString CodexTransmutation::getExtension(QString fileName) {
     QFileInfo fileInfo(fileName);
     return fileInfo.suffix().toLower();
 }
+QString CodexTransmutation::joinPaths(const QString &path1, const QString &path2) {
+    return QDir::cleanPath(path1 + QDir::separator() + path2);
+}
 
 // Incantation 
 void CodexIncantation::applyDarkTheme(QWidget* root) {
@@ -156,7 +159,7 @@ bool CodexIncantation::createEmptyFileDialog() {
     } 
     return false;
 }
-void CodexIncantation::moveSeparator(QSplitter* splitter, int value) { // TESTING 
+void CodexIncantation::moveSeparator(QSplitter* splitter, int value) { 
     if (!splitter) return;
     if (value == 0) return;
     // Get current sizes of all widgets in the splitter
@@ -180,6 +183,50 @@ void CodexIncantation::moveSeparator(QSplitter* splitter, int value) { // TESTIN
     sizes[0] = left;
     sizes[1] = right;
     splitter->setSizes(sizes);
+}
+void CodexIncantation::takeWidgetScreenshot(QWidget* wdg, QString fileName) {
+    QPixmap pixmap = wdg->grab();
+    /*
+    // Check file size estimate (rough: ARGB32 = 4 bytes per pixel)
+    long estimatedSize = pixmap.width() * pixmap.height() * 4;
+    const long MAX_SIZE = SIZE_MB * 1024 * 1024; // 10 MB limit
+    if (estimatedSize > MAX_SIZE) {
+        // Scale down to reduce size
+        int scaleFactor = qSqrt((double)estimatedSize / MAX_SIZE);
+        pixmap = pixmap.scaledToWidth(
+            pixmap.width() / scaleFactor,
+            Qt::SmoothTransformation
+        );
+    }
+    */
+    // Ensure .png extension
+    QString fullPath = QString("%1.png").arg(fileName);
+    // Extract directory from path
+    QFileInfo fileInfo(fullPath);
+    QDir dir = fileInfo.absoluteDir();
+    // Create directory if it doesn't exist
+    if (!dir.exists()) {
+        if (!dir.mkpath(".")) {
+            QMessageBox::critical(
+                wdg, 
+                "Error", 
+                QString("Failed to create directory: %1").arg( dir.absolutePath() ) 
+            );
+            qWarning() << "Failed to create directory:" << dir.absolutePath();
+            return;
+        }
+    }
+    // Save with error checking
+    if (!pixmap.save(fullPath)) {
+        QMessageBox::critical(
+            wdg, 
+            "Error", 
+            QString("Failed to save screenshot: %1").arg( fullPath ) 
+        );
+        qWarning() << "Failed to save screenshot:" << fullPath;
+        return;
+    }
+    QMessageBox::information(wdg, "File Saved", QString("File Saved at: %1").arg(fullPath) );
 }
 
 // Incantation || namespace TabbedSplitView 
