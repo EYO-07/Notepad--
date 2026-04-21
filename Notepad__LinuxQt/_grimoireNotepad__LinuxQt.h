@@ -339,6 +339,8 @@ Codex % Divination, Library
  * QMessageBox::question(parent, title, text, buttons); // Dialog with Yes/No/Cancel options.
  * msgBox.setDetailedText("string"); // Adds a "Show Details..." button with a text area.
  * msgBox.setStyleSheet("color: white;"); // Essential for visibility if using dark themes on Linux.
+ * auto reply = QMessageBox::question(this, Tigle, Message, QMessageBox::Yes|QMessageBox::No)
+ * reply would be QMessageBox::Yes or QMessageBox::No 
  * */
 /* Inventory [ QInputDialog ] { C++, Qt6 } 
  * getText(); // Static: Prompts for a string. Returns QString.
@@ -350,6 +352,11 @@ Codex % Divination, Library
  * setCancelButtonText(QString); // Customizes the 'Cancel' label.
  * // Note: Use the static methods for simple tasks; instantiate for advanced config.
  * */
+
+/* Inventory [ ] { C++, Qt6 } 
+1. SYNTAX // SHORTDESCRIPTION 
+
+*/
 
 // -- image
 /* Inventory [ QImage ] { C++, Linux, Qt6 } 
@@ -568,6 +575,23 @@ Codex % Divination, Library
 8. scnt->setAutoCompletionReplaceWord(true); // Overwrite current word on selection
 9. scnt->autoComplete(); // Manually trigger the autocompletion popup
 10. scnt->isListActive(); // Check if a completion list is currently visible
+*/
+
+/* Inventory [ QFileSystemWatcher ] { Qt6, C++ }
+1. QFileSystemWatcher watcher; // Create watcher instance
+2. watcher.addPath("file.txt"); // Add single file to watch
+3. watcher.addPaths(QStringList{"file1.txt","file2.txt"}); // Add multiple files
+4. watcher.addPath("dir/"); // Add directory to watch
+5. QObject::connect(&watcher, &QFileSystemWatcher::fileChanged, 
+   [](const QString &path){ qDebug() << "File changed:" << path; }); 
+   // Signal when file changes
+6. QObject::connect(&watcher, &QFileSystemWatcher::directoryChanged, 
+   [](const QString &path){ qDebug() << "Directory changed:" << path; }); 
+   // Signal when directory changes
+7. watcher.files(); // Returns list of watched files
+8. watcher.directories(); // Returns list of watched directories
+9. watcher.removePath("file.txt"); // Stop watching a file
+10. watcher.removePaths(QStringList{"file1.txt","file2.txt"}); // Stop watching multiple files
 */
 
 // =================================================================================

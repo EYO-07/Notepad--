@@ -732,7 +732,35 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         lexer->setFoldAtElse(true);
         lexer->setFoldCompact(false);
         // -- sql style 
-        
+        lexer->setColor(fgColor, QsciLexerSQL::Default);
+        lexer->setPaper(bgColor, QsciLexerSQL::Default);
+        lexer->setColor(commentColor, QsciLexerSQL::Comment);
+        lexer->setPaper(commentPaperColor, QsciLexerSQL::Comment);
+        lexer->setColor(commentColor, QsciLexerSQL::CommentLine);
+        lexer->setPaper(commentPaperColor, QsciLexerSQL::CommentLine);
+        lexer->setColor(commentColor, QsciLexerSQL::CommentDoc);
+        lexer->setPaper(commentPaperColor, QsciLexerSQL::CommentDoc);
+        lexer->setColor(numberColor, QsciLexerSQL::Number);
+        lexer->setPaper(numberPaperColor, QsciLexerSQL::Number);
+        lexer->setColor(keyword1, QsciLexerSQL::Keyword);
+        lexer->setColor(stringColor, QsciLexerSQL::DoubleQuotedString);
+        lexer->setPaper(stringPaperColor, QsciLexerSQL::DoubleQuotedString);
+        lexer->setColor(stringColor, QsciLexerSQL::SingleQuotedString);
+        lexer->setPaper(stringPaperColor, QsciLexerSQL::SingleQuotedString);
+        lexer->setColor(keyword2, QsciLexerSQL::PlusKeyword);
+        lexer->setColor(keyword2, QsciLexerSQL::PlusPrompt);
+        lexer->setColor(operatorColor, QsciLexerSQL::Operator);
+        lexer->setColor(fgColor, QsciLexerSQL::Identifier);
+        lexer->setColor(commentColor, QsciLexerSQL::PlusComment);
+        lexer->setPaper(commentPaperColor, QsciLexerSQL::PlusComment);
+        lexer->setColor(commentColor, QsciLexerSQL::CommentLineHash);
+        lexer->setPaper(commentPaperColor, QsciLexerSQL::CommentLineHash);
+        lexer->setColor(commentColor, QsciLexerSQL::CommentDocKeyword);
+        lexer->setPaper(commentPaperColor, QsciLexerSQL::CommentDocKeyword);
+        lexer->setColor(commentColor, QsciLexerSQL::CommentDocKeywordError);
+        lexer->setPaper(commentPaperColor, QsciLexerSQL::CommentDocKeywordError);
+        lexer->setColor(fgColor, QsciLexerSQL::QuotedIdentifier);
+        lexer->setColor(operatorColor, QsciLexerSQL::QuotedOperator);
         // 
         editor->setLexer(lexer);
         return true;
@@ -744,6 +772,7 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         lexer->setFoldPreprocessor(true);
         //lexer->setFoldAtElse(true);
         lexer->setFoldCompact(false);
+        applyHTMLStyle(lexer);
         editor->setLexer(lexer);
         return true;
     } else if ( FILE_EXT_LEXER_RUBY.contains(ext) ) {
@@ -754,6 +783,49 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         //lexer->setFoldPreprocessor(true);
         //lexer->setFoldAtElse(true);
         lexer->setFoldCompact(false);
+        // -- ruby style 
+        lexer->setColor(fgColor, QsciLexerRuby::Default);
+        lexer->setPaper(bgColor, QsciLexerRuby::Default);
+        lexer->setColor(commentColor, QsciLexerRuby::Comment);
+        lexer->setPaper(commentPaperColor, QsciLexerRuby::Comment);
+        lexer->setColor(numberColor, QsciLexerRuby::Number);
+        lexer->setPaper(numberPaperColor, QsciLexerRuby::Number);
+        lexer->setColor(fgColor, QsciLexerRuby::POD);
+        lexer->setColor(keyword1, QsciLexerRuby::Keyword);
+        lexer->setColor(stringColor, QsciLexerRuby::DoubleQuotedString);
+        lexer->setPaper(stringPaperColor, QsciLexerRuby::DoubleQuotedString);
+        lexer->setColor(stringColor, QsciLexerRuby::SingleQuotedString);
+        lexer->setPaper(stringPaperColor, QsciLexerRuby::SingleQuotedString);
+        lexer->setColor(classColor, QsciLexerRuby::ClassName);
+        lexer->setColor(functionColor, QsciLexerRuby::FunctionMethodName);
+        lexer->setColor(operatorColor, QsciLexerRuby::Operator);
+        lexer->setColor(fgColor, QsciLexerRuby::Identifier);
+        lexer->setColor(stringColor, QsciLexerRuby::Regex);
+        lexer->setPaper(stringPaperColor, QsciLexerRuby::Regex);
+        lexer->setColor(keyword2, QsciLexerRuby::Global);
+        lexer->setColor(operatorColor, QsciLexerRuby::Symbol);
+        lexer->setColor(preprocessorColor, QsciLexerRuby::ModuleName);
+        // InstanceVariable
+        lexer->setColor(keyword2, QsciLexerRuby::ClassVariable);
+        // Backticks 
+        // DataSection 
+        // HereDocumentDelimiter 
+        // HereDocument
+        lexer->setColor(stringColor, QsciLexerRuby::PercentStringq);
+        lexer->setPaper(stringPaperColor, QsciLexerRuby::PercentStringq);
+        lexer->setColor(stringColor, QsciLexerRuby::PercentStringQ);
+        lexer->setPaper(stringPaperColor, QsciLexerRuby::PercentStringQ);
+        lexer->setColor(stringColor, QsciLexerRuby::PercentStringx);
+        lexer->setPaper(stringPaperColor, QsciLexerRuby::PercentStringx);
+        lexer->setColor(stringColor, QsciLexerRuby::PercentStringr);
+        lexer->setPaper(stringPaperColor, QsciLexerRuby::PercentStringr);
+        lexer->setColor(stringColor, QsciLexerRuby::PercentStringw);
+        lexer->setPaper(stringPaperColor, QsciLexerRuby::PercentStringw);
+        // DemotedKeyword 
+        // Stdin
+        // Stdout 
+        // Stderr 
+        // 
         editor->setLexer(lexer);
         return true;
     } else if ( FILE_EXT_LEXER_PERL.contains(ext) ) {

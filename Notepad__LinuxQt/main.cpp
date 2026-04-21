@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QtGlobal>
 #include <iostream>
+#include <QDateTime>
 #include "CODEX_DarkQt.h"
 #include "CODEX_DarkQtScintilla.h"
 using namespace CodexTransmutation;
@@ -21,6 +22,7 @@ int index_new_tab = 1;
 QString currentSearchString("");
 QString lastSearchString("");
 CodexIncantation::FileRegistry FILE_REGISTRY("Notepad__LinuxQtSharedFiles");
+// QHash<QString, QDateTime> FILE_MODIFICATION;
 // functions forward declaration
 void darkTabScintillaLogic(QsciScintilla* view);
 QsciScintilla* addLeftTab_Scintilla(QSplitter* view, QString name);
@@ -30,6 +32,7 @@ bool newEmptyScintillaTab(QsciScintilla* view);
 
 // -- 
 int main(int argc, char *argv[]) {
+    // FILE_MODIFICATION = QHash<QString, QDateTime>();
     // Components    
     QApplication app(argc, argv);    
     QMainWindow* window = new QMainWindow();
@@ -56,12 +59,12 @@ int main(int argc, char *argv[]) {
         "3. Ctrl+S // save file and update the Text Markers \n"
         "4. Ctrl+W // close tab \n"
         "\n"
-        "1. Ctrl+Tab, Ctrl+Shift+Tab // Change Selected Tab from Current Tab Set \n"
+        "1. Ctrl+Tab, Ctrl+Shift+Tab // Change Selected Tab \n"
         "\n"
         "1. Alt+V // Switch view for current tab \n"
         "2. Alt+Left, Alt+Right // Focus the Left or Right current tab \n"
         "3. Alt+S // Change the split orientation\n"
-        "4. Alt+A, Alt+B // Move the splitter separator\n"
+        "4. Alt+A, Alt+D // Move the splitter separator\n"
         "\n"
         "1. Ctrl+F, Ctrl+D // Find Next, Find Previous Text\n"
     );

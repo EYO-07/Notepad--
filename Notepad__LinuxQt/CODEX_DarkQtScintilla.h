@@ -51,6 +51,13 @@ namespace CodexIncantation {
     void findNext(QsciScintilla* editor, QString text);
     void findPrevious(QsciScintilla* editor, QString text);
     QString getSearchStringFromDocDirective(QsciScintilla* editor);
+    template<typename T> void applyLexerColorsToList(T lexer, QList<int> list, QColor fore, QColor back) {
+        if (!lexer) return;
+        for(const auto& item: list) {
+            lexer->setColor(fore, item);
+            lexer->setPaper(back, item);
+        }
+    }
     // functions || events
     void onTextChange(QsciScintilla* editor, std::function<void(QsciScintilla*)> logic);
     // -- 
@@ -123,6 +130,18 @@ namespace CodexIncantation {
 
 #endif // CODEX_DarkQtScintilla_H
 
+/*
+
+if ( QMessageBox::No == QMessageBox::question(
+    editor, 
+    "Confirmation", 
+    QString("Are you sure to open this file (%1) in text editor? Some files are not supposed to be opened this way, be cautious!").arg(fileName), 
+    QMessageBox::Yes | QMessageBox::No
+)){ 
+    return true; 
+}
+
+*/
 
 
 
