@@ -1,4 +1,4 @@
-// {TextMarker|cyan:>>>,<<<,TODO|red:ISSUE|yellow:TESTING,INCOMPLETE,DEPRECATED|silver:SCULPT}
+// {TextMarker|cyan:>>>,<<<,TODO|red:ISSUE|yellow:TESTING,INCOMPLETE,DEPRECATED|silver:SCULPT,UNUSED|magenta:LOGICAL_ISSUE}
 // {TextMarker|blue:}
 // {Search:}
 // -- BEGIN 
@@ -6,31 +6,36 @@
 
 #include <QCoreApplication>
 #include <QApplication>
-#include <QPushButton>
-#include <QWidget>
-#include <QVBoxLayout> // Layout manager
-#include <QTextEdit>
-#include <QLabel>
-#include <QtGlobal>
-#include <iostream>
-#include <QDateTime>
 #include "CODEX_DarkQt.h"
 #include "CODEX_DarkQtScintilla.h"
 using namespace CodexTransmutation;
 using namespace CodexIncantation;
 
 // global variables
-int index_new_tab = 1;
 QString currentSearchString("");
 QString lastSearchString("");
 CodexIncantation::FileRegistry FILE_REGISTRY("Notepad__LinuxQtSharedFiles");
+// QFileSystemWatcher FILE_WATCHER; 
 // QHash<QString, QDateTime> FILE_MODIFICATION;
-// functions forward declaration
+// forward declaration
 void darkTabScintillaLogic(QsciScintilla* view);
 QsciScintilla* addLeftTab_Scintilla(QSplitter* view, QString name);
 QsciScintilla* addRightTab_Scintilla(QSplitter* view, QString name);
 bool newEmptyScintillaTab(QsciScintilla* view);
+void log(QString line, QsciScintilla* editor);
+void logError(QString line, QsciScintilla* editor);
+void logGreen(QString line, QsciScintilla* editor);
+
 // local classes 
+
+// local functions 
+void debugFileWatcher(const QFileSystemWatcher& watcher) { // UNUSED 
+    QString filePaths("");
+    for(const auto& item: watcher.files()) {
+        filePaths+item+",";
+    }
+    QMessageBox::information(nullptr, "Files Being Watched", filePaths);
+}
 
 // -- 
 int main(int argc, char *argv[]) {
@@ -50,13 +55,13 @@ int main(int argc, char *argv[]) {
         "// ... don't like it? use Notepadqq instead (or Nano, or Geany, or Vim ...) \n"
         "\n"
         "// Text Marker Document Directive Syntax {TextMarker|yellow:editor}\n"
-        "// Search Document Directive Syntax {Search:}"
+        "// Search Document Directive Syntax {Search:token}"
         "\n"
         "1. [ TabTitle ] // ReadOnly tab, use Ctrl+R to change ReadOnly flag, by default the file opens on readonly mode \n"
         "2. * TabTitle // Is the editor text modified flag \n"
         "\n"
         "// Commands \n"
-        "1. Ctrl+R // change readonly flag \n"
+        "1. Ctrl+R 'change readonly flag so you can actually edit' \n"
         "2. Ctrl+L // load file \n"
         "3. Ctrl+S // save file and update the Text Markers \n"
         "4. Ctrl+W // close tab \n"
@@ -68,18 +73,23 @@ int main(int argc, char *argv[]) {
         "3. Alt+S // Change the split orientation\n"
         "4. Alt+A, Alt+D // Move the splitter separator\n"
         "\n"
-        "1. Ctrl+F, Ctrl+D // Find Next, Find Previous Text\n"
+        "1. Ctrl+F, Ctrl+D // Find Next, Find Previous Text, will prompt a input dialog if don't find search directive on document. \n"
         "\n"
-        "1. F2 // Take Screenshot of the Current Editor\n"
+        "1. F1 // Take Screenshot of the Current Editor to clipboard\n"
+        "2. F2 // Take Screenshot of the Current Editor to file \n"
+        "\n"
+        "... use this tabpage as you wish, its not stored anywhere. \n"
     );
     clipboardPage->setText(
-        "// Draft | Clipboard | Log\n"
-        "... use this tabpage as you wish"
+        "// Clipboard | Log\n"
+        "... use this tabpage as you wish, its not stored anywhere. \n\n"
     );
     helpPage->setFocus();
+    log("Notepad-- Started",clipboardPage);
     { // Layout 
         // load files by argument options
         if (argc>1) {
+            log("Processing Command Line Arguments",clipboardPage);
             int i;
             bool b_left_side = true;
             for (int i = 1; i < argc; ++i) {
@@ -93,9 +103,19 @@ int main(int argc, char *argv[]) {
                     continue;
                 }
                 QString absDirPath = isDir(strArgument);
-                if (!absDirPath.isEmpty() && !absDirPath.isNull()) continue;
+                if (!absDirPath.isEmpty() && !absDirPath.isNull()) { 
+                    logError("Failed to Load File",clipboardPage);
+                    log(QString("The file '%1' is a directory" ).arg(absDirPath),clipboardPage);
+                    continue; 
+                }
                 QString absFileName = fileExists(strArgument);
-                if (absFileName.isEmpty() || absFileName.isNull()) continue;
+                if (absFileName.isEmpty() || absFileName.isNull()) {
+                    logError(
+                        QString("Failed to Load File : Invalid Filename (%1)").arg(strArgument),
+                        clipboardPage
+                    );
+                    continue;
+                }
                 QTabWidget* tabs = nullptr;
                 if (b_left_side) {
                     tabs = TabbedSplitView::getTabsByName(splitter, "leftTabs");
@@ -103,8 +123,14 @@ int main(int argc, char *argv[]) {
                     tabs = TabbedSplitView::getTabsByName(splitter, "rightTabs");
                 }
                 QsciScintilla* editor = TabbedSplitView::loadScintillaFromFilename(tabs, absFileName);
-                if (!editor) continue;
+                if (!editor) { 
+                    logError("Failed to Load File : is the file opened in another instance ?",clipboardPage);
+                    continue;
+                }
                 darkTabScintillaLogic(editor);
+                QFileInfo info(absFileName);
+                // FILE_WATCHER.addPath(info.absoluteFilePath()); // TESTING ISSUE addPath don't work 
+                log(QString("File Loaded by Command Line Argument // %1").arg(absFileName), clipboardPage);
             }
         } 
     }
@@ -203,6 +229,32 @@ int main(int argc, char *argv[]) {
             }
             return false;
         });
+        
+        /* Dialetic 
+        - Which parts of the project should be modified to autodetect external file change ?
+        : 1. Loading Logic || Should register the file to be watched 
+        : 2. Saving Logic || Should prevent the logic to be processed, only external files
+        : 3. Closing Tab Logic || Should remove the associated file 
+        -- How to block the modification detection by the program itself ?
+        - What the program should do whenever a file is externally modified ?
+        -- { The file don't exist anymore } ?
+        -- { The file was renamed } ?
+        -- { The file was changed in content } ? 
+        - What this callback should do if the file was externally modified ?
+        -- < Silent Reload > ? 
+        -- < Silent Reload with a logging in _journal.h > ?
+        -- < Dialog Reload > ? 
+        -- < Automatic Closing if the file don't exist anymore > ?
+        */
+        
+        /*
+        QObject::connect(&FILE_WATCHER, &QFileSystemWatcher::fileChanged, // TODO LOGICAL_ISSUE 
+            [clipboardPage](const QString &path){ 
+                
+                log(QString("File Changed : %1").arg(path),clipboardPage);
+            }
+        ); 
+        */
     }
     // -- 
     window->setCentralWidget(splitter);
@@ -210,6 +262,7 @@ int main(int argc, char *argv[]) {
     window->show();
     auto result = app.exec();
     { // Clean-Up 
+        // Clean-Up | Multi-instance Shared Memory Clean-up
         TabbedSplitView::foreachTab(rtabs, [](int idx,QWidget* wdg, QTabWidget* tabs) -> int {
             QString absFileName = TabbedSplitView::getScintillaFullFileName(tabs, idx);
             if (absFileName.isEmpty()) return 0;
@@ -311,13 +364,17 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 return true;
             }
         } else if (e->modifiers() == Qt::ControlModifier) { // Control 
-            if (e->key() == Qt::Key_L) {
+            if (e->key() == Qt::Key_L) { // TESTING LOGICAL_ISSUE 
                 QsciScintilla* newEditor = TabbedSplitView::dialogScintillaTabLoad(tabs);
                 if (!newEditor) return true;
+                int newEditorIndex = tabs->indexOf(newEditor);
+                if (newEditorIndex == -1) return true;
+                QString newEditorFullFileName = TabbedSplitView::getScintillaFullFileName(tabs,newEditorIndex);
+                // FILE_WATCHER.addPath(newEditorFullFileName); // ISSUE addPath don't work 
                 darkTabScintillaLogic(newEditor);
                 return true;
             }
-            if (e->key() == Qt::Key_S) {
+            if (e->key() == Qt::Key_S) { 
                 if (!tabs) return true;
                 CodexIncantation::applyIndicatorsFromTextDirectives(view);
                 QVariant data = tabs->tabBar()->tabData(currentTab);
@@ -336,20 +393,8 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 } else {}
                 return true;
             }
-            if (e->key() == Qt::Key_N) {
-                return true; // DEPRECATED
-                if (!tabs) return true;
-                QString tabs_name = tabs->objectName();
-                QSplitter* splitter = CodexIncantation::findClosestParent<QSplitter>(tabs);
-                if (!splitter) return true;
-                if (tabs_name == "leftTabs") {
-                    addLeftTab_Scintilla(splitter, QString("(%1)").arg(index_new_tab));
-                    index_new_tab++;
-                } else if (tabs_name == "rightTabs") {
-                    addRightTab_Scintilla(splitter, QString("(%1)").arg(index_new_tab));
-                    index_new_tab++;
-                }
-                return true;
+            if (e->key() == Qt::Key_N) { // UNUSED 
+                return true; 
             }
             if (e->key() == Qt::Key_R) {
                 if (!tabs) return true;
@@ -375,6 +420,7 @@ void darkTabScintillaLogic(QsciScintilla* view) {
             if (e->key() == Qt::Key_W) {
                 QString absFileName = TabbedSplitView::getScintillaFullFileName(tabs, currentTab);
                 FILE_REGISTRY.unregisterFile(absFileName);
+                // FILE_WATCHER.removePath(absFileName); // TESTING
                 TabbedSplitView::removeAndDestroyTab(tabs, currentTab);
                 if (tabs->count()==0) return true;
                 int tabIndex = tabs->currentIndex();
@@ -440,9 +486,10 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                     return true;
                 }
             }
-        } else if (e->key() == Qt::Key_F1) {
+        } else if (e->key() == Qt::Key_F1) { // TESTING Screenshot to Clipboard
+            CodexIncantation::takeWidgetScreenshot(view);
             return true;
-        } else if (e->key() == Qt::Key_F2) { // TESTING 
+        } else if (e->key() == Qt::Key_F2) { // Editor Screenshot to File 
             if ( 
                 QMessageBox::No == QMessageBox::question(
                     view, 
@@ -514,5 +561,21 @@ QsciScintilla* addRightTab_Scintilla(QSplitter* view, QString name) {
     darkTabScintillaLogic(result);
     return result;
 }
+void log(QString line, QsciScintilla* editor) {
+    QString timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+    QString textToAppend = "["+timestamp+"] "+line+"\n";
+    editor->append( textToAppend );
+}
+void logError(QString line, QsciScintilla* editor) {
+    QString timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+    QString textToAppend = "["+timestamp+"] '"+line+"'\n";
+    editor->append( textToAppend );
+}
+void logGreen(QString line, QsciScintilla* editor) {
+    QString timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+    QString textToAppend = "["+timestamp+"] //"+line+"\n";
+    editor->append( textToAppend );
+}
 
 // -- END 
+

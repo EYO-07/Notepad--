@@ -1,18 +1,28 @@
 #ifndef CODEX_DarkQt_H
 #define CODEX_DarkQt_H
-// -- 
+// 
+// Standart Library { C++ }
+#include <iostream>
+// Qt Core 
+#include <QtGlobal>
+#include <QString>
+#include <QObject>
+#include <QDir>
+#include <QDateTime>
 #include <QtCore>
+// Qt GUI | Events
 #include <QtGui>
+#include <QKeyEvent>
+// Qt GUI | Widgets
 #include <QtWidgets>
 #include <QWidget>
-#include <QString>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
 #include <QSplitter>
-#include <QTextEdit>
-#include <QObject>
-#include <QKeyEvent>
 #include <QTabWidget>
-#include <QDir>
-
+#include <QTextEdit>
+//
 namespace CodexTransmutation {
     QString loadFile(QString pathFilename);
     void saveFile(QString pathFilename, QString);
@@ -39,7 +49,8 @@ namespace CodexIncantation {
     void toggleOrientation(QSplitter *splitter);
     template<typename T> T* findClosestParent(QWidget* child);
     void moveSeparator(QSplitter* splitter, int value);
-    void takeWidgetScreenshot(QWidget* wdg, QString fileName);
+    void takeWidgetScreenshot(QWidget* wdg, QString fileName); // to file 
+    void takeWidgetScreenshot(QWidget* wdg); // to system clipboard 
     // -- 
     namespace TabbedSplitView {
         QSplitter* tabbedSplitView();
@@ -59,7 +70,6 @@ namespace CodexIncantation {
     }
     
 }
-
 // template definitions
 template<typename T> T* CodexIncantation::findClosestParent(QWidget* child) {
     if (!child) return nullptr;

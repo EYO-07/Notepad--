@@ -1,4 +1,4 @@
-// {TextMarker|cyan:Inventory|silver:Dialetic}
+// {TextMarker|cyan:Inventory|silver:Dialetic,Logic|blue:Workflow}
 // -- BEGIN 
 
 // Grimoire [ C++ ] { Qt6, Linux, QsciScintilla }
@@ -39,6 +39,11 @@ Codex % Divination, Library
 
 ... (Sculpting, Spellcrafting, Infusion) is how a programmer sees the programming as a wizard.
 ... (Sculpting, Infusion) is a shortcut workflow, when spellcraft isn't necessary if the spells necessary for the project is already in the codex or already in the built-in libraries from the grimoire.
+
+Workflow [ Programming ] { Magic Oriented Programming Paradigm } 
+-> Coding || Design || Dialetic | Logic | Workflow
+-> Coding || Design | Project Sculpting | & || $ Grimoire | &? || Sculpting | % || Spellcraft
+-> Coding || Design | Project Sculpting | & || $ Grimoire | &? || Sculpting | % | Infusion 
 
 */
 

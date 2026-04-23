@@ -3,6 +3,7 @@
 // CODEX_DarkQt.cpp
 #include "CODEX_DarkQt.h"
 #include <QApplication>
+#include <QClipboard>
 #include <QList>
 #include <QFileInfo>
 #include <QDir>
@@ -184,7 +185,7 @@ void CodexIncantation::moveSeparator(QSplitter* splitter, int value) {
     sizes[1] = right;
     splitter->setSizes(sizes);
 }
-void CodexIncantation::takeWidgetScreenshot(QWidget* wdg, QString fileName) {
+void CodexIncantation::takeWidgetScreenshot(QWidget* wdg, QString fileName) { // to file 
     QPixmap pixmap = wdg->grab();
     /*
     // Check file size estimate (rough: ARGB32 = 4 bytes per pixel)
@@ -227,6 +228,12 @@ void CodexIncantation::takeWidgetScreenshot(QWidget* wdg, QString fileName) {
         return;
     }
     QMessageBox::information(wdg, "File Saved", QString("File Saved at: %1").arg(fullPath) );
+}
+void CodexIncantation::takeWidgetScreenshot(QWidget* wdg) { // to system clipboard
+    QPixmap pixmap = wdg->grab();
+    QClipboard* clipboard = QApplication::clipboard();
+    clipboard->setPixmap(pixmap);
+    QMessageBox::information(wdg, "Copied", "Screenshot copied to clipboard.");
 }
 
 // Incantation || namespace TabbedSplitView 
