@@ -124,6 +124,12 @@ void setIndicator(QsciScintilla* editor, int indicatorId, QColor color) { // ISS
 // 4. template<typename LEXER> void applyDefaultLexerStyle(QList<int> list, LEXER* lexer)
 // 5. template<typename LEXER> void applyCommonLexerStyle(LEXER* lexer)
 // 6. template<typename LEXER> void applyPaper(QList<int> list, LEXER* lexer, QColor color)
+// 7. template<typename LEXER> void applyColor(QList<int> list, LEXER* lexer, QColor color)
+template<typename LEXER> void applyColor(QList<int> list, LEXER* lexer, QColor color) {
+    for (const int& item: list) {
+        lexer->setColor(color, item);
+    }
+}
 template<typename LEXER> void applyPaper(QList<int> list, LEXER* lexer, QColor color) {
     for (const int& item: list) {
         lexer->setPaper(color, item);
@@ -937,7 +943,7 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         //
         editor->setLexer(lexer);
         return true;
-    } else if ( FILE_EXT_LEXER_MARKDOWN.contains(ext) ) {
+    } else if ( FILE_EXT_LEXER_MARKDOWN.contains(ext) ) { // OK 
         QsciLexerMarkdown* lexer = new QsciLexerMarkdown(editor);
         lexer->setDefaultPaper(bgColor);
         lexer->setDefaultColor(fgColor);
@@ -948,15 +954,48 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         // markdown style 
         applyDefaultLexerStyle<QsciLexerMarkdown>({
             QsciLexerMarkdown::Default,
-        },lexer);
-        applyNumberLexerStyle({
+            QsciLexerMarkdown::Special,
+            QsciLexerMarkdown::HorizontalRule,
             QsciLexerMarkdown::CodeBackticks,
             QsciLexerMarkdown::CodeDoubleBackticks,
+            QsciLexerMarkdown::CodeBlock,
+        },lexer);
+        applyPaper<QsciLexerMarkdown>({
+            QsciLexerMarkdown::CodeBackticks,
+            QsciLexerMarkdown::CodeDoubleBackticks,
+            QsciLexerMarkdown::CodeBlock,
+        },lexer,bgScriptColor);
+        applyColor<QsciLexerMarkdown>({
+            QsciLexerMarkdown::CodeBackticks,
+            QsciLexerMarkdown::CodeDoubleBackticks,
+            QsciLexerMarkdown::CodeBlock,
+        },lexer,preprocessorColor);
+        applyNumberLexerStyle<QsciLexerMarkdown>({
+            QsciLexerMarkdown::Prechar, 
+            QsciLexerMarkdown::OrderedListItem, 
+            QsciLexerMarkdown::UnorderedListItem, 
+            QsciLexerMarkdown::Link, 
+            QsciLexerMarkdown::BlockQuote, 
+        },lexer);
+        lexer->setColor(keyword2, QsciLexerMarkdown::Header1);
+        lexer->setColor(keyword2, QsciLexerMarkdown::Header2);
+        lexer->setColor(keyword2, QsciLexerMarkdown::Header3);
+        lexer->setColor(keyword2, QsciLexerMarkdown::Header4);
+        lexer->setColor(keyword1, QsciLexerMarkdown::Header5);
+        lexer->setColor(keyword1, QsciLexerMarkdown::Header6);
+        applyStringLexerStyle<QsciLexerMarkdown>({
+            QsciLexerMarkdown::StrongEmphasisAsterisks,
+            QsciLexerMarkdown::StrongEmphasisUnderscores,
+            QsciLexerMarkdown::StrikeOut,
+        },lexer);
+        applyCommentLexerStyle<QsciLexerMarkdown>({
+            QsciLexerMarkdown::EmphasisAsterisks,
+            QsciLexerMarkdown::EmphasisUnderscores,
         },lexer);
         //
         editor->setLexer(lexer);
         return true;
-    } else if ( FILE_EXT_LEXER_YAML.contains(ext) ) {
+    } else if ( FILE_EXT_LEXER_YAML.contains(ext) ) { // ISSUE 
         QsciLexerYAML* lexer = new QsciLexerYAML(editor);
         lexer->setDefaultPaper(bgColor);
         lexer->setDefaultColor(fgColor);
@@ -969,15 +1008,18 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
             QsciLexerYAML::Default,
             QsciLexerYAML::Identifier,
             QsciLexerYAML::Reference,
-            QsciLexerYAML::SyntaxErrorMarker,
             QsciLexerYAML::DocumentDelimiter,
-            QsciLexerYAML::TextBlockMarker
+            
         }, lexer);
         applyCommentLexerStyle<QsciLexerYAML>({
             QsciLexerYAML::Comment
         },lexer);
         applyNumberLexerStyle<QsciLexerYAML>({
             QsciLexerYAML::Number
+        },lexer);
+        applyStringLexerStyle<QsciLexerYAML>({
+            QsciLexerYAML::SyntaxErrorMarker,
+            QsciLexerYAML::TextBlockMarker
         },lexer);
         lexer->setColor(keyword1, QsciLexerYAML::Keyword);
         lexer->setColor(operatorColor, QsciLexerYAML::Operator);

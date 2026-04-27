@@ -152,7 +152,15 @@ bool CodexIncantation::createEmptyFileDialog() {
         "", 
         "All Files (*)"
     );
-    if (fileName.isEmpty()) return false; 
+    
+    /*
+    if ( CodexTransmutation::fileExists(fileName) != "" ) {
+        QMessageBox::warning(nullptr, "Error", "File Already Exists, use Ctrl+L instead.");
+        return false;
+    }
+    */
+    
+    if (fileName.isEmpty() || fileName.isNull()) return false; 
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly)) {
         file.close();
