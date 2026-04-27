@@ -52,6 +52,12 @@ QSet<QString> FILE_EXT_LEXER_LUA = {"lua"};
 QSet<QString> FILE_EXT_LEXER_MARKDOWN = {"md", "markdown"};
 QSet<QString> FILE_EXT_LEXER_YAML = {"yaml", "yml"};
 QSet<QString> FILE_EXT_LEXER_INI = {"ini", "cfg", "conf"};
+QSet<QString> FILE_EXT_LEXER_COFFEE = {"coffee","coffee.map","litcoffee"};
+QSet<QString> FILE_EXT_LEXER_FORTRAN77 = {"f","for","f77","ftn","F","FOR","F77","FTN"};
+QSet<QString> FILE_EXT_LEXER_FORTRAN = {"f90","f95","f03","f08","f18","F90","FPP"};
+QSet<QString> FILE_EXT_LEXER_MATLAB = {"m"};
+QSet<QString> FILE_EXT_LEXER_TEX = {"tex"};
+
 QHash<QsciScintilla*, QHash<QString, QVariant>> SCINTILLA_DATA;
 QRegularExpression directiveRegex(R"(\{TextMarker\|([^}]+)\})");
 // external variables 
@@ -118,8 +124,8 @@ void setIndicator(QsciScintilla* editor, int indicatorId, QColor color) { // ISS
 }
 
 // Inventory
-// 1. template<typename LEXER> void applyCommentLexerStyle(QList<int> list, LEXER* lexer)    
-// 2. template<typename LEXER> void applyStringLexerStyle(QList<int> list, LEXER* lexer)    
+// 1. template<typename LEXER> void applyCommentLexerStyle(QList<int> list, LEXER* lexer)
+// 2. template<typename LEXER> void applyStringLexerStyle(QList<int> list, LEXER* lexer)
 // 3. template<typename LEXER> void applyNumberLexerStyle(QList<int> list, LEXER* lexer)
 // 4. template<typename LEXER> void applyDefaultLexerStyle(QList<int> list, LEXER* lexer)
 // 5. template<typename LEXER> void applyCommonLexerStyle(LEXER* lexer)
@@ -463,6 +469,21 @@ void applyHTMLStyle(QsciLexerHTML* lexer) {
         lexer->setColor(operatorColor, QsciLexerHTML::PHPOperator); 
         applyPaper(bgScriptColor, PHP_B);
     }
+}
+template<typename LEXER> void applyFortran77Style(LEXER* lexer) {
+    applyCommonLexerStyle<LEXER>(lexer);
+    applyDefaultLexerStyle<LEXER>({
+        LEXER::Identifier,
+        LEXER::Continuation,
+    },lexer);
+    applyStringLexerStyle<LEXER>({
+        LEXER::UnclosedString,
+    },lexer);
+    lexer->setColor(functionColor, LEXER::IntrinsicFunction);
+    lexer->setColor(classColor, LEXER::ExtendedFunction);
+    lexer->setColor(preprocessorColor, LEXER::PreProcessor);
+    lexer->setColor(operatorColor, LEXER::DottedOperator);
+    lexer->setColor(keyword2, LEXER::Label);
 }
 
 // -- implementations
@@ -1061,6 +1082,117 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         lexer->setFoldAtElse(true);
         lexer->setFoldCompact(false);
         applyCPPStyle(lexer);
+        editor->setLexer(lexer);
+        return true;
+    } else if ( FILE_EXT_LEXER_COFFEE.contains(ext) ) { // TESTING
+        QsciLexerCoffeeScript* lexer = new QsciLexerCoffeeScript(editor);
+        lexer->setDefaultPaper(bgColor);
+        lexer->setDefaultColor(fgColor);
+        lexer->setFoldComments(true);
+        //lexer->setFoldPreprocessor(true);
+        //lexer->setFoldAtElse(true);
+        lexer->setFoldCompact(false);
+        // coffee style 
+        applyCommonLexerStyle<QsciLexerCoffeeScript>(lexer);
+        applyDefaultLexerStyle<QsciLexerCoffeeScript>({
+            QsciLexerCoffeeScript::Default,
+            QsciLexerCoffeeScript::Identifier,
+            QsciLexerCoffeeScript::UUID,
+        },lexer);
+        applyCommentLexerStyle<QsciLexerCoffeeScript>({
+            QsciLexerCoffeeScript::CommentDoc,
+            QsciLexerCoffeeScript::CommentLine,
+            QsciLexerCoffeeScript::CommentLineDoc,
+            QsciLexerCoffeeScript::CommentBlock,
+            QsciLexerCoffeeScript::CommentDocKeyword,
+            QsciLexerCoffeeScript::CommentDocKeywordError,
+        },lexer);
+        applyNumberLexerStyle<QsciLexerCoffeeScript>({
+            QsciLexerCoffeeScript::Number
+        },lexer);
+        lexer->setColor(preprocessorColor, QsciLexerCoffeeScript::PreProcessor);
+        applyCommentLexerStyle<QsciLexerCoffeeScript>({
+            QsciLexerCoffeeScript::UnclosedString,
+            QsciLexerCoffeeScript::VerbatimString,
+            QsciLexerCoffeeScript::Regex,
+            QsciLexerCoffeeScript::BlockRegex,
+            QsciLexerCoffeeScript::BlockRegexComment,
+        },lexer);
+        lexer->setColor(keyword2, QsciLexerCoffeeScript::InstanceProperty);
+        //
+        editor->setLexer(lexer);
+        return true;
+    } else if ( FILE_EXT_LEXER_FORTRAN77.contains(ext) ) { // TESTING
+        QsciLexerFortran77* lexer = new QsciLexerFortran77(editor);
+        lexer->setDefaultPaper(bgColor);
+        lexer->setDefaultColor(fgColor);
+        //lexer->setFoldComments(true);
+        //lexer->setFoldPreprocessor(true);
+        //lexer->setFoldAtElse(true);
+        lexer->setFoldCompact(false);
+        // fortran77 style 
+        applyFortran77Style<QsciLexerFortran77>(lexer);
+        //
+        editor->setLexer(lexer);
+        return true;
+    } else if ( FILE_EXT_LEXER_FORTRAN.contains(ext) ) { // TESTING
+        QsciLexerFortran* lexer = new QsciLexerFortran(editor);
+        lexer->setDefaultPaper(bgColor);
+        lexer->setDefaultColor(fgColor);
+        //lexer->setFoldComments(true);
+        //lexer->setFoldPreprocessor(true);
+        //lexer->setFoldAtElse(true);
+        lexer->setFoldCompact(false);
+        // fortran style 
+        applyFortran77Style<QsciLexerFortran>(lexer);
+        //
+        editor->setLexer(lexer);
+        return true; 
+    } else if ( FILE_EXT_LEXER_MATLAB.contains(ext) ) { // OK 
+        QsciLexerMatlab* lexer = new QsciLexerMatlab(editor);
+        lexer->setDefaultPaper(bgColor);
+        lexer->setDefaultColor(fgColor);
+        //lexer->setFoldComments(true);
+        //lexer->setFoldPreprocessor(true);
+        //lexer->setFoldAtElse(true);
+        //lexer->setFoldCompact(false);
+        // matlab style 
+        applyCommonLexerStyle<QsciLexerMatlab>(lexer);
+        applyDefaultLexerStyle<QsciLexerMatlab>({
+            QsciLexerMatlab::Identifier,
+        },lexer);
+        //
+        editor->setLexer(lexer);
+        return true;
+    } else if ( FILE_EXT_LEXER_TEX.contains(ext) ) { // ISSUE 
+        QsciLexerTeX* lexer = new QsciLexerTeX(editor);
+        lexer->setDefaultPaper(bgColor);
+        lexer->setDefaultColor(fgColor);
+        lexer->setFoldComments(true);
+        //lexer->setFoldPreprocessor(true);
+        //lexer->setFoldAtElse(true);
+        lexer->setFoldCompact(false);
+        // tex style 
+        
+        // Inventory
+        // 1. template<typename LEXER> void applyCommentLexerStyle(QList<int> list, LEXER* lexer)
+        // 2. template<typename LEXER> void applyStringLexerStyle(QList<int> list, LEXER* lexer)
+        // 3. template<typename LEXER> void applyNumberLexerStyle(QList<int> list, LEXER* lexer)
+        // 4. template<typename LEXER> void applyDefaultLexerStyle(QList<int> list, LEXER* lexer)
+        // 5. template<typename LEXER> void applyCommonLexerStyle(LEXER* lexer)
+        // 6. template<typename LEXER> void applyPaper(QList<int> list, LEXER* lexer, QColor color)
+        // 7. template<typename LEXER> void applyColor(QList<int> list, LEXER* lexer, QColor color)
+        
+        applyDefaultLexerStyle<QsciLexerTeX>({
+            QsciLexerTeX::Default,
+            QsciLexerTeX::Text
+        },lexer);
+        lexer->setColor(keyword2, QsciLexerTeX::Group);
+        lexer->setColor(keyword2, QsciLexerTeX::Command);
+        lexer->setColor(keyword2, QsciLexerTeX::Special);
+        applyNumberLexerStyle<QsciLexerTeX>({},lexer);
+        lexer->setColor(operatorColor, QsciLexerTeX::Symbol);
+        //
         editor->setLexer(lexer);
         return true;
     } else { // Default Lexer 

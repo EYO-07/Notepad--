@@ -26,6 +26,11 @@
 #include <Qsci/qscilexerproperties.h>
 #include <Qsci/qscilexerperl.h>
 #include <Qsci/qscilexercmake.h>
+#include <Qsci/qscilexercoffeescript.h>
+#include <Qsci/qscilexerfortran77.h>
+#include <Qsci/qscilexerfortran.h>
+#include <Qsci/qscilexermatlab.h>
+#include <Qsci/qscilexertex.h>
 // --
 #include <QDebug>
 #include <QSharedMemory>

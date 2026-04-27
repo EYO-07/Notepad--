@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
         "2. Ctrl+L // load file \n"
         "3. Ctrl+S // save file and update the Text Markers \n"
         "4. Ctrl+W // close tab \n"
+        "5. Ctrl+M // create a new empty file. (you still need to load it using Ctrl+L) \n"
         "\n"
         "1. Ctrl+Tab, Ctrl+Shift+Tab // Change Selected Tab \n"
         "\n"
