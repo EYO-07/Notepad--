@@ -78,6 +78,7 @@ int main(int argc, char *argv[]) {
         "\n"
         "1. F1 // Take Screenshot of the Current Editor to clipboard\n"
         "2. F2 // Take Screenshot of the Current Editor to file \n"
+        "3. F3 // Toggle the Margin Line Numbers \n"
         "\n"
         "... use this tabpage as you wish, its not stored anywhere. \n"
     );
@@ -284,6 +285,7 @@ int main(int argc, char *argv[]) {
 
 // function implementation
 void darkTabScintillaLogic(QsciScintilla* view) {
+    static bool b_margin_visible = false;
     CodexIncantation::interceptKeyboardEvents(view, [view](QKeyEvent* e) -> bool {
         QTabWidget* tabs = CodexIncantation::findClosestParent<QTabWidget>(view);
         if (!tabs) return true;
@@ -531,6 +533,14 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 return true; 
             }
             CodexIncantation::takeWidgetScreenshot(view,screenshotPath);
+            return true;
+        } else if (e->key() == Qt::Key_F3) {
+            b_margin_visible = !b_margin_visible;
+            if (b_margin_visible) {
+                CodexIncantation::hideMargin(view);
+            } else {
+                CodexIncantation::setMargin(view);
+            }
             return true;
         }
         return false; // Let all other keys (letters, arrows, etc.) pass to Scintilla

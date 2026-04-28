@@ -78,12 +78,13 @@ void lexerPostSettings(QsciScintilla* editor) {
     editor->setBraceMatching(QsciScintilla::StrictBraceMatch);
     editor->setCaretLineBackgroundColor(QColor("#2c313c"));
     editor->setCaretForegroundColor(caretColor);
-    editor->setMarginType(1, QsciScintilla::NumberMargin);
-    editor->setMarginLineNumbers(1, true);
-    editor->setMarginWidth(1, "0000");
-    editor->setMarginsFont(MARGIN_FONT);
-    editor->setMarginsBackgroundColor(QColor(10,10,10));
-    editor->setMarginsForegroundColor(fgColor);
+    CodexIncantation::setMargin(editor);
+    //editor->setMarginType(1, QsciScintilla::NumberMargin);
+    //editor->setMarginLineNumbers(1, true);
+    //editor->setMarginWidth(1, "0000");
+    //editor->setMarginsFont(MARGIN_FONT);
+    //editor->setMarginsBackgroundColor(QColor(10,10,10));
+    //editor->setMarginsForegroundColor(fgColor);
     editor->setMatchedBraceForegroundColor(braceMatchColor);
     editor->setMatchedBraceBackgroundColor(braceMatchBackgroundColor);
     editor->setUnmatchedBraceBackgroundColor(bgColor);
@@ -487,6 +488,7 @@ template<typename LEXER> void applyFortran77Style(LEXER* lexer) {
 }
 
 // -- implementations
+// Incantation 
 QsciScintilla* CodexIncantation::newDarkScintilla(QWidget *parent, QString fileName) {
     QsciScintilla *editor = new QsciScintilla(parent);
     editor->viewport()->setAutoFillBackground(false);
@@ -1420,6 +1422,20 @@ QString CodexIncantation::getSearchStringFromDocDirective(QsciScintilla* editor)
         }
     }
     return "";
+}
+void CodexIncantation::hideMargin(QsciScintilla* editor) {
+    editor->setMarginWidth(1,0);
+    editor->setMarginLineNumbers(1, false);
+    editor->update();
+}
+void CodexIncantation::setMargin(QsciScintilla* editor) {
+    editor->setMarginType(1, QsciScintilla::NumberMargin);
+    editor->setMarginLineNumbers(1, true);
+    editor->setMarginWidth(1, "0000");
+    editor->setMarginsFont(MARGIN_FONT);
+    editor->setMarginsBackgroundColor(QColor(10,10,10));
+    editor->setMarginsForegroundColor(fgColor);
+    editor->update();
 }
 
 // Incantation || namespace TabbedSplitView 

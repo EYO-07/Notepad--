@@ -63,7 +63,8 @@ namespace CodexIncantation {
             lexer->setPaper(back, item);
         }
     }
-    //QString getStringData(QsciScintilla* editor);
+    void hideMargin(QsciScintilla* editor);
+    void setMargin(QsciScintilla* editor);
     // functions || events
     void onTextChange(QsciScintilla* editor, std::function<void(QsciScintilla*)> logic);
     // -- 
