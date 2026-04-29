@@ -43,7 +43,7 @@ namespace CodexIncantation {
     // events
     void interceptKeyboardEvents(QObject* obj, std::function<bool(QKeyEvent*)> logic);
     // dialogs
-    bool createEmptyFileDialog();
+    QString createEmptyFileDialog();
     QString textInputDialog();
     // widgets
     void toggleOrientation(QSplitter *splitter);

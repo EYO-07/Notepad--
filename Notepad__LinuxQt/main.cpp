@@ -6,18 +6,39 @@
 
 #include <QCoreApplication>
 #include <QApplication>
+#include <iostream>
+#include <string>
+// #include <memory>
 #include "CODEX_DarkQt.h"
 #include "CODEX_DarkQtScintilla.h"
 using namespace CodexTransmutation;
 using namespace CodexIncantation;
 
-// global variables
-QString currentSearchString("");
-QString lastSearchString("");
+// -- global variables
+static QString currentSearchString("");
+static QString lastSearchString("");
 CodexIncantation::FileRegistry FILE_REGISTRY("Notepad__LinuxQtSharedFiles");
 // QFileSystemWatcher FILE_WATCHER; 
 // QHash<QString, QDateTime> FILE_MODIFICATION;
-// forward declaration
+static int WIDTH = 1200;
+static int HEIGHT = 800;
+static QsciScintilla* clipboardPage = nullptr; //
+static std::string USAGE_TEXT = R"(
+Usage: <application> [options] [files]
+
+Options:
+  --left                 Load subsequent files into the left tab panel (Default).
+  --right                Load subsequent files into the right tab panel.
+  --width=<value>        Set application width (Minimum: 150).
+  --height=<value>       Set application height (Minimum: 150).
+  --vertical             Set the main splitter orientation to Vertical.
+  --horizontal           Set the main splitter orientation to Horizontal.
+
+Arguments:
+  [files]                Valid file paths to be opened in the current side's tabs.
+)";
+
+// -- forward declaration
 void darkTabScintillaLogic(QsciScintilla* view);
 QsciScintilla* addLeftTab_Scintilla(QSplitter* view, QString name);
 QsciScintilla* addRightTab_Scintilla(QSplitter* view, QString name);
@@ -25,10 +46,13 @@ bool newEmptyScintillaTab(QsciScintilla* view);
 void log(QString line, QsciScintilla* editor);
 void logError(QString line, QsciScintilla* editor);
 void logGreen(QString line, QsciScintilla* editor);
+void log(QString line);
+void logError(QString line);
+void logGreen(QString line);
 
-// local classes 
+// -- local classes 
 
-// local functions 
+// -- local functions 
 void debugFileWatcher(const QFileSystemWatcher& watcher) { // UNUSED 
     QString filePaths("");
     for(const auto& item: watcher.files()) {
@@ -47,7 +71,7 @@ int main(int argc, char *argv[]) {
     QTabWidget* ltabs = TabbedSplitView::getTabsByName(splitter, "leftTabs");
     QTabWidget* rtabs = TabbedSplitView::getTabsByName(splitter, "rightTabs");
     QsciScintilla* helpPage = addLeftTab_Scintilla(splitter, "?"); 
-    QsciScintilla* clipboardPage = addRightTab_Scintilla(splitter, "..."); 
+    clipboardPage = addRightTab_Scintilla(splitter, "..."); 
     helpPage->setText(
         "// Notepad--LinuxQt : linux version of Notepad-- using Qt6 QScintilla \n"
         "// ... lesser version of Notepad++, less language support, fixed dark theme. \n"
@@ -89,19 +113,56 @@ int main(int argc, char *argv[]) {
     helpPage->setFocus();
     log("Notepad-- Started",clipboardPage);
     { // Layout 
-        // load files by argument options
-        if (argc>1) {
+        if (argc>1) { // argument options
             log("Processing Command Line Arguments",clipboardPage);
             int i;
             bool b_left_side = true;
             for (int i = 1; i < argc; ++i) {
                 QString strArgument = argv[i];
+                if (strArgument=="--help" || strArgument=="-h" || strArgument=="-H" ) {
+                    std::cout << USAGE_TEXT << std::endl;
+                    return 0;
+                }
                 if (strArgument=="--left") {
                     b_left_side = true;
                     continue;
                 } 
                 if (strArgument=="--right") {
                     b_left_side = false;
+                    continue;
+                }
+                if (strArgument.startsWith("--width")) {
+                    auto split_list = strArgument.split("=");
+                    if ( split_list.count()!=2 ) continue;
+                    QString arg_width_str = split_list.last();
+                    if (arg_width_str.isEmpty() || arg_width_str.isNull()) continue;
+                    bool ok = false;
+                    int arg_width = arg_width_str.toInt(&ok);
+                    if (!ok) continue;
+                    if ( arg_width<150 ) continue;
+                    WIDTH = arg_width;
+                    continue;
+                }
+                if (strArgument.startsWith("--height")) {
+                    auto split_list = strArgument.split("=");
+                    if ( split_list.count()!=2 ) continue;
+                    QString arg_height_str = split_list.last();
+                    if (arg_height_str.isEmpty() || arg_height_str.isNull()) continue;
+                    bool ok = false;
+                    int arg_height = arg_height_str.toInt(&ok);
+                    if (!ok) continue;
+                    if ( arg_height<150 ) continue;
+                    HEIGHT = arg_height;
+                    continue;
+                }
+                if (strArgument=="--vertical") {
+                    if (!splitter) continue;
+                    splitter->setOrientation(Qt::Vertical);
+                    continue;
+                }
+                if (strArgument=="--horizontal") {
+                    if (!splitter) continue;
+                    splitter->setOrientation(Qt::Horizontal);
                     continue;
                 }
                 QString absDirPath = isDir(strArgument);
@@ -260,7 +321,7 @@ int main(int argc, char *argv[]) {
     }
     // -- 
     window->setCentralWidget(splitter);
-    window->resize(1200, 800);
+    window->resize(WIDTH, HEIGHT);
     window->show();
     auto result = app.exec();
     { // Clean-Up 
@@ -390,6 +451,7 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                     }
                     saveFile(absPath, view->text());
                     QMessageBox::information(view, "File Saved", "File Saved on: "+absPath);
+                    log(QString("File Saved : '%1'").arg(absPath));
                     if ( prev_tab_text.startsWith("* ") ) {
                         tabs->setTabText(currentTab,prev_tab_text.sliced(2));
                     }
@@ -417,7 +479,9 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 return true;
             }
             if (e->key() == Qt::Key_M) {
-                CodexIncantation::createEmptyFileDialog();
+                QString newFilePath = CodexIncantation::createEmptyFileDialog();
+                if (newFilePath.isEmpty() || newFilePath.isNull()) return true;
+                log(QString("Empty File Created : '%1'").arg(newFilePath));
                 return true;
             }
             if (e->key() == Qt::Key_W) {
@@ -491,6 +555,7 @@ void darkTabScintillaLogic(QsciScintilla* view) {
             }
         } else if (e->key() == Qt::Key_F1) { // TESTING Screenshot to Clipboard
             CodexIncantation::takeWidgetScreenshot(view);
+            log("Screenshot to Clipboard");
             return true;
         } else if (e->key() == Qt::Key_F2) { // Editor Screenshot to File 
             if ( 
@@ -533,6 +598,7 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 return true; 
             }
             CodexIncantation::takeWidgetScreenshot(view,screenshotPath);
+            log(QString("Screenshot to File : %1").arg(screenshotPath));
             return true;
         } else if (e->key() == Qt::Key_F3) {
             b_margin_visible = !b_margin_visible;
@@ -577,15 +643,27 @@ void log(QString line, QsciScintilla* editor) {
     QString textToAppend = "["+timestamp+"] "+line+"\n";
     editor->append( textToAppend );
 }
+void log(QString line) {
+    if (!clipboardPage) return;
+    log(line,clipboardPage);
+}
 void logError(QString line, QsciScintilla* editor) {
     QString timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
     QString textToAppend = "["+timestamp+"] '"+line+"'\n";
     editor->append( textToAppend );
 }
+void logError(QString line) {
+    if (!clipboardPage) return;
+    logError(line,clipboardPage);
+}
 void logGreen(QString line, QsciScintilla* editor) {
     QString timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
     QString textToAppend = "["+timestamp+"] //"+line+"\n";
     editor->append( textToAppend );
+}
+void logGreen(QString line) {
+    if (!clipboardPage) return;
+    logGreen(line,clipboardPage);
 }
 
 // -- END 

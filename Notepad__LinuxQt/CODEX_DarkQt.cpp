@@ -145,28 +145,20 @@ void CodexIncantation::toggleOrientation(QSplitter *splitter) {
         splitter->setOrientation(Qt::Horizontal);
     }
 }
-bool CodexIncantation::createEmptyFileDialog() {
+QString CodexIncantation::createEmptyFileDialog() {
     QString fileName = QFileDialog::getSaveFileName(
         nullptr, 
         "Create Empty File", 
         "", 
         "All Files (*)"
     );
-    
-    /*
-    if ( CodexTransmutation::fileExists(fileName) != "" ) {
-        QMessageBox::warning(nullptr, "Error", "File Already Exists, use Ctrl+L instead.");
-        return false;
-    }
-    */
-    
-    if (fileName.isEmpty() || fileName.isNull()) return false; 
+    if (fileName.isEmpty() || fileName.isNull()) return ""; 
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly)) {
         file.close();
-        return true;
+        return fileName;
     } 
-    return false;
+    return "";
 }
 void CodexIncantation::moveSeparator(QSplitter* splitter, int value) { 
     if (!splitter) return;

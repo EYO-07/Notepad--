@@ -127,6 +127,11 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * std::invoke(func, args...); // Invoke the function wrapper using standard utility
  * */
 
+/* Inventory [ Pointers ] { C++ } 
+1. Never new inside a function and store it as global // hard to track, called twice issue
+2. 
+*/
+
 // =================================================================================
 // Incantation : Graphical User Interface 
 // Incantation || Qt6 Framework 
@@ -182,6 +187,16 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * endsWith(const QString &s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const // ... 
  * startsWith(const QString &s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const // ... 
  * */
+/* Inventory [ QStringList and Split ] { C++, Qt6, QString } 
+1. QString::split(const QString &sep) // Splits string into QStringList using a separator.
+2. QString::split(const QRegularExpression &re) // Splits string based on a regex pattern.
+3. QStringList::join(const QString &sep) // Merges list elements into one string with a separator.
+4. QStringList::filter(const QString &str) // Returns a sub-list containing only strings matching 'str'.
+5. Qt::SplitBehavior // Flags (e.g., KeepEmptyParts, SkipEmptyParts) to control split output.
+6. QStringList::replaceInStrings(const QString &before, const QString &after) // Performs find-and-replace on every item in the list.
+7. QStringList::indexOf(const QRegularExpression &re) // Finds the index of the first string matching a regex.
+8. QStringList::removeDuplicates() // Removes redundant entries from the list.
+*/
 /* Inventory [ QString Comparison ] { C++, Linux, Qt6 } 
  * str1 == str2; // Case-sensitive comparison using overloaded operator.
  * str1.compare(str2, Qt::CaseInsensitive); // Returns 0 if equal; allows toggling case sensitivity.
