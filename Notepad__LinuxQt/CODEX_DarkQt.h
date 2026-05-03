@@ -1,6 +1,7 @@
-#ifndef CODEX_DarkQt_H
-#define CODEX_DarkQt_H
+//#ifndef CODEX_DarkQt_H
+//#define CODEX_DarkQt_H
 // 
+#pragma once
 // Standart Library { C++ }
 #include <iostream>
 // Qt Core 
@@ -82,4 +83,4 @@ template<typename T> T* CodexIncantation::findClosestParent(QWidget* child) {
     return nullptr;
 }
 
-#endif // CODEX_DarkQt_H
+//#endif // CODEX_DarkQt_H

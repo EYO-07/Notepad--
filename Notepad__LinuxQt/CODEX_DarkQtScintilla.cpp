@@ -124,14 +124,14 @@ void setIndicator(QsciScintilla* editor, int indicatorId, QColor color) { // ISS
     editor->SendScintilla(QsciScintilla::SCI_INDICSETUNDER, indicatorId, true);
 }
 
-// Inventory
-// 1. template<typename LEXER> void applyCommentLexerStyle(QList<int> list, LEXER* lexer)
-// 2. template<typename LEXER> void applyStringLexerStyle(QList<int> list, LEXER* lexer)
-// 3. template<typename LEXER> void applyNumberLexerStyle(QList<int> list, LEXER* lexer)
-// 4. template<typename LEXER> void applyDefaultLexerStyle(QList<int> list, LEXER* lexer)
-// 5. template<typename LEXER> void applyCommonLexerStyle(LEXER* lexer)
-// 6. template<typename LEXER> void applyPaper(QList<int> list, LEXER* lexer, QColor color)
-// 7. template<typename LEXER> void applyColor(QList<int> list, LEXER* lexer, QColor color)
+/// Inventory
+/// 1. template<typename LEXER> void applyCommentLexerStyle(QList<int> list, LEXER* lexer)
+/// 2. template<typename LEXER> void applyStringLexerStyle(QList<int> list, LEXER* lexer)
+/// 3. template<typename LEXER> void applyNumberLexerStyle(QList<int> list, LEXER* lexer)
+/// 4. template<typename LEXER> void applyDefaultLexerStyle(QList<int> list, LEXER* lexer)
+/// 5. template<typename LEXER> void applyCommonLexerStyle(LEXER* lexer)
+/// 6. template<typename LEXER> void applyPaper(QList<int> list, LEXER* lexer, QColor color)
+/// 7. template<typename LEXER> void applyColor(QList<int> list, LEXER* lexer, QColor color)
 template<typename LEXER> void applyColor(QList<int> list, LEXER* lexer, QColor color) {
     for (const int& item: list) {
         lexer->setColor(color, item);
@@ -146,6 +146,14 @@ template<typename LEXER> void applyCommentLexerStyle(QList<int> list, LEXER* lex
     for(const auto& item : list) {
         lexer->setColor(commentColor, item);
         lexer->setPaper(commentPaperColor, item);
+    }
+}
+template<typename LEXER> void applyDocCommentLexerStyle(QList<int> list, LEXER* lexer) {
+    QColor docCommentColor(220, 220, 115); //(153, 153, 102);
+    QColor docCommentPaperColor(20,20,60);
+    for(const auto& item: list) {
+        lexer->setColor(docCommentColor, item);
+        lexer->setPaper(docCommentPaperColor, item);
     }
 }
 template<typename LEXER> void applyStringLexerStyle(QList<int> list, LEXER* lexer) {
@@ -186,27 +194,42 @@ void applyCPPStyle(QsciLexerCPP* lexer) {
     lexer->setHighlightHashQuotedStrings(true);
     lexer->setHighlightBackQuotedStrings(true);
     applyCommonLexerStyle<QsciLexerCPP>(lexer);
-    lexer->setColor(commentColor, QsciLexerCPP::CommentLine);
-    lexer->setPaper(commentPaperColor, QsciLexerCPP::CommentLine);
-    lexer->setColor(commentColor, QsciLexerCPP::CommentDoc); 
-    lexer->setPaper(commentPaperColor, QsciLexerCPP::CommentDoc);
+    applyCommentLexerStyle<QsciLexerCPP>({
+        QsciLexerCPP::CommentLine
+    },lexer);
+    applyDocCommentLexerStyle<QsciLexerCPP>({
+        QsciLexerCPP::CommentDoc,
+        QsciLexerCPP::CommentLineDoc
+    },lexer);
+    applyStringLexerStyle<QsciLexerCPP>({
+        QsciLexerCPP::UnclosedString,
+        QsciLexerCPP::VerbatimString,
+        QsciLexerCPP::Regex,
+        QsciLexerCPP::RawString,
+        QsciLexerCPP::TripleQuotedVerbatimString
+    },lexer);
+    
+    //lexer->setColor(commentColor, QsciLexerCPP::CommentLine);
+    //lexer->setPaper(commentPaperColor, QsciLexerCPP::CommentLine);
+    //lexer->setColor(commentColor, QsciLexerCPP::CommentDoc); 
+    //lexer->setPaper(commentPaperColor, QsciLexerCPP::CommentDoc);
     lexer->setColor(preprocessorColor, QsciLexerCPP::PreProcessor); 
     lexer->setColor(fgColor, QsciLexerCPP::Identifier); 
-    lexer->setColor(stringColor, QsciLexerCPP::UnclosedString); 
-    lexer->setPaper(stringPaperColor, QsciLexerCPP::UnclosedString); 
-    lexer->setColor(stringColor, QsciLexerCPP::VerbatimString); 
-    lexer->setPaper(stringPaperColor, QsciLexerCPP::VerbatimString); 
-    lexer->setColor(stringColor, QsciLexerCPP::Regex); 
-    lexer->setPaper(stringPaperColor, QsciLexerCPP::Regex); 
-    lexer->setColor(commentColor, QsciLexerCPP::CommentLineDoc); 
-    lexer->setPaper(commentPaperColor, QsciLexerCPP::CommentLineDoc);
+    //lexer->setColor(stringColor, QsciLexerCPP::UnclosedString); 
+    //lexer->setPaper(stringPaperColor, QsciLexerCPP::UnclosedString); 
+    //lexer->setColor(stringColor, QsciLexerCPP::VerbatimString); 
+    //lexer->setPaper(stringPaperColor, QsciLexerCPP::VerbatimString); 
+    //lexer->setColor(stringColor, QsciLexerCPP::Regex); 
+    //lexer->setPaper(stringPaperColor, QsciLexerCPP::Regex); 
+    //lexer->setColor(commentColor, QsciLexerCPP::CommentLineDoc); 
+    //lexer->setPaper(commentPaperColor, QsciLexerCPP::CommentLineDoc);
     lexer->setColor(keyword2, QsciLexerCPP::KeywordSet2);   
     lexer->setColor(commentColor, QsciLexerCPP::CommentDocKeyword); 
     lexer->setPaper(commentPaperColor, QsciLexerCPP::CommentDocKeyword);
     lexer->setColor(commentColor, QsciLexerCPP::CommentDocKeywordError); 
     lexer->setPaper(commentPaperColor, QsciLexerCPP::CommentDocKeywordError);
-    lexer->setColor(stringColor, QsciLexerCPP::RawString);
-    lexer->setPaper(stringPaperColor, QsciLexerCPP::RawString); 
+    //lexer->setColor(stringColor, QsciLexerCPP::RawString);
+    //lexer->setPaper(stringPaperColor, QsciLexerCPP::RawString); 
     lexer->setColor(stringColor, QsciLexerCPP::TripleQuotedVerbatimString);
     lexer->setPaper(stringPaperColor, QsciLexerCPP::TripleQuotedVerbatimString);
 }
@@ -1436,6 +1459,72 @@ void CodexIncantation::setMargin(QsciScintilla* editor) {
     editor->setMarginsBackgroundColor(QColor(10,10,10));
     editor->setMarginsForegroundColor(fgColor);
     editor->update();
+}
+void CodexIncantation::toggleCommentLine(QsciScintilla* editor, QString fileName) { // INCOMPLETE
+    // 1. goto statements should have strict direct flow to avoid spaghetti, always forward.
+    // 2. goto statements should be used for simple ifs -> if(CONDITION) goto LABEL to avoid hidden jumps;
+    if (!editor) return;
+    QString commentToken = "#";
+    QString ext;
+    if ( fileName.isEmpty() || fileName.isNull() ) goto end_of_commentToken;
+    ext = CodexTransmutation::getExtension(fileName);
+    if ( ext.isEmpty() || ext.isNull() ) goto end_of_commentToken;
+    if ( FILE_EXT_LEXER_CPP.contains(ext) ) {
+        commentToken = "//";
+    } else if ( FILE_EXT_LEXER_LUA.contains(ext) ) {
+        commentToken = "--";
+    } else if ( FILE_EXT_LEXER_TEX.contains(ext) ) { 
+        commentToken = "%";
+    } else if ( FILE_EXT_LEXER_BATCH.contains(ext) ) {  
+        commentToken = "REM ";
+    }
+end_of_commentToken:
+    // -- 
+    int lineFrom, indexFrom, lineTo, indexTo;
+    editor->getSelection(&lineFrom, &indexFrom, &lineTo, &indexTo);
+    // No selection → use cursor line (FIX: no currentLine() in QScintilla)
+    if (lineFrom == -1 || lineTo == -1) {
+        int line, index;
+        editor->getCursorPosition(&line, &index);
+        lineFrom = lineTo = line;
+    }
+    // Fix selection ending at column 0 of next line
+    if (indexTo == 0 && lineTo > lineFrom) {
+        lineTo--;
+    }
+    // Detect if all lines are already commented
+    bool allCommented = true;
+    for (int line = lineFrom; line <= lineTo; ++line) {
+        QString text = editor->text(line);
+        int i = 0;
+        while (i < text.length() && text[i].isSpace()) {
+            i++;
+        }
+        if (!text.mid(i).startsWith(commentToken)) {
+            allCommented = false;
+            break;
+        }
+    }
+    editor->beginUndoAction();
+    for (int line = lineFrom; line <= lineTo; ++line) {
+        QString text = editor->text(line);
+        int i = 0;
+        while (i < text.length() && text[i].isSpace()) {
+            i++;
+        }
+        if (allCommented) {
+            // Uncomment
+            if (text.mid(i).startsWith(commentToken)) {
+                text.remove(i, commentToken.length());
+            }
+        } else {
+            // Comment
+            text.insert(i, commentToken);
+        }
+        editor->setSelection(line, 0, line, editor->lineLength(line));
+        editor->replaceSelectedText(text);
+    }
+    editor->endUndoAction();
 }
 
 // Incantation || namespace TabbedSplitView 

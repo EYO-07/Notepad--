@@ -8,6 +8,7 @@
 #include <QApplication>
 #include <iostream>
 #include <string>
+#include <unistd.h> // For geteuid()
 // #include <memory>
 #include "CODEX_DarkQt.h"
 #include "CODEX_DarkQtScintilla.h"
@@ -66,6 +67,14 @@ int main(int argc, char *argv[]) {
     // FILE_MODIFICATION = QHash<QString, QDateTime>();
     // Components    
     QApplication app(argc, argv);    
+    //
+    if (geteuid() == 0) { // Running as Root
+        QMessageBox::critical(nullptr, "Administrator Privileges", 
+            "This application is running as root. Be caferul changing system and configuration files. \n");        app.setApplicationName("Notepad-- ROOT");
+    } else {
+        app.setApplicationName("Notepad--");
+    }
+    //
     QMainWindow* window = new QMainWindow();
     QSplitter* splitter = TabbedSplitView::tabbedSplitView(window);
     QTabWidget* ltabs = TabbedSplitView::getTabsByName(splitter, "leftTabs");
@@ -79,7 +88,7 @@ int main(int argc, char *argv[]) {
         "// ... don't like it? use Notepadqq instead (or Nano, or Geany, or Vim ...) \n"
         "\n"
         "// Text Marker Document Directive Syntax {TextMarker|yellow:editor}\n"
-        "// Search Document Directive Syntax {Search:token}"
+        "// Search Document Directive Syntax {Search:}"
         "\n"
         "1. [ TabTitle ] // ReadOnly tab, use Ctrl+R to change ReadOnly flag, by default the file opens on readonly mode \n"
         "2. * TabTitle // Is the editor text modified flag \n"
@@ -292,23 +301,18 @@ int main(int argc, char *argv[]) {
             }
             return false;
         });
-        
-        /* Dialetic 
-        - Which parts of the project should be modified to autodetect external file change ?
-        : 1. Loading Logic || Should register the file to be watched 
-        : 2. Saving Logic || Should prevent the logic to be processed, only external files
-        : 3. Closing Tab Logic || Should remove the associated file 
-        -- How to block the modification detection by the program itself ?
-        - What the program should do whenever a file is externally modified ?
-        -- { The file don't exist anymore } ?
-        -- { The file was renamed } ?
-        -- { The file was changed in content } ? 
-        - What this callback should do if the file was externally modified ?
-        -- < Silent Reload > ? 
-        -- < Silent Reload with a logging in _journal.h > ?
-        -- < Dialog Reload > ? 
-        -- < Automatic Closing if the file don't exist anymore > ?
-        */
+        QObject::connect(ltabs,&QTabWidget::currentChanged,ltabs,[ltabs](int index){
+            // int index = ltabs->currentIndex();
+            QWidget* wdg = ltabs->widget(index);
+            if ( wdg->isVisible() ) return;
+            wdg->setVisible(true);
+        } );
+        QObject::connect(rtabs,&QTabWidget::currentChanged,rtabs,[rtabs](int index){
+            // int index = rtabs->currentIndex();
+            QWidget* wdg = rtabs->widget(index);
+            if ( wdg->isVisible() ) return;
+            wdg->setVisible(true);
+        } );
         
         /*
         QObject::connect(&FILE_WATCHER, &QFileSystemWatcher::fileChanged, // TODO LOGICAL_ISSUE 
@@ -553,6 +557,11 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                     return true;
                 }
             }
+            if (e->key() == Qt::Key_Q) {
+                QString fn = TabbedSplitView::getScintillaFullFileName(tabs, currentTab);
+                CodexIncantation::toggleCommentLine(view, fn);
+                return true;
+            }
         } else if (e->key() == Qt::Key_F1) { // TESTING Screenshot to Clipboard
             CodexIncantation::takeWidgetScreenshot(view);
             log("Screenshot to Clipboard");
@@ -600,13 +609,16 @@ void darkTabScintillaLogic(QsciScintilla* view) {
             CodexIncantation::takeWidgetScreenshot(view,screenshotPath);
             log(QString("Screenshot to File : %1").arg(screenshotPath));
             return true;
-        } else if (e->key() == Qt::Key_F3) {
+        } else if (e->key() == Qt::Key_F3) { // Margin Toggle 
             b_margin_visible = !b_margin_visible;
             if (b_margin_visible) {
                 CodexIncantation::hideMargin(view);
             } else {
                 CodexIncantation::setMargin(view);
             }
+            return true;
+        } else if (e->key() == Qt::Key_F4) { // ISSUE LOGICAL_ISSUE
+            //view->setVisible(!view->isVisible());
             return true;
         }
         return false; // Let all other keys (letters, arrows, etc.) pass to Scintilla
@@ -616,16 +628,16 @@ void darkTabScintillaLogic(QsciScintilla* view) {
         if ( view->isReadOnly() ) return;
         QTabWidget* tabs = CodexIncantation::findClosestParent<QTabWidget>(view);
         if (!tabs) return;
-        int currentTab = tabs->currentIndex();
-        if (currentTab == -1) return;
+        int tabIndex = tabs->indexOf(view); //currentIndex();
+        if (tabIndex == -1) return;
         // update autocompletion words 
         CodexIncantation::updateAutocompletion_Range(view);
         // update tab label
-        QVariant data = tabs->tabBar()->tabData(currentTab);
+        QVariant data = tabs->tabBar()->tabData(tabIndex);
         if(data.isNull() || !data.isValid()) return;
-        QString prev_tab_text = tabs->tabText(currentTab);
+        QString prev_tab_text = tabs->tabText(tabIndex);
         if ( prev_tab_text.startsWith("* ") ) return;
-        tabs->setTabText(currentTab,"* "+prev_tab_text);
+        tabs->setTabText(tabIndex,"* "+prev_tab_text);
     });
 }
 QsciScintilla* addLeftTab_Scintilla(QSplitter* view, QString name) {

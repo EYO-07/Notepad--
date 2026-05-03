@@ -1,6 +1,6 @@
-#ifndef CODEX_DarkQtScintilla_H
-#define CODEX_DarkQtScintilla_H
-
+//#ifndef CODEX_DarkQtScintilla_H
+//#define CODEX_DarkQtScintilla_H
+#pragma once
 #include "CODEX_DarkQt.h"
 #include <Qsci/qsciscintillabase.h>
 #include <Qsci/qsciscintilla.h>
@@ -65,6 +65,7 @@ namespace CodexIncantation {
     }
     void hideMargin(QsciScintilla* editor);
     void setMargin(QsciScintilla* editor);
+    void toggleCommentLine(QsciScintilla* editor, QString fileName);
     // functions || events
     void onTextChange(QsciScintilla* editor, std::function<void(QsciScintilla*)> logic);
     // -- 
@@ -83,7 +84,7 @@ namespace CodexIncantation {
     class FileRegistry {
     private:
         QSharedMemory shm;
-        int memory_size = 20 * 1024; // 20 KB
+        int memory_size = 200 * 1024; // 200 KB
     public:
         FileRegistry(const QString &key) : shm(key) {
             if (!shm.attach()) {
@@ -135,7 +136,7 @@ namespace CodexIncantation {
 
 }
 
-#endif // CODEX_DarkQtScintilla_H
+//#endif // CODEX_DarkQtScintilla_H
 
 /*
 

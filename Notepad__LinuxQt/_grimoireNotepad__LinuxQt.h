@@ -3,7 +3,7 @@
 
 // Grimoire [ C++ ] { Qt6, Linux, QsciScintilla }
 // ... This project uses Magic Oriented Programming Paradigm 
-/* MOPP : Magic Oriented Programming Paradigm 
+/** MOPP : Magic Oriented Programming Paradigm 
 
 ... programming is the closest thing to magic in our world
 
@@ -136,7 +136,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
 // Incantation : Graphical User Interface 
 // Incantation || Qt6 Framework 
 
-// -- basic 
+/// -- basics 
 /* Inventory [ Qt Framework ] { C++, Linux } 
  * QApplication app(argc, argv); // Manages GUI application control flow and settings
  * QPushButton button("Text");   // Creates a clickable push button widget
@@ -164,11 +164,14 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * findAncestor<T>(); // (Logic pattern) Recursively searches up for type T.
  * */
 /* Inventory [ Widget ] { C++, qt6 } 
- * setObjectName() //
- * objectName() // 
- * */
-
-// -- strings
+* setObjectName() //
+* objectName() // 
+* */
+/* Inventory [ QMainWindow and QApplication ] { C++, qt6 } 
+1. 
+*/
+ 
+/// -- strings
 /* Inventory [ QString ] { C++, Linux, Qt6 } 
  * QString str = "text"; // Implicitly converts a C-string (UTF-8) to a UTF-16 Unicode string.
  * bool isEmpty(); // Returns true if the string has no characters (length 0).
@@ -215,7 +218,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * bool atEnd(); // Returns true if there is no more data to be read from the stream.
  * */
 
-// -- collections
+/// -- collections
 /* Inventory [ String Set ] { Qt6, C++, QSet }
 1. QSet<QString> mySet; // Declaration
 2. mySet.insert("myString"); // Add a string to the set
@@ -286,7 +289,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
 8. for (T &item : list) // Range-based for loop (mutable).
 */
 
-// -- layout and frame containers
+/// -- layout and frame containers
 /* Inventory [ qApp->setStyleSheet ] { C++, Linux, Qt Framework } 
  * QWidget { ... }           // Targets all widgets; use for global background/fonts
  * QPushButton { ... }       // Targets specific class types (and their subclasses)
@@ -325,7 +328,51 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * void endGroup(); // Resets the key prefixing started by beginGroup().
  * */
 
-// -- dialogs
+/// -- events 
+/* Inventory [ Assign Event Callbacks ] { C++, Qt6 } 
+1. connect(sender, &Sender::signal, receiver, &Receiver::slot);              // connect signal to slot (member)
+2. connect(sender, &Sender::signal, this, &Class::slot);                     // connect to current class slot
+3. connect(sender, &Sender::signal, receiver, lambda);                       // connect to lambda
+4. connect(sender, &Sender::signal, [=](){  });                       // inline lambda (contextless)
+5. connect(sender, &Sender::signal, this, [=](){ });                 // lambda with context (auto disconnect)
+6. connect(btn, &QPushButton::clicked, this, &Class::on_click);              // button click event
+7. connect(chk, &QCheckBox::toggled, this, &Class::on_toggle);               // checkbox toggle event
+8. connect(edit, &QLineEdit::textChanged, this, &Class::on_text);            // text change event
+9. connect(combo, &QComboBox::currentIndexChanged, this, &Class::on_index);  // combo index change
+10. connect(timer, &QTimer::timeout, this, &Class::on_timeout);              // timer event
+11. QObject::disconnect(connection);                                         // disconnect via handle
+12. QObject::disconnect(sender, nullptr, receiver, nullptr);                 // disconnect all between objects
+13. auto c = connect(...);                                                   // store connection handle
+14. connect(sender, &Sender::signal, receiver, &Receiver::slot, Qt::UniqueConnection); // avoid duplicates
+15. connect(sender, SIGNAL(sig()), receiver, SLOT(slot()));                  // old string-based syntax (legacy)
+-> QObject::connect 
+*/
+/* Inventory [ Event Signals ] { C++, Qt6 } 
+1. &QPushButton::clicked                         // button clicked
+2. &QPushButton::pressed                         // button pressed
+3. &QPushButton::released                        // button released
+4. &QCheckBox::toggled                           // checkbox toggled (bool)
+5. &QCheckBox::stateChanged                      // checkbox state changed (int)
+6. &QLineEdit::textChanged                       // text changed (any change)
+7. &QLineEdit::textEdited                        // text edited (user only)
+8. &QLineEdit::returnPressed                     // enter key pressed
+9. &QComboBox::currentIndexChanged               // index changed
+10. &QComboBox::currentTextChanged               // text changed
+11. &QSlider::valueChanged                       // slider value changed
+12. &QSpinBox::valueChanged                      // spinbox value changed
+13. &QTimer::timeout                             // timer timeout
+14. &QWidget::windowTitleChanged                 // window title changed
+15. &QWidget::customContextMenuRequested         // context menu request
+16. &QWidget::destroyed                          // object destroyed
+17. &QWidget::objectNameChanged                  // object name changed
+18. &QAbstractItemView::clicked                  // item clicked (views)
+19. &QAbstractItemView::doubleClicked            // item double clicked
+20. &QAbstractItemView::activated                // item activated
+21. &QAbstractItemView::entered                  // mouse hover item
+22. &QApplication::aboutToQuit                   // app is quitting
+*/
+
+/// -- dialogs
 /* Inventory [ QFile ] { C++, Linux, Qt6 } 
  * QFile file(QString name); // Constructor to initialize with a specific file path.
  * bool open(OpenMode mode); // Opens file using flags like QIODevice::ReadOnly or QIODevice::WriteOnly.
@@ -378,7 +425,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
 
 */
 
-// -- image
+/// -- image
 /* Inventory [ QImage ] { C++, Linux, Qt6 } 
  * QImage(const QString &fileName); // Loads an image file optimized for direct pixel access and manipulation.
  * bool load(const QString &fileName); // Attempts to load an image; returns false if format is unsupported.
@@ -398,7 +445,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * int devicePixelRatio(); // Returns the scale factor (important for high-DPI/Retina displays on Linux).
  * */
 
-// -- tabs
+/// -- tabs
 /* Inventory [ QTabWidget ] { C++, Qt6 } 
  * addTab(QWidget*, QString); // Appends a new tab with label.
  * insertTab(int, QWidget*, QString); // Inserts a tab at a specific index.
@@ -460,7 +507,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * clear(); // Resets the variant to an invalid state.
  * */
 
-// -- QsciScintilla 
+/// -- QsciScintilla 
 /* Inventory [ Qt6 Scintilla ] { C++, Linux } 
  * #include <Qsci/qsciscintilla.h> // Include main widget class.
  * #include <Qsci/qscilexercpp.h> // Include C++ syntax highlighter.
@@ -519,7 +566,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * BraceMatch { NoBraceMatch, StrictBraceMatch, SloppyBraceMatch }
  * */
 
-// -- QsciScintilla | lexer
+/// -- QsciScintilla | lexer
 /* Inventory [ Lexer ] { Qt6, C++, Linux, QsciScintilla } 
 1. QsciLexerCPP* lexer = new QsciLexerCPP(parent); // Initialize standard C++ lexer
 2. editor->setLexer(lexer); // Attach lexer to the Scintilla editor instance
@@ -545,7 +592,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
 6. return nullptr; // Fallback to no lexer (plain text)
 */
 
-// -- QsciScintilla | events
+/// -- QsciScintilla | events
 /* Inventory [ Event Callbacks ] { C++, Linux, Qt6, Scintilla } 
  * * -- QWidget / QTabWidget (Qt6 Core) --
  * virtual void mousePressEvent(QMouseEvent* event) // Handles mouse click interactions
@@ -583,7 +630,7 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * QSignalBlocker blocker(object); // RAII-style: temporarily silences all signals for an object
  * */
 
-// -- QsciScintilla | autocompletion
+/// -- QsciScintilla | autocompletion
 /* Inventory [ Autocompletion ] { QsciScintilla, C++, Linux, Qt6 } 
 1. QsciAPIs *api = new QsciAPIs(lexer); // Initialize API handler for a specific lexer
 2. api->add("keyword"); // Manually add a single term to the completion list
