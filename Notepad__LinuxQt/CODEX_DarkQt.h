@@ -46,6 +46,7 @@ namespace CodexIncantation {
     // dialogs
     QString createEmptyFileDialog();
     QString textInputDialog();
+    QString dropDownDialog(QString title, QList<QString> options, QString message); // !
     // widgets
     void toggleOrientation(QSplitter *splitter);
     template<typename T> T* findClosestParent(QWidget* child);
