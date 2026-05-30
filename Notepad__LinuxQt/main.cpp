@@ -112,6 +112,7 @@ int main(int argc, char *argv[]) {
         "1. F1 // Take Screenshot of the Current Editor to clipboard\n"
         "2. F2 // Take Screenshot of the Current Editor to file \n"
         "3. F3 // Toggle the Margin Line Numbers \n"
+        "4. F5 // Reload the File from Current Editor \n"
         "\n"
         "... use this tabpage as you wish, its not stored anywhere. \n"
     );
@@ -619,6 +620,27 @@ void darkTabScintillaLogic(QsciScintilla* view) {
             return true;
         } else if (e->key() == Qt::Key_F4) { // ISSUE LOGICAL_ISSUE
             //view->setVisible(!view->isVisible());
+            return true;
+        } else if (e->key() == Qt::Key_F5) { // Reload
+            QString fileName = TabbedSplitView::getScintillaFullFileName(tabs,currentTab);
+            if ( fileName.isEmpty() || fileName.isNull() ) return true;
+            auto reply = QMessageBox::question(
+                view, 
+                "Reload", 
+                "Are you sure to reload this file, unsaved modifications will be lost", 
+                QMessageBox::Yes|QMessageBox::No
+            );
+            if (reply==QMessageBox::No) return true;
+            QString new_tab_text = CodexTransmutation::getShortFileName(fileName);    
+            if ( new_tab_text.isEmpty() || new_tab_text.isNull() ) return true;
+            tabs->setTabText(currentTab, QString("[ ")+new_tab_text+QString(" ]"));
+            QString content = CodexTransmutation::loadFile(fileName);
+            view->blockSignals(true);
+            view->setText(content);
+            view->blockSignals(false);
+            view->setReadOnly(true);
+            view->foldAll(true);
+            log(QString("File Reloaded : '%1'").arg(fileName));
             return true;
         }
         return false; // Let all other keys (letters, arrows, etc.) pass to Scintilla
