@@ -24,6 +24,7 @@ CodexIncantation::FileRegistry FILE_REGISTRY("Notepad__LinuxQtSharedFiles");
 static int WIDTH = 1200;
 static int HEIGHT = 800;
 static QsciScintilla* clipboardPage = nullptr; //
+int splitter_toggle_pos = 1;
 static std::string USAGE_TEXT = R"(
 Usage: <application> [options] [files]
 
@@ -386,6 +387,27 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 QSplitter* splitter = CodexIncantation::findClosestParent<QSplitter>(tabs);
                 if (!splitter) return true;
                 CodexIncantation::moveSeparator(splitter, 5);
+                return true;
+            }
+            if (e->key() == Qt::Key_X) {
+                QSplitter* splitter = CodexIncantation::findClosestParent<QSplitter>(tabs);
+                if (!splitter) return true;
+                // -- toggle 
+                switch(splitter_toggle_pos) {
+                    case 0:
+                        splitter_toggle_pos = 1;
+                        CodexIncantation::restoreToCenter(splitter);
+                        break;
+                    case 1:
+                        splitter_toggle_pos = 2;
+                        CodexIncantation::collapseToRight(splitter);
+                        break;
+                    case 2:
+                        splitter_toggle_pos = 0;
+                        CodexIncantation::collapseToLeft(splitter);
+                        break;
+                }
+                // -- 
                 return true;
             }
             if (e->key() == Qt::Key_Up) {}

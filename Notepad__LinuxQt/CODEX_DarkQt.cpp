@@ -185,6 +185,71 @@ void CodexIncantation::moveSeparator(QSplitter* splitter, int value) {
     sizes[1] = right;
     splitter->setSizes(sizes);
 }
+
+const int SLICE_MARGIN = 3; 
+void CodexIncantation::collapseToRight(QSplitter* splitter) {
+    if (!splitter || splitter->count() < 2) return;
+    QList<int> sizes = splitter->sizes();
+    if (sizes.size() < 2) return; // need at least two widgets
+    int totalSize = 0;
+    for (int s : sizes) totalSize += s;
+    // Ensure we don't have a zero total size (e.g., if hidden or 0-pixel container)
+    if (totalSize == 0) return;
+    // Logic: 
+    // First widget (Left/Top) gets: totalSize - SLICE_MARGIN
+    // Second widget (Right/Bottom) gets: SLICE_MARGIN
+    // Remaining widgets keep their current relative sizes or 0 if not needed.
+    // Note: The prompt implies a 2-widget scenario ("left and right"), 
+    // but we handle >2 by preserving the rest or setting them to 0 if they were collapsed.
+    int firstSize = totalSize - SLICE_MARGIN;
+    int secondSize = SLICE_MARGIN;
+    // Safety check: ensure firstSize isn't negative if total is tiny
+    if (firstSize < SLICE_MARGIN) {
+        firstSize = SLICE_MARGIN;
+        secondSize = totalSize - SLICE_MARGIN; 
+    }
+    if (secondSize < 0) secondSize = 0;
+    sizes[0] = firstSize;
+    sizes[1] = secondSize;
+    // Optional: Reset others to 0 if they were part of a "collapse" action, 
+    // or leave them as is. Assuming standard 2-pane usage:
+    splitter->setSizes(sizes);
+}
+void CodexIncantation::collapseToLeft(QSplitter* splitter) {
+    if (!splitter || splitter->count() < 2) return;
+    QList<int> sizes = splitter->sizes();
+    if (sizes.size() < 2) return; // need at least two widgets
+    int totalSize = 0;
+    for (int s : sizes) totalSize += s;
+    if (totalSize == 0) return;
+    // Logic:
+    // First widget (Left/Top) gets: SLICE_MARGIN
+    // Second widget (Right/Bottom) gets: totalSize - SLICE_MARGIN
+    int firstSize = SLICE_MARGIN;
+    int secondSize = totalSize - SLICE_MARGIN;
+    if (secondSize < SLICE_MARGIN) {
+        secondSize = SLICE_MARGIN;
+        firstSize = totalSize - SLICE_MARGIN;
+    }
+    if (firstSize < 0) firstSize = 0;
+    sizes[0] = firstSize;
+    sizes[1] = secondSize;
+    splitter->setSizes(sizes);
+}
+void CodexIncantation::restoreToCenter(QSplitter* splitter) {
+    if (!splitter || splitter->count() < 2) return;
+    QList<int> sizes = splitter->sizes();
+    if (sizes.size() < 2) return; // need at least two widgets
+    int totalSize = 0;
+    for (int s : sizes) totalSize += s;
+    if (totalSize == 0) return;
+    // Logic: Split equally
+    int half = totalSize / 2;
+    sizes[0] = half;
+    sizes[1] = half;
+    splitter->setSizes(sizes);
+}
+
 void CodexIncantation::takeWidgetScreenshot(QWidget* wdg, QString fileName) { // to file 
     QPixmap pixmap = wdg->grab();
     /*

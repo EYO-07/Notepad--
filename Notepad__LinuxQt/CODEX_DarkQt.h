@@ -48,11 +48,15 @@ namespace CodexIncantation {
     QString textInputDialog();
     QString dropDownDialog(QString title, QList<QString> options, QString message); // !
     // widgets
-    void toggleOrientation(QSplitter *splitter);
     template<typename T> T* findClosestParent(QWidget* child);
-    void moveSeparator(QSplitter* splitter, int value);
     void takeWidgetScreenshot(QWidget* wdg, QString fileName); // to file 
     void takeWidgetScreenshot(QWidget* wdg); // to system clipboard 
+    // widgets | splitter
+    void toggleOrientation(QSplitter *splitter);
+    void moveSeparator(QSplitter* splitter, int value);
+    void collapseToRight(QSplitter* splitter);
+    void collapseToLeft(QSplitter* splitter); 
+    void restoreToCenter(QSplitter* splitter);
     // -- 
     namespace TabbedSplitView {
         QSplitter* tabbedSplitView();
