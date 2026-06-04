@@ -385,7 +385,9 @@ void TabbedSplitView::switchTabs(int index, QTabWidget* source, QTabWidget* dest
     QString label = source->tabText(index);
     QIcon icon = source->tabIcon(index);
     QString toolTip = source->tabToolTip(index);
-    QVariant data = source->tabBar()->tabData(index);
+    auto tab_bar = source->tabBar();
+    if (!tab_bar) return;
+    QVariant data = tab_bar->tabData(index);
     QWidget* page = source->widget(index);
     if (!page) return;
     // Remove from source (this doesn't delete 'page')

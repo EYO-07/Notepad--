@@ -440,6 +440,7 @@ void darkTabScintillaLogic(QsciScintilla* view) {
             }
             if (e->key() == Qt::Key_V) {
                 QTabWidget* source = CodexIncantation::findClosestParent<QTabWidget>(view);
+                if (source->count()==1) return true;
                 QTabWidget* dest = nullptr;
                 if (!source) return true;
                 QSplitter* splitter = CodexIncantation::findClosestParent<QSplitter>(source);
