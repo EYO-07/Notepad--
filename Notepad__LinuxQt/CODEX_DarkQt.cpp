@@ -185,7 +185,6 @@ void CodexIncantation::moveSeparator(QSplitter* splitter, int value) {
     sizes[1] = right;
     splitter->setSizes(sizes);
 }
-
 const int SLICE_MARGIN = 3; 
 void CodexIncantation::collapseToRight(QSplitter* splitter) {
     if (!splitter || splitter->count() < 2) return;
@@ -249,7 +248,6 @@ void CodexIncantation::restoreToCenter(QSplitter* splitter) {
     sizes[1] = half;
     splitter->setSizes(sizes);
 }
-
 void CodexIncantation::takeWidgetScreenshot(QWidget* wdg, QString fileName) { // to file 
     QPixmap pixmap = wdg->grab();
     /*
@@ -299,6 +297,33 @@ void CodexIncantation::takeWidgetScreenshot(QWidget* wdg) { // to system clipboa
     QClipboard* clipboard = QApplication::clipboard();
     clipboard->setPixmap(pixmap);
     QMessageBox::information(wdg, "Copied", "Screenshot copied to clipboard.");
+}
+
+QString CodexIncantation::dropDownDialog(QString title, QList<QString> options, QString message) {
+    bool ok = false;
+    QStringList itemList = options;  // Convert QList<QString> to QStringList
+    QString selected = QInputDialog::getItem(
+        nullptr,           // parent widget (nullptr for no parent)
+        title,             // dialog title
+        message,           // label text
+        itemList,          // list of options
+        0,                 // default index
+        false,             // not editable
+        &ok,               // ok flag
+        Qt::WindowFlags()  // default window flags
+    );
+    // Return selected value only if user pressed OK
+    return ok ? selected : QString();
+}
+
+bool CodexIncantation::setFocusOnCurrWdg(QTabWidget* tabs) {
+    if (!tabs) return false;
+    int currentTab = tabs->currentIndex();
+    if (currentTab==-1) return false;
+    QWidget* wdg = tabs->widget(currentTab);
+    if (!wdg) return false;
+    wdg->setFocus();
+    return true;
 }
 
 // Incantation || namespace TabbedSplitView 

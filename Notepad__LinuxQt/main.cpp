@@ -391,6 +391,8 @@ void darkTabScintillaLogic(QsciScintilla* view) {
             }
             if (e->key() == Qt::Key_X) {
                 QSplitter* splitter = CodexIncantation::findClosestParent<QSplitter>(tabs);
+                QTabWidget* left_tabs = splitter->findChild<QTabWidget*>("leftTabs");
+                QTabWidget* right_tabs = splitter->findChild<QTabWidget*>("rightTabs");
                 if (!splitter) return true;
                 // -- toggle 
                 switch(splitter_toggle_pos) {
@@ -398,13 +400,15 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                         splitter_toggle_pos = 1;
                         CodexIncantation::restoreToCenter(splitter);
                         break;
-                    case 1:
+                    case 1: // focus panel 1
                         splitter_toggle_pos = 2;
                         CodexIncantation::collapseToRight(splitter);
+                        CodexIncantation::setFocusOnCurrWdg(left_tabs);
                         break;
-                    case 2:
+                    case 2: // focus panel 2
                         splitter_toggle_pos = 0;
                         CodexIncantation::collapseToLeft(splitter);
+                        CodexIncantation::setFocusOnCurrWdg(right_tabs);
                         break;
                 }
                 // -- 
@@ -417,12 +421,13 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 QSplitter* splitter = CodexIncantation::findClosestParent<QSplitter>(tabs);
                 if (!splitter) return true;
                 QTabWidget* left_tabs = splitter->findChild<QTabWidget*>("leftTabs");
-                if (!left_tabs) return true;
-                int l_currentTab = left_tabs->currentIndex();
-                if (l_currentTab==-1) return true;
-                QWidget* lwdg = left_tabs->widget(l_currentTab);
-                if (!lwdg) return true;
-                lwdg->setFocus();
+                //if (!left_tabs) return true;
+                //int l_currentTab = left_tabs->currentIndex();
+                //if (l_currentTab==-1) return true;
+                //QWidget* lwdg = left_tabs->widget(l_currentTab);
+                //if (!lwdg) return true;
+                //lwdg->setFocus();
+                CodexIncantation::setFocusOnCurrWdg(left_tabs);
                 return true;
             }
             if (e->key() == Qt::Key_Right) {
@@ -664,6 +669,13 @@ void darkTabScintillaLogic(QsciScintilla* view) {
             view->setReadOnly(true);
             view->foldAll(true);
             log(QString("File Reloaded : '%1'").arg(fileName));
+            return true;
+        } else if (e->key() == Qt::Key_F8) {
+            CodexIncantation::dropDownDialog(
+                "Test", 
+                {"option 1","option 2"}, 
+                "testing :"
+            );
             return true;
         }
         return false; // Let all other keys (letters, arrows, etc.) pass to Scintilla

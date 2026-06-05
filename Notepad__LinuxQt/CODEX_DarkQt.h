@@ -46,7 +46,7 @@ namespace CodexIncantation {
     // dialogs
     QString createEmptyFileDialog();
     QString textInputDialog();
-    QString dropDownDialog(QString title, QList<QString> options, QString message); // !
+    QString dropDownDialog(QString title, QList<QString> options, QString message); // ?
     // widgets
     template<typename T> T* findClosestParent(QWidget* child);
     void takeWidgetScreenshot(QWidget* wdg, QString fileName); // to file 
@@ -57,6 +57,8 @@ namespace CodexIncantation {
     void collapseToRight(QSplitter* splitter);
     void collapseToLeft(QSplitter* splitter); 
     void restoreToCenter(QSplitter* splitter);
+    // widgets | tabs 
+    bool setFocusOnCurrWdg(QTabWidget* tabs); // ? 
     // -- 
     namespace TabbedSplitView {
         QSplitter* tabbedSplitView();
