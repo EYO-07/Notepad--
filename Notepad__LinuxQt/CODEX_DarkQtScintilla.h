@@ -45,6 +45,7 @@
 namespace CodexIncantation {
     // functions
     QsciScintilla* newDarkScintilla(QWidget *parent = nullptr, QString fileName = "dummy.cpp");
+    void resetScintilla(QsciScintilla* editor, QString fileName); // ?
     void toggleCurrentFold(QsciScintilla *editor);
     bool setLexer(QsciScintilla* editor, QString fileName);
     bool setLexerFolding(QsciScintilla* editor, QString fileName);

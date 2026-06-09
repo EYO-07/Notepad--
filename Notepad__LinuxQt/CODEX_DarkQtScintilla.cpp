@@ -532,6 +532,23 @@ QsciScintilla* CodexIncantation::newDarkScintilla(QWidget *parent, QString fileN
     CodexIncantation::setAutocompletion(editor);
     return editor;
 }
+void CodexIncantation::resetScintilla(QsciScintilla* editor, QString fileName) {
+    if (!editor) return;
+    if (fileName.isEmpty() || fileName.isNull()) return;
+    //editor->viewport()->setAutoFillBackground(false);
+    //editor->setAutoFillBackground(false);
+    //editor->setAttribute(Qt::WA_TranslucentBackground);
+    //editor->setAttribute(Qt::WA_OpaquePaintEvent, false);
+    //editor->setUtf8(true);
+    //editor->setFont(FONT);
+    //editor->SendScintilla(QsciScintilla::SCI_SETPROPERTY, "fold", "1");
+    //editor->SendScintilla(QsciScintilla::SCI_SETPROPERTY, "fold.compact", "0");
+    //editor->SendScintilla(QsciScintilla::SCI_SETBUFFEREDDRAW, true);
+    CodexIncantation::setLexer(editor, fileName);
+    CodexIncantation::setLexerFolding(editor, fileName);
+    lexerPostSettings(editor);
+    CodexIncantation::setAutocompletion(editor);
+}
 void CodexIncantation::onTextChange(QsciScintilla* editor, std::function<void(QsciScintilla*)> logic) {
     if (!editor) return;
     QObject::connect(editor, &QsciScintilla::textChanged, editor, [editor, logic]() {
@@ -767,7 +784,9 @@ bool CodexIncantation::setLexer(QsciScintilla* editor, QString fileName) { // IN
         lexer->setColor(preprocessorColor, QsciLexerBash::Scalar); 
         lexer->setColor(stringColor, QsciLexerBash::Backticks); // `command`
         lexer->setColor(keyword2, QsciLexerBash::ParameterExpansion); // ${VAR}
+        lexer->setPaper(bgColor, QsciLexerBash::ParameterExpansion); // ${VAR}
         lexer->setColor(stringColor, QsciLexerBash::Error);
+        //lexer->setPaper(bgColor, QsciLexerBash::Error);
         // 
         editor->setLexer(lexer);
         return true;

@@ -670,11 +670,44 @@ void darkTabScintillaLogic(QsciScintilla* view) {
             view->foldAll(true);
             log(QString("File Reloaded : '%1'").arg(fileName));
             return true;
-        } else if (e->key() == Qt::Key_F8) {
-            CodexIncantation::dropDownDialog(
-                "Test", 
-                {"option 1","option 2"}, 
-                "testing :"
+        } else if (e->key() == Qt::Key_F6) { // Change lexer 
+            QString fn = TabbedSplitView::getScintillaFullFileName(tabs, currentTab);
+            if ( fn.isEmpty() || fn.isNull() ) fn = ".cpp";
+            CodexIncantation::resetScintilla(view, 
+                CodexIncantation::dropDownDialog(
+                    "Change Lexer", 
+                    {
+                        fn,
+                        ".bat",
+                        ".coffee",
+                        ".conf",
+                        ".cfg",
+                        ".cpp",
+                        ".cs",
+                        ".css",
+                        ".f",
+                        ".f90",
+                        ".html",
+                        ".ini",
+                        ".java",
+                        ".js",
+                        ".json",
+                        ".lua",
+                        ".m",
+                        ".md",
+                        ".php",
+                        ".pl",
+                        ".py",
+                        ".rb",
+                        ".sh",
+                        ".sql",
+                        ".tex",
+                        ".ts",
+                        ".xml",
+                        ".yaml"
+                    }, 
+                    "Please select the new lexer based on extension :"
+                ) 
             );
             return true;
         }

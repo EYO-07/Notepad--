@@ -298,7 +298,6 @@ void CodexIncantation::takeWidgetScreenshot(QWidget* wdg) { // to system clipboa
     clipboard->setPixmap(pixmap);
     QMessageBox::information(wdg, "Copied", "Screenshot copied to clipboard.");
 }
-
 QString CodexIncantation::dropDownDialog(QString title, QList<QString> options, QString message) {
     bool ok = false;
     QStringList itemList = options;  // Convert QList<QString> to QStringList
@@ -315,7 +314,6 @@ QString CodexIncantation::dropDownDialog(QString title, QList<QString> options, 
     // Return selected value only if user pressed OK
     return ok ? selected : QString();
 }
-
 bool CodexIncantation::setFocusOnCurrWdg(QTabWidget* tabs) {
     if (!tabs) return false;
     int currentTab = tabs->currentIndex();
