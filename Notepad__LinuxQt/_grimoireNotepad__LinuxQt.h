@@ -565,6 +565,10 @@ Workflow [ Programming ] { Magic Oriented Programming Paradigm }
  * setUnmatchedBraceBackgroundColor (const QColor &col)
  * BraceMatch { NoBraceMatch, StrictBraceMatch, SloppyBraceMatch }
  * */
+/* others
+1. editor->lines() // line count 
+*/
+
 
 /// -- QsciScintilla | lexer
 /* Inventory [ Lexer ] { Qt6, C++, Linux, QsciScintilla } 

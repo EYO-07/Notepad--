@@ -68,6 +68,13 @@ extern CodexIncantation::FileRegistry FILE_REGISTRY; // declare in main.cpp for 
 // Incantation 
 
 // -- local functions 
+int getNumberOrder(int x) {
+    if (x <= 0) return 0; 
+    return static_cast<int>(std::floor(std::log10(x))) + 1;
+}
+void updateNumberMarginWidth(QsciScintilla* editor) {
+    editor->setMarginWidth(1, QString( getNumberOrder(editor->lines())+2,'0' ) );
+}
 void lexerPostSettings(QsciScintilla* editor) {
     editor->setAutoIndent(true);
     editor->setIndentationsUseTabs(false);
@@ -79,12 +86,6 @@ void lexerPostSettings(QsciScintilla* editor) {
     editor->setCaretLineBackgroundColor(QColor("#2c313c"));
     editor->setCaretForegroundColor(caretColor);
     CodexIncantation::setMargin(editor);
-    //editor->setMarginType(1, QsciScintilla::NumberMargin);
-    //editor->setMarginLineNumbers(1, true);
-    //editor->setMarginWidth(1, "0000");
-    //editor->setMarginsFont(MARGIN_FONT);
-    //editor->setMarginsBackgroundColor(QColor(10,10,10));
-    //editor->setMarginsForegroundColor(fgColor);
     editor->setMatchedBraceForegroundColor(braceMatchColor);
     editor->setMatchedBraceBackgroundColor(braceMatchBackgroundColor);
     editor->setUnmatchedBraceBackgroundColor(bgColor);
@@ -535,15 +536,6 @@ QsciScintilla* CodexIncantation::newDarkScintilla(QWidget *parent, QString fileN
 void CodexIncantation::resetScintilla(QsciScintilla* editor, QString fileName) {
     if (!editor) return;
     if (fileName.isEmpty() || fileName.isNull()) return;
-    //editor->viewport()->setAutoFillBackground(false);
-    //editor->setAutoFillBackground(false);
-    //editor->setAttribute(Qt::WA_TranslucentBackground);
-    //editor->setAttribute(Qt::WA_OpaquePaintEvent, false);
-    //editor->setUtf8(true);
-    //editor->setFont(FONT);
-    //editor->SendScintilla(QsciScintilla::SCI_SETPROPERTY, "fold", "1");
-    //editor->SendScintilla(QsciScintilla::SCI_SETPROPERTY, "fold.compact", "0");
-    //editor->SendScintilla(QsciScintilla::SCI_SETBUFFEREDDRAW, true);
     CodexIncantation::setLexer(editor, fileName);
     CodexIncantation::setLexerFolding(editor, fileName);
     lexerPostSettings(editor);
@@ -1473,7 +1465,7 @@ void CodexIncantation::hideMargin(QsciScintilla* editor) {
 void CodexIncantation::setMargin(QsciScintilla* editor) {
     editor->setMarginType(1, QsciScintilla::NumberMargin);
     editor->setMarginLineNumbers(1, true);
-    editor->setMarginWidth(1, "0000");
+    editor->setMarginWidth(1,"0000");
     editor->setMarginsFont(MARGIN_FONT);
     editor->setMarginsBackgroundColor(QColor(10,10,10));
     editor->setMarginsForegroundColor(fgColor);
@@ -1593,6 +1585,7 @@ QsciScintilla* TabbedSplitView::dialogScintillaTabLoad(QTabWidget* tabs) {
     QString content = loadFile(fileName);
     editor->blockSignals(true);
     editor->setText(content);
+    updateNumberMarginWidth(editor);
     editor->blockSignals(false);
     CodexIncantation::updateAutocompletion_Full(editor);
     editor->setReadOnly(true);
@@ -1628,6 +1621,7 @@ QsciScintilla* TabbedSplitView::loadScintillaFromFilename(QTabWidget* tabs, QStr
     QString content = loadFile(fileName);
     editor->blockSignals(true);
     editor->setText(content);
+    updateNumberMarginWidth(editor);
     editor->blockSignals(false); 
     CodexIncantation::updateAutocompletion_Full(editor);
     editor->setReadOnly(true);

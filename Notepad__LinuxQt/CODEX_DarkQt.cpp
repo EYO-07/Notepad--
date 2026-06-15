@@ -323,6 +323,23 @@ bool CodexIncantation::setFocusOnCurrWdg(QTabWidget* tabs) {
     wdg->setFocus();
     return true;
 }
+QList<QString> CodexIncantation::getFonts(QString substring) {
+    QList<QString> matchedFonts;
+    // Get all available font families from the system
+    // QFontDatabase::families() returns a sorted QStringList
+    const QStringList allFonts = QFontDatabase::families();
+    // If no filter is provided, return all fonts
+    if (substring.trimmed().isEmpty()) {
+        return allFonts;
+    }
+    // Filter based on substring (case-insensitive)
+    for (const QString& font : allFonts) {
+        if (font.contains(substring, Qt::CaseInsensitive)) {
+            matchedFonts.append(font);
+        }
+    }
+    return matchedFonts;
+}
 
 // Incantation || namespace TabbedSplitView 
 QSplitter* TabbedSplitView::tabbedSplitView() {

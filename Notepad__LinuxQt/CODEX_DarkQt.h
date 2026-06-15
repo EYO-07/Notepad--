@@ -4,9 +4,11 @@
 #pragma once
 // Standart Library { C++ }
 #include <iostream>
+#include <cmath> 
 // Qt Core 
 #include <QtGlobal>
 #include <QString>
+#include <QStringList>
 #include <QObject>
 #include <QDir>
 #include <QDateTime>
@@ -23,6 +25,7 @@
 #include <QSplitter>
 #include <QTabWidget>
 #include <QTextEdit>
+#include <QFontDatabase>
 //
 namespace CodexTransmutation {
     QString loadFile(QString pathFilename);
@@ -38,6 +41,7 @@ namespace CodexTransmutation {
     
 }
 namespace CodexIncantation {
+    QList<QString> getFonts(QString substring); // !
     // theme 
     void applyDarkTheme(QWidget* root);
     void setWindowOpacity(QWidget* window, double level);
