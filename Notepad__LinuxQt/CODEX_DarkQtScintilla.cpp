@@ -73,7 +73,8 @@ int getNumberOrder(int x) {
     return static_cast<int>(std::floor(std::log10(x))) + 1;
 }
 void updateNumberMarginWidth(QsciScintilla* editor) {
-    editor->setMarginWidth(1, QString( getNumberOrder(editor->lines())+2,'0' ) );
+    int size = std::max(3,getNumberOrder(editor->lines())+2);
+    editor->setMarginWidth(1, QString(size, '0') );
 }
 void lexerPostSettings(QsciScintilla* editor) {
     editor->setAutoIndent(true);
@@ -1465,7 +1466,8 @@ void CodexIncantation::hideMargin(QsciScintilla* editor) {
 void CodexIncantation::setMargin(QsciScintilla* editor) {
     editor->setMarginType(1, QsciScintilla::NumberMargin);
     editor->setMarginLineNumbers(1, true);
-    editor->setMarginWidth(1,"0000");
+    //editor->setMarginWidth(1,"0000");
+    updateNumberMarginWidth(editor);
     editor->setMarginsFont(MARGIN_FONT);
     editor->setMarginsBackgroundColor(QColor(10,10,10));
     editor->setMarginsForegroundColor(fgColor);
