@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
                 darkTabScintillaLogic(editor);
                 QFileInfo info(absFileName);
                 // FILE_WATCHER.addPath(info.absoluteFilePath()); // TESTING ISSUE addPath don't work 
-                log(QString("File Loaded by Command Line Argument // %1").arg(absFileName), clipboardPage);
+                log(QString("File Loaded by Command Line Argument on %2 // %1").arg(absFileName, tabs->objectName() ));
             }
         } 
     }
@@ -469,6 +469,7 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                 QString newEditorFullFileName = TabbedSplitView::getScintillaFullFileName(tabs,newEditorIndex);
                 // FILE_WATCHER.addPath(newEditorFullFileName); // ISSUE addPath don't work 
                 darkTabScintillaLogic(newEditor);
+                log(QString("File Loaded on %2 // %1").arg(newEditorFullFileName, tabs->objectName() ));
                 return true;
             }
             if (e->key() == Qt::Key_S) { 
@@ -482,13 +483,18 @@ void darkTabScintillaLogic(QsciScintilla* view) {
                         QMessageBox::warning(view, "Aborted", "The editor for "+absPath+" is read only");
                         return true;
                     }
-                    saveFile(absPath, view->text());
-                    QMessageBox::information(view, "File Saved", "File Saved on: "+absPath);
-                    log(QString("File Saved : '%1'").arg(absPath));
-                    if ( prev_tab_text.startsWith("* ") ) {
-                        tabs->setTabText(currentTab,prev_tab_text.sliced(2));
+                    QString errorMessage = saveFile(absPath, view->text());
+                    if ( errorMessage.isEmpty() || errorMessage.isNull() ) {
+                        QMessageBox::information(view, "File Saved", "File Saved on: "+absPath);
+                        log(QString("File Saved : '%1'").arg(absPath));
+                        if ( prev_tab_text.startsWith("* ") ) {
+                            tabs->setTabText(currentTab,prev_tab_text.sliced(2));
+                        }
+                    } else {
+                        QMessageBox::critical(view, "Error", errorMessage);
+                        logError(errorMessage);
                     }
-                } else {}
+                }
                 return true;
             }
             if (e->key() == Qt::Key_N) { // UNUSED 

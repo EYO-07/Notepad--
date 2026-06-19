@@ -4,12 +4,11 @@
 #include "CODEX_DarkQt.h"
 #include <QApplication>
 #include <QClipboard>
-#include <QList>
-#include <QFileInfo>
-#include <QDir>
 using namespace CodexIncantation;
 
 // Transmutation
+
+/*
 void CodexTransmutation::saveFile(QString fileName, QString content) { // Revision
     QFile file(fileName);
     if (!file.exists()) return;
@@ -19,6 +18,35 @@ void CodexTransmutation::saveFile(QString fileName, QString content) { // Revisi
         file.close();
     }
 }
+*/
+
+QString CodexTransmutation::saveFile(const QString &fileName, const QString &content) {
+    // "" means success
+    QFile file(fileName);
+    QString message = "";
+    QFileDevice::FileError error;
+    QTextStream out;
+    if (!file.exists()) return QString("Error: File does not exist: '%1'").arg(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        error = file.error();
+        if (error == QFileDevice::PermissionsError) {
+            message = QString("Error: Permission denied. Cannot write to read-only file: '%1'").arg(fileName);
+        } else if (error == QFileDevice::WriteError) {
+            message = QString("Error: Write failed. The file system may be read-only or full: '%1'").arg(fileName);
+        } else {
+            message = QString("Error: Failed to open file '%1'. Reason: %2").arg(fileName, file.errorString());
+        }
+        goto end;
+    }
+file_opened:
+    out.setDevice(&file);
+    out << content;
+    if (!file.flush()) message = QString("Error: Failed to flush data to disk for: '%1'").arg(fileName);
+    file.close();
+end:
+    return message;
+}
+
 QString CodexTransmutation::loadFile(QString fileName) { // Revision 
     QFile file(fileName);
     // Check if it's a file and not a directory/socket

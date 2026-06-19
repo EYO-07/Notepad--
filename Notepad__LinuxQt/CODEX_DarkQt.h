@@ -7,12 +7,17 @@
 #include <cmath> 
 // Qt Core 
 #include <QtGlobal>
+#include <QList>
 #include <QString>
 #include <QStringList>
+#include <QTextStream>
 #include <QObject>
 #include <QDir>
 #include <QDateTime>
 #include <QtCore>
+#include <QFile>
+#include <QFileInfo>
+#include <QIODevice>
 // Qt GUI | Events
 #include <QtGui>
 #include <QKeyEvent>
@@ -26,10 +31,12 @@
 #include <QTabWidget>
 #include <QTextEdit>
 #include <QFontDatabase>
+
 //
 namespace CodexTransmutation {
     QString loadFile(QString pathFilename);
-    void saveFile(QString pathFilename, QString);
+    // void saveFile(QString pathFilename, QString);
+    QString saveFile(const QString &fileName, const QString &content);
     QString fileExists(QString path); // return "" or absolute path
     QString isDir(QString path); // return "" or absolute path 
     QString inputText(QWidget* parent, QString title, QString label, QString default_text);
