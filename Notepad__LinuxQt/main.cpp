@@ -107,6 +107,7 @@ int main(int argc, char *argv[]) {
         "2. Alt+Left, Alt+Right // Focus the Left or Right current tab \n"
         "3. Alt+S // Change the split orientation\n"
         "4. Alt+A, Alt+D // Move the splitter separator\n"
+        "5. Alt+X // Change Splitter Focus\n"
         "\n"
         "1. Ctrl+F, Ctrl+D // Find Next, Find Previous Text, will prompt a input dialog if don't find search directive on document. \n"
         "\n"
@@ -114,6 +115,7 @@ int main(int argc, char *argv[]) {
         "2. F2 // Take Screenshot of the Current Editor to file \n"
         "3. F3 // Toggle the Margin Line Numbers \n"
         "4. F5 // Reload the File from Current Editor \n"
+        "5. F6 // Change the scintilla lexer \n"
         "\n"
         "... use this tabpage as you wish, its not stored anywhere. \n"
     );
