@@ -2,9 +2,9 @@
 
 ![](Notepad__6.png)
 
-A slop and much lesser version of Notepad++, don't like it? Use Notepad++ instead.
+A slop and much lesser version of Notepad++, don't like it? Use Notepad++ instead. For Linux version use [Notepad--](https://github.com/EYO-07/Notepad--Linux).
 
-Build on top of winforms and Scintilla5.NET ( https://github.com/desjarlais/Scintilla.NET ).
+Build on top of winforms and [Scintilla5.NET](https://github.com/desjarlais/Scintilla.NET).
 
 ## Features--
 1. Fixed Dark Theme. I don't care about your bad taste, it's hardcoded.
@@ -49,12 +49,3 @@ I recommend to "self-audit" those files using A.I., the project is simple and al
 ## Experimental 
 This project have some experimental plugins. Currently there is just one module available.
 1. [ Global Hotkeys Module ](https://github.com/EYO-07/ghcmd) : when active this module creates global hotkeys to move mouse from numpad keyboard using (numpad 5,numpad 1,numpad 2,numpad 3) to move the mouse (up,left,down,right), (numpad 4, numpad 6) to remap mouse buttons, (numpad 0, numpad 7) to use mouse scrolling, (numpad 8) to change mouse pointer speed, and hotkeys to resize and change position of any active window. Follow the instructions to compile the ghcmd.exe, create a folder named `modules` where you find the Notepad--.exe, put ghcmd.exe on this folder and restart the Notepad--.exe. 
-
-# Notepad--LinuxQt 
-
-Experimental version of Notepad-- for linux distributions, build on Qt6 and QsciScintilla. As there are many linux distros, I can't test on every one, this Notepad-- version works at least in two distributions (Debian, MX Linux Fluxbox) which are the two linux available for me. If you find any issues during installation, please report in issue section.
-
-## Installation 
-
-For installation read the readme.txt inside the Notepad__LinuxQt
-1. Run the bash scripts for installing dependencies and bash script to build the project.
